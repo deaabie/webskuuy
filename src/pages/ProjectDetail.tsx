@@ -79,15 +79,15 @@ const ProjectDetail = () => {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-6 gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            as={Link} 
-            to="/"
-            className="rounded-full"
-          >
-            <ArrowLeft size={20} />
-          </Button>
+          <Link to="/">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full"
+            >
+              <ArrowLeft size={20} />
+            </Button>
+          </Link>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
               <img 
