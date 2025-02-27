@@ -11,36 +11,36 @@ const Faq = () => {
 
   const faqs = [
     {
-      question: "What is this platform about?",
-      answer: "Our platform is a comprehensive project management system that helps teams collaborate, track progress, and deliver projects on time. It combines powerful features with an intuitive interface to make project management seamless and efficient."
+      question: "What is a blockchain node?",
+      answer: "A blockchain node is a computer that participates in a blockchain network by maintaining a copy of the blockchain, validating transactions, and contributing to the consensus mechanism. Nodes are the infrastructure that keeps blockchain networks running in a decentralized manner."
     },
     {
-      question: "How do I get started with your service?",
-      answer: "Getting started is easy! First, create an account by clicking the 'Sign Up' button. Once registered, you can create your first project, invite team members, and begin organizing your work. We also offer a helpful onboarding tour to guide you through key features."
+      question: "What's the difference between a validator and a full node?",
+      answer: "A full node maintains a complete copy of the blockchain and verifies transactions, but doesn't necessarily participate in block production. A validator node (in Proof-of-Stake networks) actively participates in consensus by proposing and validating new blocks, often requiring staked tokens and specialized hardware."
     },
     {
-      question: "Is there a free trial available?",
-      answer: "Yes, we offer a 14-day free trial with full access to all features. No credit card is required to start your trial. After the trial period, you can choose from our various subscription plans based on your needs."
+      question: "What hardware do I need to run a validator node?",
+      answer: "Hardware requirements vary by blockchain, but generally validators need a dedicated server with sufficient CPU (4-8 cores), RAM (16-32GB), storage (1TB+ SSD), and a stable internet connection with good bandwidth. High-throughput networks like Solana have more demanding requirements than others."
     },
     {
-      question: "Can I integrate with other tools?",
-      answer: "Absolutely! Our platform offers seamless integration with popular tools including Slack, GitHub, Trello, Asana, Google Workspace, and many more. We also have an API available for custom integrations with your existing systems."
+      question: "Is running a node profitable?",
+      answer: "Profitability depends on the blockchain network, the amount staked, hardware and operational costs, and market conditions. Validators typically earn rewards for block production and transaction validation, but costs (hardware, electricity, maintenance) must be considered for net profitability calculations."
     },
     {
-      question: "What support options are available?",
-      answer: "We provide multiple support channels including 24/7 chat support, email assistance, comprehensive documentation, video tutorials, and a community forum. Enterprise customers also receive dedicated account managers and priority support."
+      question: "What are the risks of running a validator?",
+      answer: "Risks include slashing (penalties for downtime or misbehavior), technical failures, security breaches, and regulatory uncertainties. Different networks have different slashing conditions and penalty severities. Proper server security, monitoring, and maintenance are essential to mitigate these risks."
     },
     {
-      question: "How secure is my data?",
-      answer: "Security is our top priority. We use industry-standard encryption for all data, both in transit and at rest. Our infrastructure is hosted on secure cloud providers with regular security audits, and we're compliant with GDPR, SOC 2, and other relevant standards."
+      question: "How much do I need to stake to become a validator?",
+      answer: "Stake requirements vary widely by network: Ethereum requires 32 ETH, Solana requires around 0.1 SOL (but high hardware costs), Polkadot has dynamic minimums, and Cosmos chains typically require between 50-10,000 tokens depending on the specific chain. Some networks also allow delegation to validators."
     },
     {
-      question: "Can I cancel my subscription anytime?",
-      answer: "Yes, you can cancel your subscription at any time. When you cancel, you'll continue to have access until the end of your current billing period. We don't lock you in with long-term contracts or charge cancellation fees."
+      question: "How do I handle validator node maintenance and updates?",
+      answer: "Regular maintenance includes updating client software, operating system patches, security updates, and occasional hardware upgrades. Most networks announce updates in advance. Setting up monitoring, automated alerts, and having a backup validator ready are best practices to minimize downtime during maintenance."
     },
     {
-      question: "Do you offer discounts for non-profits or educational institutions?",
-      answer: "Yes, we offer special pricing for non-profit organizations, educational institutions, and open-source projects. Please contact our sales team with details about your organization to learn more about our discount programs."
+      question: "Can I run multiple validators on the same machine?",
+      answer: "While technically possible for some networks, it's generally not recommended for security and performance reasons. Running multiple validators on one machine creates a single point of failure and can lead to correlated downtime or slashing. For most networks, dedicated hardware per validator is the recommended best practice."
     },
   ];
 
@@ -60,9 +60,9 @@ const Faq = () => {
   return (
     <div className="container mx-auto py-10 px-4 md:px-6">
       <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold mb-4">Frequently Asked Questions</h1>
+        <h1 className="text-4xl font-bold mb-4">Node Operator FAQ</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Find answers to common questions about our platform, features, and services.
+          Find answers to common questions about running nodes and validators across different blockchain networks.
         </p>
       </div>
 
@@ -71,7 +71,7 @@ const Faq = () => {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
           <Input
             className="pl-10"
-            placeholder="Search for questions..."
+            placeholder="Search for node operation questions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -81,9 +81,9 @@ const Faq = () => {
       <div className="max-w-3xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Common Questions</CardTitle>
+            <CardTitle>Node Operation Questions</CardTitle>
             <CardDescription>
-              Browse through our most frequently asked questions
+              Essential information for blockchain validators and node runners
             </CardDescription>
           </CardHeader>
           <CardContent className="divide-y">
@@ -124,16 +124,16 @@ const Faq = () => {
         </Card>
 
         <div className="mt-10 text-center">
-          <h2 className="text-2xl font-bold mb-4">Still have questions?</h2>
+          <h2 className="text-2xl font-bold mb-4">More Validator Questions?</h2>
           <p className="text-muted-foreground mb-6">
-            If you couldn't find the answer you were looking for, please contact our support team.
+            If you have more specific questions about running nodes on particular networks, our support team can help.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild variant="outline">
-              <a href="/contact">Contact Support</a>
+              <a href="/contact">Contact Node Support</a>
             </Button>
             <Button asChild>
-              <a href="#">View Documentation</a>
+              <a href="#">View Validation Guides</a>
             </Button>
           </div>
         </div>

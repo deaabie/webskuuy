@@ -2,56 +2,56 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Download, Code, Terminal, Share2, BookOpen, Github, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Download, Server, Terminal, Activity, BookOpen, Shield, Gauge } from "lucide-react";
 
 const Tools = () => {
   const tools = [
     {
-      title: "Project Generator",
-      description: "Create new project scaffolds with best practices and configs pre-configured",
-      icon: <Code className="h-8 w-8" />,
+      title: "Node Launcher",
+      description: "Automated node deployment with pre-configured settings for popular blockchains",
+      icon: <Server className="h-8 w-8" />,
       badge: "Popular",
-      features: ["Templates for various frameworks", "Custom configurations", "Optimized build setup"]
+      features: ["One-click node deployment", "Multi-chain support", "Infrastructure optimization"]
     },
     {
-      title: "CLI Interface",
-      description: "Powerful command-line tools to manage your projects from the terminal",
+      title: "Validator CLI",
+      description: "Command-line interface for managing validator operations across networks",
       icon: <Terminal className="h-8 w-8" />,
-      features: ["Project management", "Deployment tools", "Database migrations"]
+      features: ["Validator management", "Key generation", "Transaction signing"]
     },
     {
-      title: "Component Library",
-      description: "Ready-to-use UI components that follow accessibility best practices",
-      icon: <Share2 className="h-8 w-8" />,
+      title: "Performance Monitor",
+      description: "Real-time monitoring and alerting for validator nodes and blockchain metrics",
+      icon: <Activity className="h-8 w-8" />,
       badge: "New",
-      features: ["Fully responsive", "Theme customization", "Comprehensive documentation"]
+      features: ["Uptime tracking", "Slashing protection", "Performance analytics"]
     },
     {
-      title: "Documentation Builder",
-      description: "Generate beautiful, searchable documentation for your projects",
+      title: "Documentation Hub",
+      description: "Comprehensive guides for setting up nodes across different blockchain networks",
       icon: <BookOpen className="h-8 w-8" />,
-      features: ["Markdown support", "Code highlighting", "Versioning"]
+      features: ["Network-specific guides", "Troubleshooting tips", "Security best practices"]
     },
     {
-      title: "GitHub Integration",
-      description: "Seamlessly connect your projects with GitHub repositories",
-      icon: <Github className="h-8 w-8" />,
-      features: ["Automatic PR creation", "CI/CD integration", "Issue tracking"]
+      title: "Security Analyzer",
+      description: "Audit your validator setup for security vulnerabilities and best practices",
+      icon: <Shield className="h-8 w-8" />,
+      features: ["Security scanning", "Configuration validation", "Vulnerability detection"]
     },
     {
-      title: "Code Quality Tools",
-      description: "Analyze and improve your codebase quality and maintainability",
-      icon: <CheckCircle2 className="h-8 w-8" />,
-      features: ["Linting", "Type checking", "Performance analysis"]
+      title: "Staking Calculator",
+      description: "Calculate potential rewards, costs, and ROI for different validator setups",
+      icon: <Gauge className="h-8 w-8" />,
+      features: ["Revenue projections", "Cost analysis", "Network comparisons"]
     }
   ];
 
   return (
     <div className="container mx-auto py-10 px-4 md:px-6">
       <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold mb-4">Developer Tools</h1>
+        <h1 className="text-4xl font-bold mb-4">Node Operator Tools</h1>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-          Powerful utilities and resources to streamline your development workflow and improve productivity.
+          Essential utilities and resources for setting up, managing, and optimizing your blockchain validators.
         </p>
       </div>
 
@@ -100,11 +100,12 @@ const Tools = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div>
             <h2 className="text-2xl font-bold mb-4">
-              Developer SDK
+              Validator SDK
             </h2>
             <p className="text-muted-foreground mb-6">
-              Our comprehensive Software Development Kit gives you all the tools you need to build powerful, 
-              scalable applications. With extensive documentation and examples, you'll be up and running in minutes.
+              Our comprehensive Validator SDK gives you programmatic access to node management APIs, 
+              staking functions, and blockchain interaction tools. Built for both solo validators and 
+              staking-as-a-service providers.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button>
@@ -116,15 +117,18 @@ const Tools = () => {
           <div className="bg-background p-4 rounded-md">
             <pre className="text-xs md:text-sm overflow-x-auto">
               <code className="language-bash block p-4">
-                {`# Install the SDK
-npm install @company/sdk
+                {`# Install the Validator SDK
+npm install @skuuy/validator-sdk
 
-# Initialize your project
-npx @company/sdk init my-project
+# Initialize validator for Ethereum
+const validator = new ValidatorClient({
+  network: "ethereum",
+  endpoint: "YOUR_RPC_URL",
+  keystore: "./validator_keys.json"
+});
 
-# Start development server
-cd my-project
-npm run dev`}
+# Start validation
+await validator.start();`}
               </code>
             </pre>
           </div>
@@ -132,27 +136,27 @@ npm run dev`}
       </div>
 
       <div className="text-center mb-10">
-        <h2 className="text-2xl font-bold mb-4">Community Resources</h2>
+        <h2 className="text-2xl font-bold mb-4">Blockchain Network Resources</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-          Check out these additional resources created by our community.
+          Network-specific resources to help you run validators on major blockchains.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           {
-            title: "Starter Templates",
-            description: "Pre-configured project templates for various use cases",
+            title: "Ethereum Staking Suite",
+            description: "Complete toolkit for ETH validators including monitoring and MEV optimization",
             link: "#"
           },
           {
-            title: "Plugin Directory",
-            description: "Extend functionality with community-built plugins",
+            title: "Solana Validator Pack",
+            description: "High-performance tools for Solana validators with vote account management",
             link: "#"
           },
           {
-            title: "Developer Forum",
-            description: "Get help and share knowledge with other developers",
+            title: "Cosmos Validator Bundle",
+            description: "Multi-chain tooling for running validators across the Cosmos ecosystem",
             link: "#"
           }
         ].map((resource, index) => (
