@@ -1,369 +1,317 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Search, Moon, Sun, Menu, Filter, ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Atom,
-  Bitcoin,
-  ChevronDown,
-  Cpu,
-  ExternalLink,
-  FileQuestion,
-  Loader2,
-  Search,
-  Sun,
-  CircleEllipsis,
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
+// Project type definition
 interface Project {
   id: string;
   name: string;
   categories: string[];
-  description: string;
   logo: string;
   status: "active" | "upcoming" | "ended";
 }
 
-// Get category icon - moved outside of components to be accessible to both Index and ProjectCard
-const getCategoryIcon = (category: string) => {
-  const foundCategory = categories.find(c => c.value === category);
-  return foundCategory ? foundCategory.icon : null;
-};
-
-// Available categories - moved outside to be accessible globally
-const categories = [
-  { value: "Cosmos", icon: <Atom size={16} /> },
-  { value: "Bitcoin", icon: <Bitcoin size={16} /> },
-  { value: "EVM", icon: <Cpu size={16} /> },
-  { value: "Solana", icon: <Sun size={16} /> },
-  { value: "Polkadot", icon: <CircleEllipsis size={16} /> },
-  { value: "Other", icon: <FileQuestion size={16} /> },
-];
-
+// Sample projects data
+const projectsData: Project[] = [{
+  id: "hemi",
+  name: "Hemi",
+  categories: ["Tech"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "sunrise",
+  name: "Sunrise",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "sahara-ai",
+  name: "Sahara AI",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "nexus",
+  name: "Nexus",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "iota",
+  name: "IOTA",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "pell",
+  name: "Pell",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "dill",
+  name: "Dill",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "upcoming"
+}, {
+  id: "solv",
+  name: "Solv",
+  categories: ["Community", "Tech"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "story",
+  name: "Story",
+  categories: ["Tech", "Community"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "ended"
+}, {
+  id: "symbiotic",
+  name: "Symbiotic",
+  categories: ["Tech"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}, {
+  id: "airchains",
+  name: "Airchains",
+  categories: ["Tech"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "upcoming"
+}, {
+  id: "nubit",
+  name: "Nubit",
+  categories: ["Tech"],
+  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  status: "active"
+}];
 const Index = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [darkMode, setDarkMode] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  
-  // Fetch projects from Supabase
-  useEffect(() => {
-    const fetchProjects = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*');
-        
-        if (error) {
-          console.error('Error fetching projects:', error);
-          return;
-        }
-        
-        // Transform data format to match our interface
-        const transformedData = data.map(project => ({
-          id: project.id,
-          name: project.name,
-          categories: project.categories || [],
-          description: project.description || "",
-          logo: project.logo || "",
-          status: project.status as "active" | "upcoming" | "ended",
-        }));
-        
-        setProjects(transformedData);
-      } catch (error) {
-        console.error('Error in fetchProjects:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchProjects();
-  }, []);
-  
-  // Filter projects based on search query, selected categories, and active tab
-  const filteredProjects = projects.filter((project) => {
-    // Filter by status
-    if (activeTab !== "all" && project.status !== activeTab) {
-      return false;
-    }
-    
-    // Filter by search query
-    if (
-      searchQuery &&
-      !project.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !project.description.toLowerCase().includes(searchQuery.toLowerCase())
-    ) {
-      return false;
-    }
-    
-    // Filter by selected categories
-    if (
-      selectedCategories.length > 0 &&
-      !project.categories.some((category) =>
-        selectedCategories.includes(category)
-      )
-    ) {
-      return false;
-    }
-    
-    return true;
+  const [selectedStatus, setSelectedStatus] = useState<string>("active");
+  const {
+    toast
+  } = useToast();
+
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.documentElement.classList.toggle("dark");
+  };
+
+  // Filter projects based on search query, categories, and status
+  const filteredProjects = projectsData.filter(project => {
+    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategories = selectedCategories.length === 0 || selectedCategories.some(cat => project.categories.includes(cat));
+    const matchesStatus = selectedStatus === "all" || project.status === selectedStatus;
+    return matchesSearch && matchesCategories && matchesStatus;
   });
-  
+
+  // Count projects by status
+  const activeCount = projectsData.filter(p => p.status === "active").length;
+  const upcomingCount = projectsData.filter(p => p.status === "upcoming").length;
+  const endedCount = projectsData.filter(p => p.status === "ended").length;
+
   // Toggle category selection
   const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category));
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
     } else {
       setSelectedCategories([...selectedCategories, category]);
     }
   };
-  
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+  return <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} transition-colors duration-300`}>
+      {/* Header */}
+      <header className={`sticky top-0 z-50 ${darkMode ? 'bg-gray-900' : 'bg-white'} border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="font-bold text-xl flex items-center">
+              <span className="text-purple-500">Skuuy.</span>
+              <span>com</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Link to="/portal" className="btn btn-primary btn-sm rounded-full">
+              Testnets portal
+            </Link>
+            <button onClick={toggleDarkMode} className="btn btn-ghost btn-circle">
+              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+            <button className="btn btn-ghost btn-circle md:hidden">
+              <Menu size={20} />
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      {/* Ad Banner */}
+      <div className={`py-2 px-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} flex justify-between items-center`}>
+        <div className="flex items-center gap-2">
+          <span className="text-xs bg-blue-500 text-white px-1 rounded">Ad</span>
+          <span className="text-sm">VPS/VDS in 30+ countries. Accept crypto, card eu/ru/ua - etc world, and more different payments methods</span>
+        </div>
+        <button className="text-gray-500">&times;</button>
+      </div>
+      
       {/* Hero Section */}
-      <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white p-10 pb-20">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <ServerIcon className="h-8 w-8" />
-              <span className="text-2xl font-bold">Web3 Node Ops</span>
-            </div>
-            <div className="flex gap-4">
-              <Link to="/about">
-                <Button variant="ghost">About</Button>
-              </Link>
-              <Link to="/tools">
-                <Button variant="ghost">Tools</Button>
-              </Link>
-              <Link to="/contact">
-                <Button variant="ghost">Contact</Button>
-              </Link>
-              <Link to="/admin">
-                <Button>Admin</Button>
-              </Link>
-            </div>
-          </div>
-          <div className="mt-16 mb-10 text-center">
-            <h1 className="text-5xl font-bold mb-4">Run Web3 Infrastructure</h1>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Simple guides for setting up and running nodes for various blockchain networks. Join testnets, earn rewards, and contribute to decentralization.
-            </p>
-          </div>
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-2xl">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                className="pl-10 py-6 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 rounded-lg"
-                placeholder="Search for projects by name or description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+      <section className="py-12 text-center">
+        
+        <motion.h2 className="text-3xl md:text-4xl font-bold mb-6" initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.5,
+        delay: 0.1
+      }}>Skuuy is Your Gateway to Web3 Node Operation</motion.h2>
+        <motion.p className="text-lg text-gray-400 mb-8" initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        duration: 0.5,
+        delay: 0.2
+      }}>Comprehensive guides and tools for setting up and managing blockchain nodes</motion.p>
+        
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className={`relative rounded-full overflow-hidden border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+            <input type="text" placeholder="Enter project" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={`w-full py-3 px-6 pr-12 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} focus:outline-none`} />
+            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+              <Search size={20} className="text-gray-500" />
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Projects Section */}
-      <div className="container mx-auto max-w-6xl px-4 -mt-10">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-              <Tabs
-                defaultValue="all"
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full md:w-auto"
-              >
-                <TabsList>
-                  <TabsTrigger value="all">All Projects</TabsTrigger>
-                  <TabsTrigger value="active">Active</TabsTrigger>
-                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                  <TabsTrigger value="ended">Ended</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full md:w-auto">
-                    Filter Categories <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56">
-                  <DropdownMenuLabel>Select Categories</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {categories.map((category) => (
-                    <DropdownMenuCheckboxItem
-                      key={category.value}
-                      checked={selectedCategories.includes(category.value)}
-                      onCheckedChange={() => toggleCategory(category.value)}
-                    >
-                      <div className="flex items-center gap-2">
-                        {category.icon}
-                        <span>{category.value}</span>
-                      </div>
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center items-center py-20">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : filteredProjects.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-gray-500 dark:text-gray-400">
-                  No projects found. Try adjusting your search or filters.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProjects.map((project) => (
-                  <ProjectCard key={project.id} project={project} />
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Simple Footer */}
-      <footer className="mt-20 py-10 bg-gray-800 text-white">
-        <div className="container mx-auto max-w-6xl px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <ServerIcon className="h-6 w-6" />
-              <span className="text-xl font-bold">Web3 Node Ops</span>
-            </div>
-            <div className="flex gap-4">
-              <Link to="/about" className="text-gray-300 hover:text-white">
-                About
-              </Link>
-              <Link to="/tools" className="text-gray-300 hover:text-white">
-                Tools
-              </Link>
-              <Link to="/contact" className="text-gray-300 hover:text-white">
-                Contact
-              </Link>
-            </div>
+        
+        {/* Filters */}
+        <div className="flex flex-wrap justify-center gap-4 mb-8">
+          <div className="flex items-center">
+            <button className={`px-3 py-1 rounded-full ${selectedCategories.includes('Tech') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Tech')}>
+              Tech
+            </button>
           </div>
-          <div className="mt-4 text-center text-gray-400 text-sm">
-            © 2023 Web3 Node Ops. All rights reserved.
+          <div className="flex items-center">
+            <button className={`px-3 py-1 rounded-full ${selectedCategories.includes('Community') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Community')}>
+              Community
+            </button>
+          </div>
+        </div>
+        
+        {/* Status Tabs */}
+        <div className="flex flex-wrap justify-center gap-8 mb-8">
+          <button className={`flex items-center ${selectedStatus === 'active' ? 'text-purple-500' : 'text-gray-500'}`} onClick={() => setSelectedStatus('active')}>
+            <span>Active</span>
+            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-gray-800">{activeCount}</span>
+          </button>
+          <button className={`flex items-center ${selectedStatus === 'upcoming' ? 'text-purple-500' : 'text-gray-500'}`} onClick={() => setSelectedStatus('upcoming')}>
+            <span>Upcoming</span>
+            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-gray-800">{upcomingCount}</span>
+          </button>
+          <button className={`flex items-center ${selectedStatus === 'ended' ? 'text-purple-500' : 'text-gray-500'}`} onClick={() => setSelectedStatus('ended')}>
+            <span>Ended</span>
+            <span className="ml-2 text-xs px-2 py-1 rounded-full bg-gray-800">{endedCount}</span>
+          </button>
+        </div>
+        
+        {/* Sort Options */}
+        <div className="flex justify-end max-w-6xl mx-auto mb-4">
+          <button className="flex items-center gap-1 text-sm text-gray-500">
+            <span>Newest</span>
+            <Filter size={16} />
+          </button>
+        </div>
+        
+        {/* Projects Grid */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
+          {filteredProjects.map(project => <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'}`}>
+              <div className="flex flex-col h-full">
+                <div className="mb-2 text-sm text-gray-500">
+                  {project.categories.join("/")}
+                </div>
+                <div className="flex-grow flex items-center justify-center py-4">
+                  <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
+                    <img src={project.logo} alt={project.name} className="w-12 h-12 object-contain" onError={e => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://placehold.co/100x100?text=Logo";
+                }} />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold mt-2">{project.name}</h3>
+              </div>
+            </Link>)}
+        </div>
+        
+        {/* Show More Button */}
+        <div className="mt-10">
+          <button className={`flex items-center gap-2 mx-auto px-6 py-2 rounded-full ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} onClick={() => toast({
+          title: "Coming Soon",
+          description: "More projects will be available soon!"
+        })}>
+            <span>Show more</span>
+            <ArrowDown size={16} />
+          </button>
+        </div>
+      </section>
+      
+      {/* Footer */}
+      <footer className={`py-12 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="font-bold mb-4">Our Products</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Explorers</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Staking</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Tools</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">Company</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Contact Us</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">About</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Careers</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">Support</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Feedback & Bug Report</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Help Center</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">FAQ</a></li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-bold mb-4">Socials</h3>
+              <ul className="space-y-2">
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Twitter</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">GitHub</a></li>
+                <li><a href="#" className="text-gray-500 hover:text-purple-500">Telegram</a></li>
+              </ul>
+            </div>
           </div>
         </div>
       </footer>
-    </div>
-  );
+      
+      {/* Admin Panel Button */}
+      <div className="fixed bottom-6 right-6">
+        <Link to="/admin" className="btn btn-primary btn-circle shadow-lg" onClick={() => toast({
+        title: "Admin Access",
+        description: "Redirecting to admin portal"
+      })}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+          </svg>
+        </Link>
+      </div>
+    </div>;
 };
-
-const ServerIcon = (props: React.SVGProps<SVGSVGElement>) => {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-      <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-      <line x1="6" y1="6" x2="6.01" y2="6"></line>
-      <line x1="6" y1="18" x2="6.01" y2="18"></line>
-    </svg>
-  );
-};
-
-const ProjectCard = ({ project }: { project: Project }) => {
-  return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
-              <img
-                src={project.logo || "https://placehold.co/100x100?text=Logo"}
-                alt={project.name}
-                className="h-6 w-6 object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://placehold.co/100x100?text=Logo";
-                }}
-              />
-            </div>
-            <CardTitle>{project.name}</CardTitle>
-          </div>
-          <Badge
-            variant={
-              project.status === "active"
-                ? "default"
-                : project.status === "upcoming"
-                ? "secondary"
-                : "outline"
-            }
-          >
-            {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-          </Badge>
-        </div>
-        <div className="flex flex-wrap gap-1 mt-2">
-          {project.categories.map((category) => (
-            <div
-              key={category}
-              className="flex items-center gap-1 text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full"
-            >
-              {getCategoryIcon(category)}
-              <span>{category}</span>
-            </div>
-          ))}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <CardDescription className="line-clamp-3 h-[60px]">
-          {project.description}
-        </CardDescription>
-      </CardContent>
-      <CardFooter>
-        <div className="w-full flex justify-between items-center">
-          <Link to={`/project/${project.id}`}>
-            <Button variant="outline" size="sm">
-              View Details
-            </Button>
-          </Link>
-          <Button size="sm" variant="ghost" className="gap-1">
-            <ExternalLink size={16} />
-            Website
-          </Button>
-        </div>
-      </CardFooter>
-    </Card>
-  );
-};
-
 export default Index;
