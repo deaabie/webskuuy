@@ -4,25 +4,18 @@ import AdminLogin from "@/components/admin/AdminLogin";
 import TabContent from "@/components/admin/TabContent";
 import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
-import DataMigration from "@/utils/migrationUtil";
 
 const Admin = () => {
   const { isLoading, isAuthenticated, handleLoginSuccess, handleLogout } = useAdminAuth();
   
   // If not authenticated, show login form
   if (!isAuthenticated) {
-    return (
-      <>
-        <DataMigration />
-        <AdminLogin onLoginSuccess={handleLoginSuccess} />
-      </>
-    );
+    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
   
   // Admin Dashboard
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-      <DataMigration />
       <div className="container mx-auto p-4">
         <AdminHeader onLogout={handleLogout} />
         
