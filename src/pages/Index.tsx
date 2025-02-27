@@ -4,55 +4,29 @@ import { Search, Moon, Sun, Menu, Filter, ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-// Project type definition
-interface Project {
-  id: string;
-  name: string;
-  categories: string[];
-  logo: string;
-  status: "active" | "upcoming" | "ended";
-}
+import { toast } from "sonner";
+import { useProjects } from "@/hooks/use-projects";
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("active");
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  // Use React Query hook to fetch projects
+  const { data: projects = [], isLoading, error } = useProjects();
 
-  const fetchProjects = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('projects')
-        .select('id, name, categories, logo, status');
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data) {
-        setProjects(data as Project[]);
-      }
-    } catch (error) {
-      console.error("Error fetching projects:", error);
+  // Show error notifications if needed
+  useEffect(() => {
+    if (error) {
       toast({
         title: "Error",
         description: "Failed to load projects",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [error, toast]);
 
   // Toggle dark mode
   const toggleDarkMode = () => {

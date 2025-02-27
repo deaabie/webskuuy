@@ -10,10 +10,14 @@ import ProjectsList from "@/components/admin/ProjectsList";
 import ProjectForm from "@/components/admin/ProjectForm";
 import InstallationGuidesList from "@/components/admin/InstallationGuidesList";
 import { Project } from "@/types/project";
-import { fetchProjects, createProject, updateProject, deleteProject } from "@/services/projectService";
+import { 
+  useProjects, 
+  useCreateProject, 
+  useUpdateProject, 
+  useDeleteProject 
+} from "@/hooks/use-projects";
 
 const Admin = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
   const [activeTab, setActiveTab] = useState("projects");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -22,6 +26,12 @@ const Admin = () => {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // React Query hooks
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects();
+  const { mutate: createProject } = useCreateProject();
+  const { mutate: updateProject } = useUpdateProject();
+  const { mutate: deleteProject } = useDeleteProject();
   
   // Form states for new project creation
   const [newProject, setNewProject] = useState<Omit<Project, "id">>({
@@ -35,10 +45,7 @@ const Admin = () => {
   
   useEffect(() => {
     checkAdminAuth();
-    if (isAuthenticated) {
-      loadProjects();
-    }
-  }, [isAuthenticated]);
+  }, []);
 
   // Check admin authentication
   const checkAdminAuth = async () => {
@@ -64,24 +71,6 @@ const Admin = () => {
       title: "Logged Out",
       description: "You have been logged out successfully",
     });
-  };
-
-  // Load projects
-  const loadProjects = async () => {
-    setIsLoading(true);
-    try {
-      const data = await fetchProjects();
-      setProjects(data);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch projects",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
   };
   
   // Handle new project form changes
@@ -122,7 +111,7 @@ const Admin = () => {
     }
   };
   
-  // Create new project
+  // Create new project using React Query
   const handleCreateProject = async () => {
     if (!newProject.name) {
       toast({
@@ -133,41 +122,26 @@ const Admin = () => {
       return;
     }
     
-    try {
-      await createProject(newProject);
-      
-      // Refresh projects list
-      loadProjects();
-      
-      // Reset form
-      setNewProject({
-        name: "",
-        categories: [],
-        description: "",
-        logo: "",
-        status: "upcoming",
-        installation_guide: ""
-      });
-      
-      // Show success toast
-      toast({
-        title: "Project Created",
-        description: `${newProject.name} has been created successfully`,
-      });
-    } catch (error) {
-      console.error("Error creating project:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create project",
-        variant: "destructive"
-      });
-    }
+    createProject(newProject, {
+      onSuccess: () => {
+        // Reset form
+        setNewProject({
+          name: "",
+          categories: [],
+          description: "",
+          logo: "",
+          status: "upcoming",
+          installation_guide: ""
+        });
+      }
+    });
   };
   
   // Start editing project
   const startEditing = (project: Project) => {
     setSelectedProject(project);
     setIsEditing(true);
+    setActiveTab("create");
   };
   
   // Cancel editing
@@ -176,55 +150,21 @@ const Admin = () => {
     setSelectedProject(null);
   };
   
-  // Update project
+  // Update project using React Query
   const handleUpdateProject = async () => {
     if (!selectedProject) return;
     
-    try {
-      await updateProject(selectedProject);
-      
-      // Refresh projects list
-      loadProjects();
-      
-      setIsEditing(false);
-      setSelectedProject(null);
-      
-      // Show success toast
-      toast({
-        title: "Project Updated",
-        description: `${selectedProject.name} has been updated successfully`,
-      });
-    } catch (error) {
-      console.error("Error updating project:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update project",
-        variant: "destructive"
-      });
-    }
+    updateProject(selectedProject, {
+      onSuccess: () => {
+        setIsEditing(false);
+        setSelectedProject(null);
+      }
+    });
   };
   
-  // Delete project
+  // Delete project using React Query
   const handleDeleteProject = async (id: string) => {
-    try {
-      await deleteProject(id);
-      
-      // Refresh projects list
-      loadProjects();
-      
-      // Show success toast
-      toast({
-        title: "Project Deleted",
-        description: "The project has been deleted successfully",
-      });
-    } catch (error) {
-      console.error("Error deleting project:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete project",
-        variant: "destructive"
-      });
-    }
+    deleteProject(id);
   };
   
   // If not authenticated, show login form
@@ -270,7 +210,8 @@ const Admin = () => {
               <ProjectsList 
                 projects={projects} 
                 onEditProject={startEditing} 
-                onDeleteProject={handleDeleteProject} 
+                onDeleteProject={handleDeleteProject}
+                isLoading={isLoadingProjects}
               />
             </TabsContent>
             
@@ -301,7 +242,8 @@ const Admin = () => {
               <InstallationGuidesList 
                 projects={projects} 
                 onEditProject={startEditing} 
-                onTabChange={setActiveTab} 
+                onTabChange={setActiveTab}
+                isLoading={isLoadingProjects}
               />
             </TabsContent>
           </Tabs>

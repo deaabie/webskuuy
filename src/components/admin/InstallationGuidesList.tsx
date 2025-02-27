@@ -1,69 +1,90 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { Edit2, Loader2 } from "lucide-react";
 import { Project } from "@/types/project";
-import { useNavigate } from "react-router-dom";
 
 interface InstallationGuidesListProps {
   projects: Project[];
   onEditProject: (project: Project) => void;
   onTabChange: (tab: string) => void;
+  isLoading?: boolean;
 }
 
-const InstallationGuidesList = ({ projects, onEditProject, onTabChange }: InstallationGuidesListProps) => {
-  const navigate = useNavigate();
-
+const InstallationGuidesList = ({ 
+  projects, 
+  onEditProject, 
+  onTabChange,
+  isLoading = false
+}: InstallationGuidesListProps) => {
+  
+  const handleEditGuide = (project: Project) => {
+    onEditProject(project);
+    onTabChange("create");
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+  
+  if (projects.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <h3 className="text-lg font-medium mb-2">No projects found</h3>
+        <p className="text-gray-500">Create a project first to add installation guides</p>
+      </div>
+    );
+  }
+  
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Installation Guides</CardTitle>
-        <CardDescription>Manage node installation guides for your projects</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {projects.map((project) => (
-            <div 
-              key={project.id} 
-              className="flex items-center justify-between p-3 border rounded-lg"
-            >
+    <div className="space-y-6">
+      {projects.map(project => (
+        <Card key={project.id}>
+          <CardContent className="p-0">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <FileText size={20} className="text-gray-500" />
-                <div>
-                  <p className="font-medium">{project.name} Guide</p>
-                  <p className="text-sm text-gray-500">{
-                    project.installation_guide 
-                      ? `${project.installation_guide.split('\n').length} lines` 
-                      : "No guide available"
-                  }</p>
+                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {project.logo ? (
+                    <img
+                      src={project.logo}
+                      alt={project.name}
+                      className="w-6 h-6 object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://placehold.co/100x100?text=Logo";
+                      }}
+                    />
+                  ) : (
+                    <span className="text-sm">{project.name.charAt(0)}</span>
+                  )}
                 </div>
+                <h3 className="font-medium">{project.name}</h3>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    onEditProject(project);
-                    onTabChange("create");
-                  }}
-                >
-                  Edit
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => {
-                    navigate(`/project/${project.id}`);
-                  }}
-                >
-                  View
-                </Button>
+              <Button variant="outline" size="sm" onClick={() => handleEditGuide(project)}>
+                <Edit2 className="h-4 w-4 mr-2" />
+                Edit Guide
+              </Button>
+            </div>
+            <div className="p-4">
+              <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+                <pre className="whitespace-pre-wrap text-sm font-mono">
+                  {project.installation_guide 
+                    ? project.installation_guide.length > 200 
+                      ? project.installation_guide.substring(0, 200) + "..." 
+                      : project.installation_guide
+                    : "No installation guide provided."
+                  }
+                </pre>
               </div>
             </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 };
 

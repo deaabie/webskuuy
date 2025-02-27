@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/types/project";
-import { useToast } from "@/hooks/use-toast";
 
 // Fetch projects from Supabase
 export const fetchProjects = async (): Promise<Project[]> => {
@@ -25,6 +24,33 @@ export const fetchProjects = async (): Promise<Project[]> => {
   }));
   
   return formattedProjects;
+};
+
+// Fetch single project by ID
+export const fetchProjectById = async (id: string): Promise<Project> => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', id)
+    .maybeSingle();
+  
+  if (error) {
+    throw error;
+  }
+  
+  if (!data) {
+    throw new Error("Project not found");
+  }
+  
+  return {
+    id: data.id,
+    name: data.name,
+    categories: data.categories || [],
+    description: data.description || "",
+    logo: data.logo || "",
+    status: data.status as "active" | "upcoming" | "ended",
+    installation_guide: data.installation_guide || ""
+  };
 };
 
 // Create new project
@@ -57,8 +83,8 @@ export const createProject = async (project: Omit<Project, "id">): Promise<Proje
 };
 
 // Update project
-export const updateProject = async (project: Project): Promise<void> => {
-  const { error } = await supabase
+export const updateProject = async (project: Project): Promise<Project> => {
+  const { data, error } = await supabase
     .from('projects')
     .update({
       name: project.name,
@@ -69,11 +95,22 @@ export const updateProject = async (project: Project): Promise<void> => {
       installation_guide: project.installation_guide,
       updated_at: new Date().toISOString()
     })
-    .eq('id', project.id);
+    .eq('id', project.id)
+    .select();
   
   if (error) {
     throw error;
   }
+  
+  return {
+    id: data[0].id,
+    name: data[0].name,
+    categories: data[0].categories || [],
+    description: data[0].description || "",
+    logo: data[0].logo || "",
+    status: data[0].status as "active" | "upcoming" | "ended",
+    installation_guide: data[0].installation_guide || ""
+  };
 };
 
 // Delete project

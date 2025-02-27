@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,66 +7,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Copy, Check, Loader2 } from "lucide-react";
 import Markdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-
-interface Project {
-  id: string;
-  name: string;
-  categories: string[];
-  description: string;
-  logo: string;
-  status: "active" | "upcoming" | "ended";
-  installation_guide: string;
-}
+import { useProject } from "@/hooks/use-projects";
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [project, setProject] = useState<Project | null>(null);
   const [copied, setCopied] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
-  useEffect(() => {
-    const fetchProject = async () => {
-      if (!id) return;
-      
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', id)
-          .single();
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (data) {
-          setProject({
-            id: data.id,
-            name: data.name,
-            categories: data.categories || [],
-            description: data.description || "",
-            logo: data.logo || "",
-            status: data.status as "active" | "upcoming" | "ended",
-            installation_guide: data.installation_guide || ""
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching project:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load project details",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchProject();
-  }, [id, toast]);
+  // Use the React Query hook to fetch project data
+  const { data: project, isLoading, error } = useProject(id || "");
   
   // Handle code copy
   const copyCode = (code: string) => {
@@ -83,6 +32,7 @@ const ProjectDetail = () => {
     }, 2000);
   };
   
+  // Show loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -91,7 +41,8 @@ const ProjectDetail = () => {
     );
   }
   
-  if (!project) {
+  // Show error state
+  if (error || !project) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

@@ -1,0 +1,83 @@
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { 
+  fetchProjects, 
+  fetchProjectById, 
+  createProject, 
+  updateProject, 
+  deleteProject 
+} from "@/services/projectService";
+import { Project } from "@/types/project";
+
+// Hook to fetch all projects
+export function useProjects() {
+  return useQuery({
+    queryKey: ["projects"],
+    queryFn: fetchProjects,
+  });
+}
+
+// Hook to fetch a single project by ID
+export function useProject(id: string) {
+  return useQuery({
+    queryKey: ["projects", id],
+    queryFn: () => fetchProjectById(id),
+    enabled: !!id, // Only run query if id is truthy
+  });
+}
+
+// Hook to create a new project
+export function useCreateProject() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (newProject: Omit<Project, "id">) => createProject(newProject),
+    onSuccess: () => {
+      // Invalidate projects cache to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project created successfully");
+    },
+    onError: (error) => {
+      console.error("Error creating project:", error);
+      toast.error("Failed to create project");
+    },
+  });
+}
+
+// Hook to update a project
+export function useUpdateProject() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (project: Project) => updateProject(project),
+    onSuccess: (updatedProject) => {
+      // Update projects cache
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projects", updatedProject.id] });
+      toast.success("Project updated successfully");
+    },
+    onError: (error) => {
+      console.error("Error updating project:", error);
+      toast.error("Failed to update project");
+    },
+  });
+}
+
+// Hook to delete a project
+export function useDeleteProject() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => deleteProject(id),
+    onSuccess: () => {
+      // Invalidate projects cache to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast.success("Project deleted successfully");
+    },
+    onError: (error) => {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project");
+    },
+  });
+}
