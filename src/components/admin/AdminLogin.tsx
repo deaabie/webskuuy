@@ -31,7 +31,6 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
     setLoginLoading(true);
     
     try {
-      // Make sure we're using the correct approach to fetch the admin user
       console.log("Attempting login with username:", username);
       
       const { data, error } = await supabase
@@ -49,6 +48,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
       }
       
       if (data) {
+        console.log("Admin user found, authentication successful:", data);
         // Store admin credentials in localStorage
         localStorage.setItem("admin-auth", "authenticated");
         localStorage.setItem("admin-username", username);
@@ -103,6 +103,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyDown={handleKeyDown}
+                placeholder="admin"
               />
             </div>
             <div className="space-y-2">
@@ -113,6 +114,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={handleKeyDown}
+                placeholder="Enter your password"
               />
             </div>
           </div>
