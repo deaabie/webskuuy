@@ -25,6 +25,8 @@ const ProjectForm = ({
   onSubmit,
   onCancel 
 }: ProjectFormProps) => {
+  const categories = ["Bitcoin", "Cosmos", "EVM", "Solana", "Polkadot", "Other"];
+  
   return (
     <Card>
       <CardHeader>
@@ -49,20 +51,16 @@ const ProjectForm = ({
         <div className="space-y-2">
           <Label>Categories</Label>
           <div className="flex flex-wrap gap-2">
-            <Button 
-              variant={project.categories?.includes("Tech") ? "default" : "outline"}
-              size="sm"
-              onClick={() => onCategoryToggle("Tech")}
-            >
-              Tech
-            </Button>
-            <Button 
-              variant={project.categories?.includes("Community") ? "default" : "outline"}
-              size="sm"
-              onClick={() => onCategoryToggle("Community")}
-            >
-              Community
-            </Button>
+            {categories.map(category => (
+              <Button 
+                key={category}
+                variant={project.categories?.includes(category) ? "default" : "outline"}
+                size="sm"
+                onClick={() => onCategoryToggle(category)}
+              >
+                {category}
+              </Button>
+            ))}
           </div>
         </div>
         

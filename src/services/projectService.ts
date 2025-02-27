@@ -9,6 +9,7 @@ export const fetchProjects = async (): Promise<Project[]> => {
     .select('*');
   
   if (error) {
+    console.error("Error fetching projects:", error);
     throw error;
   }
   
@@ -35,6 +36,7 @@ export const fetchProjectById = async (id: string): Promise<Project> => {
     .maybeSingle();
   
   if (error) {
+    console.error("Error fetching project:", error);
     throw error;
   }
   
@@ -68,7 +70,12 @@ export const createProject = async (project: Omit<Project, "id">): Promise<Proje
     .select();
   
   if (error) {
+    console.error("Error creating project:", error);
     throw error;
+  }
+  
+  if (!data || data.length === 0) {
+    throw new Error("Failed to create project");
   }
   
   return {
@@ -99,7 +106,12 @@ export const updateProject = async (project: Project): Promise<Project> => {
     .select();
   
   if (error) {
+    console.error("Error updating project:", error);
     throw error;
+  }
+  
+  if (!data || data.length === 0) {
+    throw new Error("Failed to update project");
   }
   
   return {
@@ -121,6 +133,7 @@ export const deleteProject = async (id: string): Promise<void> => {
     .eq('id', id);
   
   if (error) {
+    console.error("Error deleting project:", error);
     throw error;
   }
 };

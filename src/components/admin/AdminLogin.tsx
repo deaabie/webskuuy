@@ -31,12 +31,13 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
     setLoginLoading(true);
     
     try {
+      // Use single() for proper error handling when no user is found
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
         .eq('username', username)
         .eq('password', password)
-        .single();
+        .maybeSingle();
       
       if (error) {
         throw error;
@@ -44,6 +45,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
       
       if (data) {
         localStorage.setItem("admin-auth", "authenticated");
+        localStorage.setItem("admin-username", username);
         onLoginSuccess();
         toast({
           title: "Success",
@@ -69,6 +71,12 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleLogin();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
       <Card className="w-full max-w-md">
@@ -85,6 +93,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
                 type="text" 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
             </div>
             <div className="space-y-2">
@@ -94,6 +103,7 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
             </div>
           </div>
