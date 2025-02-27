@@ -31,27 +31,37 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
     setLoginLoading(true);
     
     try {
-      // Use single() for proper error handling when no user is found
+      // Make sure we're using the correct approach to fetch the admin user
+      console.log("Attempting login with username:", username);
+      
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
-        .eq('username', username)
-        .eq('password', password)
+        .eq('username', username.trim())
+        .eq('password', password.trim())
         .maybeSingle();
       
+      console.log("Login response:", { data, error });
+      
       if (error) {
+        console.error("Database error during login:", error);
         throw error;
       }
       
       if (data) {
+        // Store admin credentials in localStorage
         localStorage.setItem("admin-auth", "authenticated");
         localStorage.setItem("admin-username", username);
-        onLoginSuccess();
+        
+        // Notify success and call the success callback
         toast({
           title: "Success",
           description: "Logged in successfully",
         });
+        
+        onLoginSuccess();
       } else {
+        console.log("No matching admin user found");
         toast({
           title: "Authentication Failed",
           description: "Invalid username or password",
@@ -67,7 +77,6 @@ const AdminLogin = ({ onLoginSuccess }: AdminLoginProps) => {
       });
     } finally {
       setLoginLoading(false);
-      setPassword("");
     }
   };
 
