@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Search, Moon, Sun, Menu, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -6,16 +5,21 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
-
 const Index = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("active");
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
 
   // Use React Query hook to fetch projects
-  const { data: projects = [], isLoading, error } = useProjects();
+  const {
+    data: projects = [],
+    isLoading,
+    error
+  } = useProjects();
 
   // Show error notifications if needed
   useEffect(() => {
@@ -55,7 +59,6 @@ const Index = () => {
       setSelectedCategories([...selectedCategories, category]);
     }
   };
-  
   return <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} transition-colors duration-300`}>
       {/* Header */}
       <header className={`sticky top-0 z-50 ${darkMode ? 'bg-gray-900' : 'bg-white'} border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
@@ -82,7 +85,7 @@ const Index = () => {
       <div className={`py-2 px-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} flex justify-between items-center`}>
         <div className="flex items-center gap-2">
           <span className="text-xs bg-blue-500 text-white px-1 rounded">Ad</span>
-          <span className="text-sm">VPS/VDS in 30+ countries. Accept crypto, card eu/ru/ua - etc world, and more different payments methods</span>
+          <span className="text-sm">SPACE AVAILABLE * SPACE AVAILABLE * SPACE AVAILABLE</span>
         </div>
         <button className="text-gray-500">&times;</button>
       </div>
@@ -200,10 +203,11 @@ const Index = () => {
         
         {/* Projects Grid */}
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
-          {isLoading ? (
-            // Loading skeleton
-            Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className={`block rounded-lg p-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+          {isLoading ?
+        // Loading skeleton
+        Array.from({
+          length: 8
+        }).map((_, index) => <div key={index} className={`block rounded-lg p-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
                 <div className="animate-pulse flex flex-col h-full">
                   <div className="h-4 bg-gray-700 rounded w-1/3 mb-2"></div>
                   <div className="flex-grow flex items-center justify-center py-4">
@@ -211,17 +215,9 @@ const Index = () => {
                   </div>
                   <div className="h-5 bg-gray-700 rounded w-1/2 mt-2"></div>
                 </div>
-              </div>
-            ))
-          ) : filteredProjects.length > 0 ? (
-            filteredProjects.map(project => (
-              <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'} relative`}>
+              </div>) : filteredProjects.length > 0 ? filteredProjects.map(project => <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'} relative`}>
                 {/* Status Badge */}
-                <div className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full ${
-                  project.status === 'active' ? 'bg-green-700 text-white' : 
-                  project.status === 'upcoming' ? 'bg-blue-500 text-white' : 
-                  'bg-gray-500 text-white'
-                }`}>
+                <div className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full ${project.status === 'active' ? 'bg-green-700 text-white' : project.status === 'upcoming' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'}`}>
                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
                 </div>
                 
@@ -232,34 +228,28 @@ const Index = () => {
                   <div className="flex-grow flex items-center justify-center py-4">
                     <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
                       <img src={project.logo} alt={project.name} className="w-12 h-12 object-contain" onError={e => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "https://placehold.co/100x100?text=Logo";
-                      }} />
+                  const target = e.target as HTMLImageElement;
+                  target.src = "https://placehold.co/100x100?text=Logo";
+                }} />
                     </div>
                   </div>
                   <h3 className="text-lg font-semibold mt-2">{project.name}</h3>
                 </div>
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10">
+              </Link>) : <div className="col-span-full text-center py-10">
               <p className="text-gray-500">No projects found. Try adjusting your filters.</p>
-            </div>
-          )}
+            </div>}
         </div>
         
         {/* Show More Button */}
-        {filteredProjects.length > 0 && (
-          <div className="mt-10">
+        {filteredProjects.length > 0 && <div className="mt-10">
             <button className={`flex items-center gap-2 mx-auto px-6 py-2 rounded-full ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} onClick={() => toast({
-              title: "Coming Soon",
-              description: "More projects will be available soon!"
-            })}>
+          title: "Coming Soon",
+          description: "More projects will be available soon!"
+        })}>
               <span>Show more</span>
               <ArrowDown size={16} />
             </button>
-          </div>
-        )}
+          </div>}
       </section>
       
       {/* Footer */}
@@ -303,5 +293,4 @@ const Index = () => {
       </footer>
     </div>;
 };
-
 export default Index;
