@@ -259,9 +259,9 @@ const Index = () => {
             <div>
               <h3 className="font-bold mb-4">Our Products</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Explorers</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Staking</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Tools</a></li>
+                <li><a href="https://explorer.skuuy.com" className="text-gray-500 hover:text-purple-500">Explorers</a></li>
+                <li><a href="https://explorer.skuuy.com" className="text-gray-500 hover:text-purple-500">Staking</a></li>
+                <li><a href="https://skuuy.com" className="text-gray-500 hover:text-purple-500">Tools</a></li>
               </ul>
             </div>
             <div>
@@ -283,9 +283,9 @@ const Index = () => {
             <div>
               <h3 className="font-bold mb-4">Socials</h3>
               <ul className="space-y-2">
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Twitter</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">GitHub</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Telegram</a></li>
+                <li><a href="https://x.com/BrigadirCurva" className="text-gray-500 hover:text-purple-500">Twitter</a></li>
+                <li><a href="https://github.com/deaabie" className="text-gray-500 hover:text-purple-500">GitHub</a></li>
+                <li><a href="https://t.me/suncomefaster" className="text-gray-500 hover:text-purple-500">Telegram</a></li>
               </ul>
             </div>
           </div>
