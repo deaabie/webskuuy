@@ -218,7 +218,7 @@ const Index = () => {
               <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'} relative`}>
                 {/* Status Badge */}
                 <div className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full ${
-                  project.status === 'active' ? 'bg-green-500 text-white' : 
+                  project.status === 'active' ? 'bg-green-700 text-white' : 
                   project.status === 'upcoming' ? 'bg-blue-500 text-white' : 
                   'bg-gray-500 text-white'
                 }`}>
