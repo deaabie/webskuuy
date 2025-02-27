@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Copy, Check, Atom, Bitcoin, Circuit, Sun, CircleEllipsis, FileQuestion } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Check, Atom, Bitcoin, Cpu, Sun, CircleEllipsis, FileQuestion } from "lucide-react";
 import Markdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
 
@@ -59,7 +59,7 @@ const ProjectDetail = () => {
       case "Bitcoin":
         return <Bitcoin size={16} className="mr-1" />;
       case "EVM":
-        return <Circuit size={16} className="mr-1" />;
+        return <Cpu size={16} className="mr-1" />;
       case "Solana":
         return <Sun size={16} className="mr-1" />;
       case "Polkadot":

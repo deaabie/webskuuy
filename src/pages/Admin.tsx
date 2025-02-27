@@ -18,7 +18,7 @@ import {
   LogIn,
   Atom,
   Bitcoin,
-  Circuit,
+  Cpu,
   Sun,
   CircleEllipsis,
   FileQuestion
@@ -151,7 +151,7 @@ const Admin = () => {
       case "Bitcoin":
         return <Bitcoin size={16} className="mr-1" />;
       case "EVM":
-        return <Circuit size={16} className="mr-1" />;
+        return <Cpu size={16} className="mr-1" />;
       case "Solana":
         return <Sun size={16} className="mr-1" />;
       case "Polkadot":
@@ -426,7 +426,7 @@ const Admin = () => {
                       onClick={() => toggleCategory("EVM")}
                       className="flex items-center"
                     >
-                      <Circuit size={16} className="mr-1" />
+                      <Cpu size={16} className="mr-1" />
                       EVM
                     </Button>
                     <Button 
@@ -656,7 +656,7 @@ const Admin = () => {
                       }}
                       className="flex items-center"
                     >
-                      <Circuit size={16} className="mr-1" />
+                      <Cpu size={16} className="mr-1" />
                       EVM
                     </Button>
                     <Button 
