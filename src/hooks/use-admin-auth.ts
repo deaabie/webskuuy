@@ -41,6 +41,7 @@ export const useAdminAuth = () => {
   return {
     isLoading,
     isAuthenticated,
+    isAdminLoggedIn: isAuthenticated, // Add this property as an alias for isAuthenticated
     handleLoginSuccess,
     handleLogout
   };
