@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/types/project";
 
@@ -604,7 +605,7 @@ Restart=always
 RestartSec=1
 User=$USER
 LimitNOFILE=1000000
-Environment="PATH=/bin:/usr/bin:/home/$USER/.local/share/solana/install/active_release/bin"
+Environment=\\"PATH=/bin:/usr/bin:/home/$USER/.local/share/solana/install/active_release/bin\\"
 ExecStart=/home/$USER/start-validator.sh
 
 [Install]
@@ -649,7 +650,7 @@ git fetch
 git checkout vX.Y.Z  # replace with new version
 ./scripts/cargo-install-all.sh --validator-only .
 sudo systemctl restart solana-validator
-\`\`\```
+\`\`\``
     });
 
     // Arbitrum Node
