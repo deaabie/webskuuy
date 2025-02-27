@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { Search, Moon, Sun, Menu, Filter, ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { Atom, Bitcoin, Cpu, CircleEllipsis, FileQuestion } from "lucide-react";
 
 // Project type definition
 interface Project {
@@ -17,74 +19,74 @@ interface Project {
 const projectsData: Project[] = [{
   id: "hemi",
   name: "Hemi",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Cosmos"],
+  logo: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGNvc21vcyUyMGNoYWlufGVufDB8fDB8fHww",
   status: "active"
 }, {
   id: "sunrise",
   name: "Sunrise",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Solana"],
+  logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8c29sYW5hJTIwYmxvY2tjaGFpbnxlbnwwfHwwfHx8MA%3D%3D",
   status: "active"
 }, {
   id: "sahara-ai",
   name: "Sahara AI",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["EVM", "Cosmos"],
+  logo: "https://images.unsplash.com/photo-1639322537228-f710d846310a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZXRoZXJldW18ZW58MHx8MHx8fDA%3D",
   status: "active"
 }, {
   id: "nexus",
   name: "Nexus",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Polkadot"],
+  logo: "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8cG9sa2Fkb3R8ZW58MHx8MHx8fDA%3D",
   status: "active"
 }, {
   id: "iota",
   name: "IOTA",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Other"],
+  logo: "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGJsb2NrY2hhaW58ZW58MHx8MHx8fDA%3D",
   status: "active"
 }, {
   id: "pell",
   name: "Pell",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Bitcoin"],
+  logo: "https://images.unsplash.com/photo-1516245834210-c4c142787335?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Yml0Y29pbnxlbnwwfHwwfHx8MA%3D%3D",
   status: "active"
 }, {
   id: "dill",
   name: "Dill",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["EVM"],
+  logo: "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8ZXRoZXJldW18ZW58MHx8MHx8fDA%3D",
   status: "upcoming"
 }, {
   id: "solv",
   name: "Solv",
-  categories: ["Community", "Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Cosmos", "Polkadot"],
+  logo: "https://images.unsplash.com/photo-1545726408-5d071b83e1f2?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fGNvc21vc3xlbnwwfHwwfHx8MA%3D%3D",
   status: "active"
 }, {
   id: "story",
   name: "Story",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Solana"],
+  logo: "https://images.unsplash.com/photo-1647428475543-0ec9c4731d96?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8c29sYW5hfGVufDB8fDB8fHww",
   status: "ended"
 }, {
   id: "symbiotic",
   name: "Symbiotic",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Bitcoin"],
+  logo: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Yml0Y29pbnxlbnwwfHwwfHx8MA%3D%3D",
   status: "active"
 }, {
   id: "airchains",
   name: "Airchains",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["EVM"],
+  logo: "https://images.unsplash.com/photo-1639762681057-408e52192e55?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGV0aGVyZXVtfGVufDB8fDB8fHww",
   status: "upcoming"
 }, {
   id: "nubit",
   name: "Nubit",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+  categories: ["Other"],
+  logo: "https://images.unsplash.com/photo-1642079418385-17777550d549?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Y3J5cHRvfGVufDB8fDB8fHww",
   status: "active"
 }];
 const Index = () => {
@@ -100,6 +102,26 @@ const Index = () => {
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
     document.documentElement.classList.toggle("dark");
+  };
+  
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Cosmos":
+        return <Atom size={16} className="mr-1" />;
+      case "Bitcoin":
+        return <Bitcoin size={16} className="mr-1" />;
+      case "EVM":
+        return <Cpu size={16} className="mr-1" />;
+      case "Solana":
+        return <Sun size={16} className="mr-1" />;
+      case "Polkadot":
+        return <CircleEllipsis size={16} className="mr-1" />;
+      case "Other":
+        return <FileQuestion size={16} className="mr-1" />;
+      default:
+        return null;
+    }
   };
 
   // Filter projects based on search query, categories, and status
@@ -194,13 +216,39 @@ const Index = () => {
         {/* Filters */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full ${selectedCategories.includes('Tech') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Tech')}>
-              Tech
+            <button className={`flex items-center px-3 py-1 rounded-full ${selectedCategories.includes('Cosmos') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Cosmos')}>
+              <Atom size={16} className="mr-1" />
+              Cosmos
             </button>
           </div>
           <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full ${selectedCategories.includes('Community') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Community')}>
-              Community
+            <button className={`flex items-center px-3 py-1 rounded-full ${selectedCategories.includes('Bitcoin') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Bitcoin')}>
+              <Bitcoin size={16} className="mr-1" />
+              Bitcoin
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`flex items-center px-3 py-1 rounded-full ${selectedCategories.includes('EVM') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('EVM')}>
+              <Cpu size={16} className="mr-1" />
+              EVM
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`flex items-center px-3 py-1 rounded-full ${selectedCategories.includes('Solana') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Solana')}>
+              <Sun size={16} className="mr-1" />
+              Solana
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`flex items-center px-3 py-1 rounded-full ${selectedCategories.includes('Polkadot') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Polkadot')}>
+              <CircleEllipsis size={16} className="mr-1" />
+              Polkadot
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`flex items-center px-3 py-1 rounded-full ${selectedCategories.includes('Other') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Other')}>
+              <FileQuestion size={16} className="mr-1" />
+              Other
             </button>
           </div>
         </div>
@@ -233,15 +281,20 @@ const Index = () => {
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
           {filteredProjects.map(project => <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'}`}>
               <div className="flex flex-col h-full">
-                <div className="mb-2 text-sm text-gray-500">
-                  {project.categories.join("/")}
+                <div className="mb-2 text-sm text-gray-500 flex items-center">
+                  {project.categories.map(cat => (
+                    <span key={cat} className="mr-2 flex items-center">
+                      {getCategoryIcon(cat)}
+                      {cat}
+                    </span>
+                  ))}
                 </div>
                 <div className="flex-grow flex items-center justify-center py-4">
-                  <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
-                    <img src={project.logo} alt={project.name} className="w-12 h-12 object-contain" onError={e => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://placehold.co/100x100?text=Logo";
-                }} />
+                  <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                    <img src={project.logo} alt={project.name} className="w-full h-full object-cover" onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://placehold.co/100x100?text=Logo";
+                    }} />
                   </div>
                 </div>
                 <h3 className="text-lg font-semibold mt-2">{project.name}</h3>

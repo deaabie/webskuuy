@@ -1,4 +1,8 @@
 
+// Admin login credentials:
+// Username: admin
+// Password: admin123
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +46,7 @@ const initialProjects: Project[] = [
     name: "Hemi",
     categories: ["Cosmos"],
     description: "Hemi is a cutting-edge blockchain protocol focusing on scalability and security.",
-    logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+    logo: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGNvc21vcyUyMGNoYWlufGVufDB8fDB8fHww",
     status: "active",
     installationGuide: "# Hemi Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 4 CPU cores\n- 8GB RAM\n- 100GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Hemi\ncurl -sSL https://get.hemi.network | bash\n\n# Start the node\nhemi-node start --testnet\n```"
   },
@@ -51,7 +55,7 @@ const initialProjects: Project[] = [
     name: "Sunrise",
     categories: ["Solana"],
     description: "Sunrise is a decentralized finance platform built for cross-chain compatibility.",
-    logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
+    logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8c29sYW5hJTIwYmxvY2tjaGFpbnxlbnwwfHwwfHx8MA%3D%3D",
     status: "active",
     installationGuide: "# Sunrise Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 2 CPU cores\n- 4GB RAM\n- 50GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Sunrise\ncurl -sSL https://get.sunrise.network | bash\n\n# Start the node\nsunrise-node start --testnet\n```"
   },
