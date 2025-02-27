@@ -1,8 +1,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit2, Loader2 } from "lucide-react";
+import { Edit2, Loader2, ExternalLink } from "lucide-react";
 import { Project } from "@/types/project";
+import { Link } from "react-router-dom";
 
 interface InstallationGuidesListProps {
   projects: Project[];
@@ -40,10 +41,13 @@ const InstallationGuidesList = ({
     );
   }
   
+  // Sort projects by name for easier navigation
+  const sortedProjects = [...projects].sort((a, b) => a.name.localeCompare(b.name));
+  
   return (
     <div className="space-y-6">
-      {projects.map(project => (
-        <Card key={project.id}>
+      {sortedProjects.map(project => (
+        <Card key={project.id} className="overflow-hidden">
           <CardContent className="p-0">
             <div className="p-4 bg-gray-50 dark:bg-gray-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -62,23 +66,56 @@ const InstallationGuidesList = ({
                     <span className="text-sm">{project.name.charAt(0)}</span>
                   )}
                 </div>
-                <h3 className="font-medium">{project.name}</h3>
+                <div>
+                  <h3 className="font-medium">{project.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      project.status === 'active' ? 'bg-green-100 text-green-800' : 
+                      project.status === 'upcoming' ? 'bg-blue-100 text-blue-800' : 
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                    </span>
+                    {project.categories.map(cat => (
+                      <span key={cat} className="text-xs px-2 py-0.5 bg-gray-200 rounded-full">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={() => handleEditGuide(project)}>
-                <Edit2 className="h-4 w-4 mr-2" />
-                Edit Guide
-              </Button>
+              <div className="flex gap-2">
+                <Link to={`/project/${project.id}`} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={() => handleEditGuide(project)}>
+                  <Edit2 className="h-4 w-4 mr-2" />
+                  Edit Guide
+                </Button>
+              </div>
             </div>
             <div className="p-4">
               <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                <pre className="whitespace-pre-wrap text-sm font-mono">
+                <div className="font-mono text-sm whitespace-pre-wrap">
                   {project.installation_guide 
-                    ? project.installation_guide.length > 200 
-                      ? project.installation_guide.substring(0, 200) + "..." 
-                      : project.installation_guide
+                    ? (project.installation_guide.startsWith('# ') 
+                      ? project.installation_guide.split('\n').slice(0, 3).join('\n') + '...' 
+                      : project.installation_guide.length > 200 
+                        ? project.installation_guide.substring(0, 200) + "..." 
+                        : project.installation_guide)
                     : "No installation guide provided."
                   }
-                </pre>
+                </div>
+                {project.installation_guide && project.installation_guide.length > 200 && (
+                  <div className="mt-2 text-right">
+                    <span className="text-xs text-gray-500">
+                      {(project.installation_guide.match(/\n/g) || []).length + 1} lines total
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

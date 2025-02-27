@@ -2,7 +2,6 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ExternalLink, Copy, Check, Loader2 } from "lucide-react";
 import Markdown from "react-markdown";
@@ -73,16 +72,20 @@ const ProjectDetail = () => {
             </Button>
           </Link>
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-              <img 
-                src={project.logo} 
-                alt={project.name}
-                className="w-8 h-8 object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://placehold.co/100x100?text=Logo";
-                }}
-              />
+            <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+              {project.logo ? (
+                <img 
+                  src={project.logo} 
+                  alt={project.name}
+                  className="w-8 h-8 object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://placehold.co/100x100?text=Logo";
+                  }}
+                />
+              ) : (
+                <span className="text-sm">{project.name.charAt(0)}</span>
+              )}
             </div>
             <div>
               <h1 className="text-2xl font-bold">{project.name}</h1>
@@ -113,44 +116,58 @@ const ProjectDetail = () => {
                 <CardTitle>Installation Guide</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
-                  <Markdown
-                    components={{
-                      code(props) {
-                        const {children, className, node, ...rest} = props
-                        const match = /language-(\w+)/.exec(className || '')
-                        
-                        // If it's a code block (with language)
-                        if (match) {
+                {project.installation_guide ? (
+                  <div className="prose dark:prose-invert max-w-none prose-headings:mt-6 prose-headings:mb-4">
+                    <Markdown
+                      components={{
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-0 mb-4" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-6 mb-3" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold mt-5 mb-2" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc pl-6 my-4" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal pl-6 my-4" {...props} />,
+                        li: ({ node, ...props }) => <li className="my-1" {...props} />,
+                        p: ({ node, ...props }) => <p className="my-3" {...props} />,
+                        code(props) {
+                          const {children, className, node, ...rest} = props
+                          const match = /language-(\w+)/.exec(className || '')
+                          
+                          // If it's a code block (with language)
+                          if (match) {
+                            return (
+                              <div className="relative my-4">
+                                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                                  <code className={className} {...rest}>
+                                    {children}
+                                  </code>
+                                </pre>
+                                <button
+                                  onClick={() => copyCode(String(children))}
+                                  className="absolute right-2 top-2 bg-gray-700 hover:bg-gray-600 text-gray-300 p-1.5 rounded"
+                                  title="Copy to clipboard"
+                                >
+                                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                                </button>
+                              </div>
+                            )
+                          }
+                          
+                          // Inline code
                           return (
-                            <div className="relative">
-                              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
-                                <code className={className} {...rest}>
-                                  {children}
-                                </code>
-                              </pre>
-                              <button
-                                onClick={() => copyCode(children as string)}
-                                className="absolute right-2 top-2 bg-gray-800 hover:bg-gray-700 text-gray-300 p-1 rounded"
-                              >
-                                {copied ? <Check size={16} /> : <Copy size={16} />}
-                              </button>
-                            </div>
+                            <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-sm">
+                              {children}
+                            </code>
                           )
                         }
-                        
-                        // Inline code
-                        return (
-                          <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">
-                            {children}
-                          </code>
-                        )
-                      }
-                    }}
-                  >
-                    {project.installation_guide}
-                  </Markdown>
-                </div>
+                      }}
+                    >
+                      {project.installation_guide}
+                    </Markdown>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">No installation guide available for this project.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
