@@ -25,9 +25,11 @@ import {
   Cpu,
   Sun,
   CircleEllipsis,
-  FileQuestion
+  FileQuestion,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Project {
   id: string;
@@ -36,30 +38,10 @@ interface Project {
   description: string;
   logo: string;
   status: "active" | "upcoming" | "ended";
-  installationGuide: string;
+  installation_guide: string;
+  created_at?: string;
+  updated_at?: string;
 }
-
-// Sample projects data
-const initialProjects: Project[] = [
-  {
-    id: "hemi",
-    name: "Hemi",
-    categories: ["Cosmos"],
-    description: "Hemi is a cutting-edge blockchain protocol focusing on scalability and security.",
-    logo: "https://images.unsplash.com/photo-1614064641938-3bbee52942c7?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fGNvc21vcyUyMGNoYWlufGVufDB8fDB8fHww",
-    status: "active",
-    installationGuide: "# Hemi Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 4 CPU cores\n- 8GB RAM\n- 100GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Hemi\ncurl -sSL https://get.hemi.network | bash\n\n# Start the node\nhemi-node start --testnet\n```"
-  },
-  {
-    id: "sunrise",
-    name: "Sunrise",
-    categories: ["Solana"],
-    description: "Sunrise is a decentralized finance platform built for cross-chain compatibility.",
-    logo: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8c29sYW5hJTIwYmxvY2tjaGFpbnxlbnwwfHwwfHx8MA%3D%3D",
-    status: "active",
-    installationGuide: "# Sunrise Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 2 CPU cores\n- 4GB RAM\n- 50GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Sunrise\ncurl -sSL https://get.sunrise.network | bash\n\n# Start the node\nsunrise-node start --testnet\n```"
-  },
-];
 
 // Admin credentials
 const adminCredentials = {
@@ -68,12 +50,13 @@ const adminCredentials = {
 };
 
 const Admin = () => {
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [activeTab, setActiveTab] = useState("login");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  const [isLoading, setIsLoading] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -84,8 +67,51 @@ const Admin = () => {
     if (loggedIn === "true") {
       setIsLoggedIn(true);
       setActiveTab("projects");
+      fetchProjects();
     }
   }, []);
+  
+  // Fetch projects from Supabase
+  const fetchProjects = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching projects:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch projects: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Transform data format to match our interface
+      const transformedData = data.map(project => ({
+        id: project.id,
+        name: project.name,
+        categories: project.categories || [],
+        description: project.description || "",
+        logo: project.logo || "",
+        status: project.status as "active" | "upcoming" | "ended",
+        installation_guide: project.installation_guide || ""
+      }));
+      
+      setProjects(transformedData);
+    } catch (error) {
+      console.error('Error in fetchProjects:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong while fetching projects",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Handle login
   const handleLogin = () => {
@@ -100,6 +126,7 @@ const Admin = () => {
         title: "Login Successful",
         description: "Welcome to the admin dashboard",
       });
+      fetchProjects();
     } else {
       toast({
         title: "Login Failed",
@@ -127,7 +154,7 @@ const Admin = () => {
     description: "",
     logo: "",
     status: "upcoming",
-    installationGuide: ""
+    installation_guide: ""
   });
   
   // Handle new project form changes
@@ -168,7 +195,7 @@ const Admin = () => {
   };
   
   // Create new project
-  const createProject = () => {
+  const createProject = async () => {
     if (!newProject.name) {
       toast({
         title: "Error",
@@ -178,33 +205,72 @@ const Admin = () => {
       return;
     }
     
-    // Generate ID from name
-    const id = newProject.name.toLowerCase().replace(/\s+/g, '-');
+    setIsLoading(true);
     
-    // Create new project object
-    const project: Project = {
-      ...newProject,
-      id
-    };
-    
-    // Add to projects list
-    setProjects([...projects, project]);
-    
-    // Reset form
-    setNewProject({
-      name: "",
-      categories: [],
-      description: "",
-      logo: "",
-      status: "upcoming",
-      installationGuide: ""
-    });
-    
-    // Show success toast
-    toast({
-      title: "Project Created",
-      description: `${project.name} has been created successfully`,
-    });
+    try {
+      // Insert new project into Supabase
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([{
+          name: newProject.name,
+          description: newProject.description,
+          logo: newProject.logo,
+          categories: newProject.categories,
+          status: newProject.status,
+          installation_guide: newProject.installation_guide
+        }])
+        .select();
+      
+      if (error) {
+        console.error('Error creating project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create project: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Add the new project to the list
+      if (data && data.length > 0) {
+        const newProjectData = {
+          id: data[0].id,
+          name: data[0].name,
+          categories: data[0].categories || [],
+          description: data[0].description || "",
+          logo: data[0].logo || "",
+          status: data[0].status as "active" | "upcoming" | "ended",
+          installation_guide: data[0].installation_guide || ""
+        };
+        
+        setProjects([...projects, newProjectData]);
+        
+        // Reset form
+        setNewProject({
+          name: "",
+          categories: [],
+          description: "",
+          logo: "",
+          status: "upcoming",
+          installation_guide: ""
+        });
+        
+        // Show success toast
+        toast({
+          title: "Project Created",
+          description: `${newProjectData.name} has been created successfully`,
+        });
+      }
+    } catch (error) {
+      console.error('Error in createProject:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong while creating the project",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Edit project
@@ -214,35 +280,102 @@ const Admin = () => {
   };
   
   // Update project
-  const updateProject = () => {
+  const updateProject = async () => {
     if (!selectedProject) return;
     
-    // Update project in list
-    const updatedProjects = projects.map(p => 
-      p.id === selectedProject.id ? selectedProject : p
-    );
+    setIsLoading(true);
     
-    setProjects(updatedProjects);
-    setIsEditing(false);
-    setSelectedProject(null);
-    
-    // Show success toast
-    toast({
-      title: "Project Updated",
-      description: `${selectedProject.name} has been updated successfully`,
-    });
+    try {
+      // Update project in Supabase
+      const { error } = await supabase
+        .from('projects')
+        .update({
+          name: selectedProject.name,
+          description: selectedProject.description,
+          logo: selectedProject.logo,
+          categories: selectedProject.categories,
+          status: selectedProject.status,
+          installation_guide: selectedProject.installation_guide,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedProject.id);
+      
+      if (error) {
+        console.error('Error updating project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update project: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Update project in list
+      const updatedProjects = projects.map(p => 
+        p.id === selectedProject.id ? selectedProject : p
+      );
+      
+      setProjects(updatedProjects);
+      setIsEditing(false);
+      setSelectedProject(null);
+      
+      // Show success toast
+      toast({
+        title: "Project Updated",
+        description: `${selectedProject.name} has been updated successfully`,
+      });
+    } catch (error) {
+      console.error('Error in updateProject:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong while updating the project",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Delete project
-  const deleteProject = (id: string) => {
-    const updatedProjects = projects.filter(p => p.id !== id);
-    setProjects(updatedProjects);
+  const deleteProject = async (id: string) => {
+    setIsLoading(true);
     
-    // Show success toast
-    toast({
-      title: "Project Deleted",
-      description: "The project has been deleted successfully",
-    });
+    try {
+      // Delete project from Supabase
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete project: " + error.message,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Remove project from list
+      const updatedProjects = projects.filter(p => p.id !== id);
+      setProjects(updatedProjects);
+      
+      // Show success toast
+      toast({
+        title: "Project Deleted",
+        description: "The project has been deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error in deleteProject:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong while deleting the project",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Login form component
@@ -323,66 +456,83 @@ const Admin = () => {
           
           {/* Projects List */}
           <TabsContent value="projects">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project) => (
-                <Card key={project.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-xl font-bold">{project.name}</CardTitle>
-                    <div className="flex gap-1">
-                      {project.categories.map(cat => (
-                        <span key={cat} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center">
-                          {getCategoryIcon(cat)}
-                          {cat}
-                        </span>
-                      ))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-center py-4">
-                      <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
-                        <img 
-                          src={project.logo} 
-                          alt={project.name}
-                          className="w-10 h-10 object-contain"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = "https://placehold.co/100x100?text=Logo";
-                          }}
-                        />
+            {isLoading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : projects.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-gray-500 dark:text-gray-400">No projects found. Create your first project!</p>
+                <Button 
+                  className="mt-4" 
+                  onClick={() => setActiveTab("create")}
+                >
+                  <Plus size={16} className="mr-2" />
+                  Create Project
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <Card key={project.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-xl font-bold">{project.name}</CardTitle>
+                      <div className="flex gap-1">
+                        {project.categories.map(cat => (
+                          <span key={cat} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center">
+                            {getCategoryIcon(cat)}
+                            {cat}
+                          </span>
+                        ))}
                       </div>
-                    </div>
-                    <p className="text-sm text-gray-500 mt-2 line-clamp-2">{project.description}</p>
-                    <div className="mt-3">
-                      <span 
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          project.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 
-                          project.status === 'upcoming' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' : 
-                          'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
-                        }`}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-center py-4">
+                        <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                          <img 
+                            src={project.logo} 
+                            alt={project.name}
+                            className="w-10 h-10 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://placehold.co/100x100?text=Logo";
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 mt-2 line-clamp-2">{project.description}</p>
+                      <div className="mt-3">
+                        <span 
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            project.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' : 
+                            project.status === 'upcoming' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' : 
+                            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100'
+                          }`}
+                        >
+                          {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+                        </span>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button variant="outline" size="sm" onClick={() => startEditing(project)}>
+                        Edit
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => {
+                          if (confirm(`Are you sure you want to delete ${project.name}?`)) {
+                            deleteProject(project.id);
+                          }
+                        }}
                       >
-                        {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                      </span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" size="sm" onClick={() => startEditing(project)}>
-                      Edit
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => {
-                        if (confirm(`Are you sure you want to delete ${project.name}?`)) {
-                          deleteProject(project.id);
-                        }
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                        <Trash2 size={16} />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
           
           {/* Create New Project */}
@@ -511,15 +661,28 @@ const Admin = () => {
                     id="guide" 
                     placeholder="# Installation Guide\n\n## Prerequisites\n- Required software\n- Hardware specs\n\n## Steps\n1. First step\n2. Second step"
                     className="min-h-[200px] font-mono"
-                    value={newProject.installationGuide}
-                    onChange={(e) => handleFormChange("installationGuide", e.target.value)}
+                    value={newProject.installation_guide}
+                    onChange={(e) => handleFormChange("installation_guide", e.target.value)}
                   />
                 </div>
               </CardContent>
               <CardFooter>
-                <Button onClick={createProject} className="w-full">
-                  <Plus size={16} className="mr-2" />
-                  Create Project
+                <Button 
+                  onClick={createProject} 
+                  className="w-full"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={16} className="mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} className="mr-2" />
+                      Create Project
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>
@@ -533,47 +696,57 @@ const Admin = () => {
                 <CardDescription>Manage node installation guides for your projects</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {projects.map((project) => (
-                    <div 
-                      key={project.id} 
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <FileText size={20} className="text-gray-500" />
-                        <div>
-                          <p className="font-medium">{project.name} Guide</p>
-                          <p className="text-sm text-gray-500">{
-                            project.installationGuide 
-                              ? `${project.installationGuide.split('\n').length} lines` 
-                              : "No guide available"
-                          }</p>
+                {isLoading ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : projects.length === 0 ? (
+                  <div className="text-center py-10">
+                    <p className="text-gray-500 dark:text-gray-400">No projects found. Create your first project to add guides!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {projects.map((project) => (
+                      <div 
+                        key={project.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center gap-3">
+                          <FileText size={20} className="text-gray-500" />
+                          <div>
+                            <p className="font-medium">{project.name} Guide</p>
+                            <p className="text-sm text-gray-500">{
+                              project.installation_guide 
+                                ? `${project.installation_guide.split('\n').length} lines` 
+                                : "No guide available"
+                            }</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              startEditing(project);
+                              setActiveTab("create");
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              navigate(`/project/${project.id}`);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => {
-                            startEditing(project);
-                            setActiveTab("create");
-                          }}
-                        >
-                          Edit
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => {
-                            navigate(`/project/${project.id}`);
-                          }}
-                        >
-                          View
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -771,8 +944,8 @@ const Admin = () => {
                   <Textarea 
                     id="edit-guide" 
                     className="min-h-[200px] font-mono"
-                    value={selectedProject.installationGuide}
-                    onChange={(e) => setSelectedProject({...selectedProject, installationGuide: e.target.value})}
+                    value={selectedProject.installation_guide}
+                    onChange={(e) => setSelectedProject({...selectedProject, installation_guide: e.target.value})}
                   />
                 </div>
               </CardContent>
@@ -780,9 +953,21 @@ const Admin = () => {
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel
                 </Button>
-                <Button onClick={updateProject}>
-                  <Save size={16} className="mr-2" />
-                  Save Changes
+                <Button 
+                  onClick={updateProject}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 size={16} className="mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} className="mr-2" />
+                      Save Changes
+                    </>
+                  )}
                 </Button>
               </CardFooter>
             </Card>

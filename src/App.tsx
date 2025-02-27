@@ -13,7 +13,7 @@ import Contact from "./pages/Contact";
 import Tools from "./pages/Tools";
 import About from "./pages/About";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { X } from "lucide-react";
+import { X, Info } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +33,7 @@ const App = () => {
         {showLoginInfo && (
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-sm">
             <Alert className="bg-purple-800 text-white">
+              <Info className="h-4 w-4 mr-2" />
               <AlertTitle className="flex justify-between items-center">
                 Admin Login Credentials
                 <button onClick={() => setShowLoginInfo(false)}>

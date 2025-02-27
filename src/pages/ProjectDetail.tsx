@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Copy, Check, Atom, Bitcoin, Cpu, Sun, CircleEllipsis, FileQuestion } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Check, Atom, Bitcoin, Cpu, Sun, CircleEllipsis, FileQuestion, Loader2 } from "lucide-react";
 import Markdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Project {
   id: string;
@@ -14,42 +15,67 @@ interface Project {
   description: string;
   logo: string;
   status: "active" | "upcoming" | "ended";
-  installationGuide: string;
+  installation_guide: string;
+  created_at?: string;
+  updated_at?: string;
 }
-
-// Sample projects data
-const projectsData: Project[] = [
-  {
-    id: "hemi",
-    name: "Hemi",
-    categories: ["Cosmos"],
-    description: "Hemi is a cutting-edge blockchain protocol focusing on scalability and security.",
-    logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-    status: "active",
-    installationGuide: "# Hemi Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 4 CPU cores\n- 8GB RAM\n- 100GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Hemi\ncurl -sSL https://get.hemi.network | bash\n\n# Start the node\nhemi-node start --testnet\n```"
-  },
-  {
-    id: "sunrise",
-    name: "Sunrise",
-    categories: ["Solana"],
-    description: "Sunrise is a decentralized finance platform built for cross-chain compatibility.",
-    logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-    status: "active",
-    installationGuide: "# Sunrise Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 2 CPU cores\n- 4GB RAM\n- 50GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Sunrise\ncurl -sSL https://get.sunrise.network | bash\n\n# Start the node\nsunrise-node start --testnet\n```"
-  },
-];
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   useEffect(() => {
-    // Find the project by ID
-    const foundProject = projectsData.find(p => p.id === id);
-    setProject(foundProject || null);
-  }, [id]);
+    const fetchProject = async () => {
+      if (!id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching project:', error);
+          toast({
+            title: "Error",
+            description: "Failed to fetch project details",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        if (data) {
+          // Transform data to match our interface
+          const projectData: Project = {
+            id: data.id,
+            name: data.name,
+            categories: data.categories || [],
+            description: data.description || "",
+            logo: data.logo || "",
+            status: data.status as "active" | "upcoming" | "ended",
+            installation_guide: data.installation_guide || ""
+          };
+          
+          setProject(projectData);
+        }
+      } catch (error) {
+        console.error('Error in fetchProject:', error);
+        toast({
+          title: "Error",
+          description: "Something went wrong while fetching project details",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProject();
+  }, [id, toast]);
   
   // Get category icon
   const getCategoryIcon = (category: string) => {
@@ -86,10 +112,27 @@ const ProjectDetail = () => {
     }, 2000);
   };
   
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
   if (!project) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Project not found</p>
+        <div className="text-center">
+          <p className="text-xl font-semibold mb-2">Project not found</p>
+          <p className="text-gray-500 mb-4">The project you're looking for doesn't exist or has been removed.</p>
+          <Link to="/">
+            <Button>
+              <ArrowLeft size={16} className="mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -149,44 +192,50 @@ const ProjectDetail = () => {
                 <CardTitle>Installation Guide</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
-                  <Markdown
-                    components={{
-                      code(props) {
-                        const {children, className, node, ...rest} = props
-                        const match = /language-(\w+)/.exec(className || '')
-                        
-                        // If it's a code block (with language)
-                        if (match) {
+                {project.installation_guide ? (
+                  <div className="prose dark:prose-invert max-w-none">
+                    <Markdown
+                      components={{
+                        code(props) {
+                          const {children, className, node, ...rest} = props
+                          const match = /language-(\w+)/.exec(className || '')
+                          
+                          // If it's a code block (with language)
+                          if (match) {
+                            return (
+                              <div className="relative">
+                                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                                  <code className={className} {...rest}>
+                                    {children}
+                                  </code>
+                                </pre>
+                                <button
+                                  onClick={() => copyCode(children as string)}
+                                  className="absolute right-2 top-2 bg-gray-800 hover:bg-gray-700 text-gray-300 p-1 rounded"
+                                >
+                                  {copied ? <Check size={16} /> : <Copy size={16} />}
+                                </button>
+                              </div>
+                            )
+                          }
+                          
+                          // Inline code
                           return (
-                            <div className="relative">
-                              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
-                                <code className={className} {...rest}>
-                                  {children}
-                                </code>
-                              </pre>
-                              <button
-                                onClick={() => copyCode(children as string)}
-                                className="absolute right-2 top-2 bg-gray-800 hover:bg-gray-700 text-gray-300 p-1 rounded"
-                              >
-                                {copied ? <Check size={16} /> : <Copy size={16} />}
-                              </button>
-                            </div>
+                            <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">
+                              {children}
+                            </code>
                           )
                         }
-                        
-                        // Inline code
-                        return (
-                          <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded">
-                            {children}
-                          </code>
-                        )
-                      }
-                    }}
-                  >
-                    {project.installationGuide}
-                  </Markdown>
-                </div>
+                      }}
+                    >
+                      {project.installation_guide}
+                    </Markdown>
+                  </div>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-gray-500">No installation guide available for this project.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -197,7 +246,7 @@ const ProjectDetail = () => {
                 <CardTitle>Project Info</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 dark:text-gray-300">{project.description}</p>
+                <p className="text-gray-600 dark:text-gray-300">{project.description || "No description available."}</p>
                 
                 <div className="mt-6 space-y-4">
                   <div>
