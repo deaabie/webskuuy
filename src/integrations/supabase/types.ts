@@ -30,6 +30,53 @@ export type Database = {
         }
         Relationships: []
       }
+      project_details: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          detail_type: string
+          display_order: number | null
+          id: string
+          project_id: string
+          title: string
+          updated_at: string | null
+          url: string | null
+          value: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          detail_type: string
+          display_order?: number | null
+          id?: string
+          project_id: string
+          title: string
+          updated_at?: string | null
+          url?: string | null
+          value?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          detail_type?: string
+          display_order?: number | null
+          id?: string
+          project_id?: string
+          title?: string
+          updated_at?: string | null
+          url?: string | null
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_details_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           categories: string[] | null

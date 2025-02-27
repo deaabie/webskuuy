@@ -237,6 +237,43 @@ export const deleteProject = async (id: string): Promise<void> => {
   }
 };
 
+// Fetch projects by category
+export const fetchProjectsByCategory = async (category: string): Promise<Project[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .contains('categories', [category]);
+    
+    if (error) {
+      console.error("Error fetching projects by category:", error);
+      throw error;
+    }
+    
+    if (!data) {
+      return [];
+    }
+    
+    // Transform data to match our expected format
+    const formattedProjects = data.map(project => ({
+      id: project.id,
+      name: project.name,
+      categories: project.categories || [],
+      description: project.description || "",
+      logo: project.logo || "",
+      status: project.status as "active" | "upcoming" | "ended",
+      installation_guide: project.installation_guide || "",
+      created_at: project.created_at,
+      updated_at: project.updated_at
+    }));
+    
+    return formattedProjects;
+  } catch (error) {
+    console.error(`Failed to fetch projects by category ${category}:`, error);
+    throw error;
+  }
+};
+
 // Add sample projects to the database
 export const addSampleProjects = async (): Promise<void> => {
   try {

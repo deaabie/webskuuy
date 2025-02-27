@@ -3,18 +3,27 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Copy, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Check, Loader2, Edit } from "lucide-react";
 import Markdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
 import { useProject } from "@/hooks/use-projects";
+import { useProjectDetailsByType } from "@/hooks/use-project-details";
+import ProjectDetailsList from "@/components/project/ProjectDetailsList";
+import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+  const { isAdminLoggedIn } = useAdminAuth();
   
   // Use the React Query hook to fetch project data
   const { data: project, isLoading, error } = useProject(id || "");
+  
+  // Fetch project details by type
+  const { data: resources = [], isLoading: isLoadingResources } = useProjectDetailsByType(id || "", "resource");
+  const { data: communityLinks = [], isLoading: isLoadingCommunity } = useProjectDetailsByType(id || "", "community");
+  const { data: requirements = [], isLoading: isLoadingRequirements } = useProjectDetailsByType(id || "", "requirement");
   
   // Handle code copy
   const copyCode = (code: string) => {
@@ -107,6 +116,15 @@ const ProjectDetail = () => {
               </div>
             </div>
           </div>
+          
+          {isAdminLoggedIn && (
+            <Link to={`/admin?editProject=${project.id}`} className="ml-auto">
+              <Button variant="outline" size="sm">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit Project
+              </Button>
+            </Link>
+          )}
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -178,73 +196,29 @@ const ProjectDetail = () => {
                 <CardTitle>Project Info</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 dark:text-gray-300">{project.description}</p>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">{project.description}</p>
                 
-                <div className="mt-6 space-y-4">
+                <div className="space-y-4">
                   <div>
                     <h3 className="font-medium mb-2">Resources</h3>
-                    <div className="space-y-2">
-                      <a 
-                        href="#" 
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink size={16} />
-                        <span>Official Website</span>
-                      </a>
-                      <a 
-                        href="#" 
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink size={16} />
-                        <span>Documentation</span>
-                      </a>
-                      <a 
-                        href="#" 
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink size={16} />
-                        <span>GitHub Repository</span>
-                      </a>
-                    </div>
+                    <ProjectDetailsList
+                      details={resources}
+                      detailType="resource"
+                      projectId={project.id}
+                      isLoading={isLoadingResources}
+                      isAdmin={isAdminLoggedIn}
+                    />
                   </div>
                   
                   <div>
                     <h3 className="font-medium mb-2">Community</h3>
-                    <div className="space-y-2">
-                      <a 
-                        href="#" 
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink size={16} />
-                        <span>Twitter</span>
-                      </a>
-                      <a 
-                        href="#" 
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink size={16} />
-                        <span>Discord</span>
-                      </a>
-                      <a 
-                        href="#" 
-                        className="flex items-center gap-2 text-blue-600 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink size={16} />
-                        <span>Telegram</span>
-                      </a>
-                    </div>
+                    <ProjectDetailsList
+                      details={communityLinks}
+                      detailType="community"
+                      projectId={project.id}
+                      isLoading={isLoadingCommunity}
+                      isAdmin={isAdminLoggedIn}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -255,24 +229,13 @@ const ProjectDetail = () => {
                 <CardTitle>Requirements</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">CPU</span>
-                    <span className="font-medium">4 cores</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">RAM</span>
-                    <span className="font-medium">8 GB</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Storage</span>
-                    <span className="font-medium">100 GB SSD</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">OS</span>
-                    <span className="font-medium">Ubuntu 20.04+</span>
-                  </div>
-                </div>
+                <ProjectDetailsList
+                  details={requirements}
+                  detailType="requirement"
+                  projectId={project.id}
+                  isLoading={isLoadingRequirements}
+                  isAdmin={isAdminLoggedIn}
+                />
               </CardContent>
             </Card>
           </div>

@@ -6,7 +6,8 @@ import {
   fetchProjectById, 
   createProject, 
   updateProject, 
-  deleteProject 
+  deleteProject,
+  fetchProjectsByCategory
 } from "@/services/projectService";
 import { Project } from "@/types/project";
 
@@ -15,6 +16,15 @@ export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
     queryFn: fetchProjects,
+  });
+}
+
+// Hook to fetch projects by category
+export function useProjectsByCategory(category: string) {
+  return useQuery({
+    queryKey: ["projects", "category", category],
+    queryFn: () => fetchProjectsByCategory(category),
+    enabled: !!category, // Only run query if category is truthy
   });
 }
 
