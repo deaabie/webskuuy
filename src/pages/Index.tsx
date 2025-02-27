@@ -44,22 +44,28 @@ interface Project {
   status: "active" | "upcoming" | "ended";
 }
 
+// Get category icon - moved outside of components to be accessible to both Index and ProjectCard
+const getCategoryIcon = (category: string) => {
+  const foundCategory = categories.find(c => c.value === category);
+  return foundCategory ? foundCategory.icon : null;
+};
+
+// Available categories - moved outside to be accessible globally
+const categories = [
+  { value: "Cosmos", icon: <Atom size={16} /> },
+  { value: "Bitcoin", icon: <Bitcoin size={16} /> },
+  { value: "EVM", icon: <Cpu size={16} /> },
+  { value: "Solana", icon: <Sun size={16} /> },
+  { value: "Polkadot", icon: <CircleEllipsis size={16} /> },
+  { value: "Other", icon: <FileQuestion size={16} /> },
+];
+
 const Index = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  
-  // Available categories
-  const categories = [
-    { value: "Cosmos", icon: <Atom size={16} /> },
-    { value: "Bitcoin", icon: <Bitcoin size={16} /> },
-    { value: "EVM", icon: <Cpu size={16} /> },
-    { value: "Solana", icon: <Sun size={16} /> },
-    { value: "Polkadot", icon: <CircleEllipsis size={16} /> },
-    { value: "Other", icon: <FileQuestion size={16} /> },
-  ];
   
   // Fetch projects from Supabase
   useEffect(() => {
@@ -132,12 +138,6 @@ const Index = () => {
     } else {
       setSelectedCategories([...selectedCategories, category]);
     }
-  };
-  
-  // Get category icon
-  const getCategoryIcon = (category: string) => {
-    const foundCategory = categories.find(c => c.value === category);
-    return foundCategory ? foundCategory.icon : null;
   };
   
   return (
