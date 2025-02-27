@@ -4,9 +4,10 @@ import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Copy, Check } from "lucide-react";
+import { ArrowLeft, ExternalLink, Copy, Check, Loader2 } from "lucide-react";
 import Markdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Project {
   id: string;
@@ -15,42 +16,57 @@ interface Project {
   description: string;
   logo: string;
   status: "active" | "upcoming" | "ended";
-  installationGuide: string;
+  installation_guide: string;
 }
-
-// Sample projects data
-const projectsData: Project[] = [
-  {
-    id: "hemi",
-    name: "Hemi",
-    categories: ["Tech"],
-    description: "Hemi is a cutting-edge blockchain protocol focusing on scalability and security.",
-    logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-    status: "active",
-    installationGuide: "# Hemi Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 4 CPU cores\n- 8GB RAM\n- 100GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Hemi\ncurl -sSL https://get.hemi.network | bash\n\n# Start the node\nhemi-node start --testnet\n```"
-  },
-  {
-    id: "sunrise",
-    name: "Sunrise",
-    categories: ["Tech", "Community"],
-    description: "Sunrise is a decentralized finance platform built for cross-chain compatibility.",
-    logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-    status: "active",
-    installationGuide: "# Sunrise Node Installation Guide\n\n## Prerequisites\n- Ubuntu 20.04 or higher\n- 2 CPU cores\n- 4GB RAM\n- 50GB SSD\n\n## Installation Steps\n```bash\n# Update and install dependencies\napt update && apt upgrade -y\napt install curl git build-essential -y\n\n# Install Sunrise\ncurl -sSL https://get.sunrise.network | bash\n\n# Start the node\nsunrise-node start --testnet\n```"
-  },
-];
 
 const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
   useEffect(() => {
-    // Find the project by ID
-    const foundProject = projectsData.find(p => p.id === id);
-    setProject(foundProject || null);
-  }, [id]);
+    const fetchProject = async () => {
+      if (!id) return;
+      
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          throw error;
+        }
+        
+        if (data) {
+          setProject({
+            id: data.id,
+            name: data.name,
+            categories: data.categories || [],
+            description: data.description || "",
+            logo: data.logo || "",
+            status: data.status as "active" | "upcoming" | "ended",
+            installation_guide: data.installation_guide || ""
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching project:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load project details",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchProject();
+  }, [id, toast]);
   
   // Handle code copy
   const copyCode = (code: string) => {
@@ -67,10 +83,27 @@ const ProjectDetail = () => {
     }, 2000);
   };
   
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+  
   if (!project) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Project not found</p>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-2">Project Not Found</h1>
+          <p className="text-gray-500 mb-4">The project you're looking for doesn't exist or has been removed.</p>
+          <Link to="/">
+            <Button>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }
@@ -164,7 +197,7 @@ const ProjectDetail = () => {
                       }
                     }}
                   >
-                    {project.installationGuide}
+                    {project.installation_guide}
                   </Markdown>
                 </div>
               </CardContent>

@@ -1,8 +1,10 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Search, Moon, Sun, Menu, Filter, ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Project type definition
 interface Project {
@@ -13,88 +15,44 @@ interface Project {
   status: "active" | "upcoming" | "ended";
 }
 
-// Sample projects data
-const projectsData: Project[] = [{
-  id: "hemi",
-  name: "Hemi",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "sunrise",
-  name: "Sunrise",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "sahara-ai",
-  name: "Sahara AI",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "nexus",
-  name: "Nexus",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "iota",
-  name: "IOTA",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "pell",
-  name: "Pell",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "dill",
-  name: "Dill",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "upcoming"
-}, {
-  id: "solv",
-  name: "Solv",
-  categories: ["Community", "Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "story",
-  name: "Story",
-  categories: ["Tech", "Community"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "ended"
-}, {
-  id: "symbiotic",
-  name: "Symbiotic",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}, {
-  id: "airchains",
-  name: "Airchains",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "upcoming"
-}, {
-  id: "nubit",
-  name: "Nubit",
-  categories: ["Tech"],
-  logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
-  status: "active"
-}];
 const Index = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("active");
-  const {
-    toast
-  } = useToast();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, name, categories, logo, status');
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setProjects(data as Project[]);
+      }
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load projects",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Toggle dark mode
   const toggleDarkMode = () => {
@@ -103,7 +61,7 @@ const Index = () => {
   };
 
   // Filter projects based on search query, categories, and status
-  const filteredProjects = projectsData.filter(project => {
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategories = selectedCategories.length === 0 || selectedCategories.some(cat => project.categories.includes(cat));
     const matchesStatus = selectedStatus === "all" || project.status === selectedStatus;
@@ -111,9 +69,9 @@ const Index = () => {
   });
 
   // Count projects by status
-  const activeCount = projectsData.filter(p => p.status === "active").length;
-  const upcomingCount = projectsData.filter(p => p.status === "upcoming").length;
-  const endedCount = projectsData.filter(p => p.status === "ended").length;
+  const activeCount = projects.filter(p => p.status === "active").length;
+  const upcomingCount = projects.filter(p => p.status === "upcoming").length;
+  const endedCount = projects.filter(p => p.status === "ended").length;
 
   // Toggle category selection
   const toggleCategory = (category: string) => {
@@ -123,6 +81,7 @@ const Index = () => {
       setSelectedCategories([...selectedCategories, category]);
     }
   };
+  
   return <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} transition-colors duration-300`}>
       {/* Header */}
       <header className={`sticky top-0 z-50 ${darkMode ? 'bg-gray-900' : 'bg-white'} border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
@@ -231,34 +190,57 @@ const Index = () => {
         
         {/* Projects Grid */}
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
-          {filteredProjects.map(project => <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'}`}>
-              <div className="flex flex-col h-full">
-                <div className="mb-2 text-sm text-gray-500">
-                  {project.categories.join("/")}
-                </div>
-                <div className="flex-grow flex items-center justify-center py-4">
-                  <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
-                    <img src={project.logo} alt={project.name} className="w-12 h-12 object-contain" onError={e => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://placehold.co/100x100?text=Logo";
-                }} />
+          {isLoading ? (
+            // Loading skeleton
+            Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className={`block rounded-lg p-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                <div className="animate-pulse flex flex-col h-full">
+                  <div className="h-4 bg-gray-700 rounded w-1/3 mb-2"></div>
+                  <div className="flex-grow flex items-center justify-center py-4">
+                    <div className="w-20 h-20 rounded-full bg-gray-700"></div>
                   </div>
+                  <div className="h-5 bg-gray-700 rounded w-1/2 mt-2"></div>
                 </div>
-                <h3 className="text-lg font-semibold mt-2">{project.name}</h3>
               </div>
-            </Link>)}
+            ))
+          ) : filteredProjects.length > 0 ? (
+            filteredProjects.map(project => (
+              <Link to={`/project/${project.id}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                <div className="flex flex-col h-full">
+                  <div className="mb-2 text-sm text-gray-500">
+                    {project.categories.join("/")}
+                  </div>
+                  <div className="flex-grow flex items-center justify-center py-4">
+                    <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center">
+                      <img src={project.logo} alt={project.name} className="w-12 h-12 object-contain" onError={e => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://placehold.co/100x100?text=Logo";
+                      }} />
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold mt-2">{project.name}</h3>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-10">
+              <p className="text-gray-500">No projects found. Try adjusting your filters.</p>
+            </div>
+          )}
         </div>
         
         {/* Show More Button */}
-        <div className="mt-10">
-          <button className={`flex items-center gap-2 mx-auto px-6 py-2 rounded-full ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} onClick={() => toast({
-          title: "Coming Soon",
-          description: "More projects will be available soon!"
-        })}>
-            <span>Show more</span>
-            <ArrowDown size={16} />
-          </button>
-        </div>
+        {filteredProjects.length > 0 && (
+          <div className="mt-10">
+            <button className={`flex items-center gap-2 mx-auto px-6 py-2 rounded-full ${darkMode ? 'bg-gray-800' : 'bg-gray-200'}`} onClick={() => toast({
+              title: "Coming Soon",
+              description: "More projects will be available soon!"
+            })}>
+              <span>Show more</span>
+              <ArrowDown size={16} />
+            </button>
+          </div>
+        )}
       </section>
       
       {/* Footer */}
@@ -303,10 +285,7 @@ const Index = () => {
       
       {/* Admin Panel Button */}
       <div className="fixed bottom-6 right-6">
-        <Link to="/admin" className="btn btn-primary btn-circle shadow-lg" onClick={() => toast({
-        title: "Admin Access",
-        description: "Redirecting to admin portal"
-      })}>
+        <Link to="/admin" className="btn btn-primary btn-circle shadow-lg">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
           </svg>
@@ -314,4 +293,5 @@ const Index = () => {
       </div>
     </div>;
 };
+
 export default Index;
