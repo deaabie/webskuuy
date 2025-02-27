@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Search, Moon, Sun, Menu, Filter, ArrowDown } from "lucide-react";
+import { Search, Moon, Sun, Menu, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -68,9 +68,6 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-3">
-            <Link to="/portal" className="btn btn-primary btn-sm rounded-full">
-              Testnets portal
-            </Link>
             <button onClick={toggleDarkMode} className="btn btn-ghost btn-circle">
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -127,13 +124,52 @@ const Index = () => {
         {/* Filters */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full ${selectedCategories.includes('Tech') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Tech')}>
-              Tech
+            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Bitcoin') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Bitcoin')}>
+              <Bitcoin size={16} />
+              <span>Bitcoin</span>
             </button>
           </div>
           <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full ${selectedCategories.includes('Community') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Community')}>
-              Community
+            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Cosmos') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Cosmos')}>
+              <Coins size={16} />
+              <span>Cosmos</span>
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('EVM') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('EVM')}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 5L5 12l6 7" />
+                <path d="M19 5l-6 7 6 7" />
+              </svg>
+              <span>EVM</span>
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Solana') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Solana')}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v4" />
+                <path d="M12 14h.01" />
+              </svg>
+              <span>Solana</span>
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Polkadot') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Polkadot')}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span>Polkadot</span>
+            </button>
+          </div>
+          <div className="flex items-center">
+            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Other') ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Other')}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M8 12h8" />
+              </svg>
+              <span>Other</span>
             </button>
           </div>
         </div>
@@ -256,15 +292,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-      
-      {/* Admin Panel Button */}
-      <div className="fixed bottom-6 right-6">
-        <Link to="/admin" className="btn btn-primary btn-circle shadow-lg">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-          </svg>
-        </Link>
-      </div>
     </div>;
 };
 
