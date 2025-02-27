@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,8 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Plus, ArrowLeft, Trash2, Save, Upload, FileText } from "lucide-react";
+import { 
+  Plus, 
+  ArrowLeft, 
+  Trash2, 
+  Save, 
+  Upload, 
+  FileText, 
+  LogIn,
+  Atom,
+  Bitcoin,
+  Circuit,
+  Sun,
+  CircleEllipsis,
+  FileQuestion
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Project {
@@ -27,7 +40,7 @@ const initialProjects: Project[] = [
   {
     id: "hemi",
     name: "Hemi",
-    categories: ["Tech"],
+    categories: ["Cosmos"],
     description: "Hemi is a cutting-edge blockchain protocol focusing on scalability and security.",
     logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
     status: "active",
@@ -36,7 +49,7 @@ const initialProjects: Project[] = [
   {
     id: "sunrise",
     name: "Sunrise",
-    categories: ["Tech", "Community"],
+    categories: ["Solana"],
     description: "Sunrise is a decentralized finance platform built for cross-chain compatibility.",
     logo: "/lovable-uploads/b0037210-e798-410d-b9d2-e4f24211c714.png",
     status: "active",
@@ -44,14 +57,64 @@ const initialProjects: Project[] = [
   },
 ];
 
+// Admin credentials
+const adminCredentials = {
+  username: "admin",
+  password: "admin123"
+};
+
 const Admin = () => {
   const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [activeTab, setActiveTab] = useState("projects");
+  const [activeTab, setActiveTab] = useState("login");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  // Check if user is already logged in
+  useEffect(() => {
+    const loggedIn = localStorage.getItem("adminLoggedIn");
+    if (loggedIn === "true") {
+      setIsLoggedIn(true);
+      setActiveTab("projects");
+    }
+  }, []);
+  
+  // Handle login
+  const handleLogin = () => {
+    if (
+      loginForm.username === adminCredentials.username && 
+      loginForm.password === adminCredentials.password
+    ) {
+      setIsLoggedIn(true);
+      setActiveTab("projects");
+      localStorage.setItem("adminLoggedIn", "true");
+      toast({
+        title: "Login Successful",
+        description: "Welcome to the admin dashboard",
+      });
+    } else {
+      toast({
+        title: "Login Failed",
+        description: "Invalid username or password",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle logout
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setActiveTab("login");
+    localStorage.removeItem("adminLoggedIn");
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully",
+    });
+  };
   
   // Form states for new project creation
   const [newProject, setNewProject] = useState<Omit<Project, "id">>({
@@ -77,6 +140,26 @@ const Admin = () => {
       handleFormChange("categories", newProject.categories.filter(c => c !== category));
     } else {
       handleFormChange("categories", [...newProject.categories, category]);
+    }
+  };
+  
+  // Get category icon
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Cosmos":
+        return <Atom size={16} className="mr-1" />;
+      case "Bitcoin":
+        return <Bitcoin size={16} className="mr-1" />;
+      case "EVM":
+        return <Circuit size={16} className="mr-1" />;
+      case "Solana":
+        return <Sun size={16} className="mr-1" />;
+      case "Polkadot":
+        return <CircleEllipsis size={16} className="mr-1" />;
+      case "Other":
+        return <FileQuestion size={16} className="mr-1" />;
+      default:
+        return null;
     }
   };
   
@@ -158,19 +241,73 @@ const Admin = () => {
     });
   };
   
+  // Login form component
+  const LoginForm = () => (
+    <Card className="max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl">Admin Login</CardTitle>
+        <CardDescription>
+          Login to access the admin dashboard
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <Input 
+            id="username" 
+            placeholder="Enter your username" 
+            value={loginForm.username}
+            onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input 
+            id="password" 
+            type="password" 
+            placeholder="Enter your password" 
+            value={loginForm.password}
+            onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+          />
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Button 
+          className="w-full" 
+          onClick={handleLogin}
+        >
+          <LogIn size={16} className="mr-2" />
+          Login
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+  
+  // If not logged in, show login form
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4 flex items-center justify-center">
+        <LoginForm />
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       <div className="container mx-auto p-4">
-        <div className="flex items-center mb-6 gap-4">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => navigate('/')}
-            className="rounded-full"
-          >
-            <ArrowLeft size={20} />
-          </Button>
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/')}
+              className="rounded-full"
+            >
+              <ArrowLeft size={20} />
+            </Button>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          </div>
+          <Button variant="outline" onClick={handleLogout}>Logout</Button>
         </div>
         
         <Tabs defaultValue="projects" value={activeTab} onValueChange={setActiveTab}>
@@ -189,7 +326,8 @@ const Admin = () => {
                     <CardTitle className="text-xl font-bold">{project.name}</CardTitle>
                     <div className="flex gap-1">
                       {project.categories.map(cat => (
-                        <span key={cat} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-full">
+                        <span key={cat} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-800 rounded-full flex items-center">
+                          {getCategoryIcon(cat)}
                           {cat}
                         </span>
                       ))}
@@ -265,18 +403,58 @@ const Admin = () => {
                   <Label>Categories</Label>
                   <div className="flex flex-wrap gap-2">
                     <Button 
-                      variant={newProject.categories.includes("Tech") ? "default" : "outline"}
+                      variant={newProject.categories.includes("Cosmos") ? "default" : "outline"}
                       size="sm"
-                      onClick={() => toggleCategory("Tech")}
+                      onClick={() => toggleCategory("Cosmos")}
+                      className="flex items-center"
                     >
-                      Tech
+                      <Atom size={16} className="mr-1" />
+                      Cosmos
                     </Button>
                     <Button 
-                      variant={newProject.categories.includes("Community") ? "default" : "outline"}
+                      variant={newProject.categories.includes("Bitcoin") ? "default" : "outline"}
                       size="sm"
-                      onClick={() => toggleCategory("Community")}
+                      onClick={() => toggleCategory("Bitcoin")}
+                      className="flex items-center"
                     >
-                      Community
+                      <Bitcoin size={16} className="mr-1" />
+                      Bitcoin
+                    </Button>
+                    <Button 
+                      variant={newProject.categories.includes("EVM") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleCategory("EVM")}
+                      className="flex items-center"
+                    >
+                      <Circuit size={16} className="mr-1" />
+                      EVM
+                    </Button>
+                    <Button 
+                      variant={newProject.categories.includes("Solana") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleCategory("Solana")}
+                      className="flex items-center"
+                    >
+                      <Sun size={16} className="mr-1" />
+                      Solana
+                    </Button>
+                    <Button 
+                      variant={newProject.categories.includes("Polkadot") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleCategory("Polkadot")}
+                      className="flex items-center"
+                    >
+                      <CircleEllipsis size={16} className="mr-1" />
+                      Polkadot
+                    </Button>
+                    <Button 
+                      variant={newProject.categories.includes("Other") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleCategory("Other")}
+                      className="flex items-center"
+                    >
+                      <FileQuestion size={16} className="mr-1" />
+                      Other
                     </Button>
                   </div>
                 </div>
@@ -419,42 +597,130 @@ const Admin = () => {
                   <Label>Categories</Label>
                   <div className="flex flex-wrap gap-2">
                     <Button 
-                      variant={selectedProject.categories.includes("Tech") ? "default" : "outline"}
+                      variant={selectedProject.categories.includes("Cosmos") ? "default" : "outline"}
                       size="sm"
                       onClick={() => {
-                        if (selectedProject.categories.includes("Tech")) {
+                        if (selectedProject.categories.includes("Cosmos")) {
                           setSelectedProject({
                             ...selectedProject, 
-                            categories: selectedProject.categories.filter(c => c !== "Tech")
+                            categories: selectedProject.categories.filter(c => c !== "Cosmos")
                           });
                         } else {
                           setSelectedProject({
                             ...selectedProject, 
-                            categories: [...selectedProject.categories, "Tech"]
+                            categories: [...selectedProject.categories, "Cosmos"]
                           });
                         }
                       }}
+                      className="flex items-center"
                     >
-                      Tech
+                      <Atom size={16} className="mr-1" />
+                      Cosmos
                     </Button>
                     <Button 
-                      variant={selectedProject.categories.includes("Community") ? "default" : "outline"}
+                      variant={selectedProject.categories.includes("Bitcoin") ? "default" : "outline"}
                       size="sm"
                       onClick={() => {
-                        if (selectedProject.categories.includes("Community")) {
+                        if (selectedProject.categories.includes("Bitcoin")) {
                           setSelectedProject({
                             ...selectedProject, 
-                            categories: selectedProject.categories.filter(c => c !== "Community")
+                            categories: selectedProject.categories.filter(c => c !== "Bitcoin")
                           });
                         } else {
                           setSelectedProject({
                             ...selectedProject, 
-                            categories: [...selectedProject.categories, "Community"]
+                            categories: [...selectedProject.categories, "Bitcoin"]
                           });
                         }
                       }}
+                      className="flex items-center"
                     >
-                      Community
+                      <Bitcoin size={16} className="mr-1" />
+                      Bitcoin
+                    </Button>
+                    <Button 
+                      variant={selectedProject.categories.includes("EVM") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (selectedProject.categories.includes("EVM")) {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: selectedProject.categories.filter(c => c !== "EVM")
+                          });
+                        } else {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: [...selectedProject.categories, "EVM"]
+                          });
+                        }
+                      }}
+                      className="flex items-center"
+                    >
+                      <Circuit size={16} className="mr-1" />
+                      EVM
+                    </Button>
+                    <Button 
+                      variant={selectedProject.categories.includes("Solana") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (selectedProject.categories.includes("Solana")) {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: selectedProject.categories.filter(c => c !== "Solana")
+                          });
+                        } else {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: [...selectedProject.categories, "Solana"]
+                          });
+                        }
+                      }}
+                      className="flex items-center"
+                    >
+                      <Sun size={16} className="mr-1" />
+                      Solana
+                    </Button>
+                    <Button 
+                      variant={selectedProject.categories.includes("Polkadot") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (selectedProject.categories.includes("Polkadot")) {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: selectedProject.categories.filter(c => c !== "Polkadot")
+                          });
+                        } else {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: [...selectedProject.categories, "Polkadot"]
+                          });
+                        }
+                      }}
+                      className="flex items-center"
+                    >
+                      <CircleEllipsis size={16} className="mr-1" />
+                      Polkadot
+                    </Button>
+                    <Button 
+                      variant={selectedProject.categories.includes("Other") ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        if (selectedProject.categories.includes("Other")) {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: selectedProject.categories.filter(c => c !== "Other")
+                          });
+                        } else {
+                          setSelectedProject({
+                            ...selectedProject, 
+                            categories: [...selectedProject.categories, "Other"]
+                          });
+                        }
+                      }}
+                      className="flex items-center"
+                    >
+                      <FileQuestion size={16} className="mr-1" />
+                      Other
                     </Button>
                   </div>
                 </div>
