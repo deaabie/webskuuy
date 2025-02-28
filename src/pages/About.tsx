@@ -57,50 +57,12 @@ const About = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="team" className="mb-16">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="team">Our Team</TabsTrigger>
+        <Tabs defaultValue="values" className="mb-16">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="values">Our Values</TabsTrigger>
             <TabsTrigger value="networks">Supported Networks</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
           </TabsList>
-          <TabsContent value="team" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  name: "Alex Nakamoto",
-                  role: "Founder & Head of Validation",
-                  image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=300&h=300",
-                  bio: "Previously ran validation infrastructure for major PoS networks. 5+ years in blockchain infrastructure."
-                },
-                {
-                  name: "Sarah Chen",
-                  role: "CTO & Protocol Expert",
-                  image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300&h=300",
-                  bio: "Cryptography researcher and core contributor to several consensus protocols. Specializes in validator security."
-                },
-                {
-                  name: "Michael Rodriguez",
-                  role: "Head of Node Operations",
-                  image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300&h=300",
-                  bio: "Infrastructure architect with experience managing 1000+ node clusters for enterprise blockchain deployments."
-                }
-              ].map((member, index) => (
-                <Card key={index}>
-                  <CardContent className="pt-6">
-                    <div className="flex flex-col items-center text-center">
-                      <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
-                        <img src={member.image} alt={member.name} className="w-full h-full object-cover" />
-                      </div>
-                      <h3 className="text-lg font-bold">{member.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{member.role}</p>
-                      <p className="text-sm">{member.bio}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
           <TabsContent value="values" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
