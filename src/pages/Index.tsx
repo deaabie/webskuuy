@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
+import IndexFooter from "@/components/IndexFooter";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -227,6 +228,9 @@ const Index = () => {
             </button>
           </div>}
       </section>
+      
+      {/* Footer */}
+      <IndexFooter />
     </div>;
 };
 

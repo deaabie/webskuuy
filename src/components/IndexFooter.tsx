@@ -96,8 +96,11 @@ const IndexFooter = () => {
           </div>
         </div>
         
+        {/* Horizontal Border Line */}
+        <div className="border-t border-gray-700 mt-8"></div>
+        
         {/* Copyright Section */}
-        <div className="mt-8 text-center border-t border-gray-700 pt-6">
+        <div className="mt-6 text-center">
           <p className="text-sm text-gray-400">
             © 2025 Skuuy. All rights reserved.
           </p>
