@@ -139,14 +139,14 @@ const About = () => {
                 description: "Our node operation guides and infrastructure recommendations achieved near-perfect uptime across all supported networks."
               },
               {
-                title: "100,000 Nodes Launched",
-                year: "2022",
-                description: "Validators following our guides have collectively launched over 100,000 nodes across various blockchain networks."
+                title: "1000 Nodes Launched",
+                year: "2023",
+                description: "Validators following our guides have collectively launched over 1000 nodes across various blockchain networks."
               },
               {
                 title: "Web3 Infrastructure Award",
                 year: "2023",
-                description: "Recognized for excellence in decentralized infrastructure and validator support at the Global Blockchain Summit."
+                description: "Recognized for excellence in decentralized infrastructure and validator support at early stages Blockchain project."
               }
             ].map((achievement, index) => (
               <Card key={index}>
