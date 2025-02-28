@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/types/project";
 
@@ -70,6 +71,45 @@ export const fetchProjectById = async (id: string): Promise<Project> => {
     };
   } catch (error) {
     console.error(`Failed to fetch project ${id}:`, error);
+    throw error;
+  }
+};
+
+// Fetch project by name (slug)
+export const fetchProjectByName = async (name: string): Promise<Project> => {
+  try {
+    // Make the search case-insensitive by converting to lowercase
+    const normalizedName = name.toLowerCase();
+    
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .ilike('name', normalizedName)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching project by name:", error);
+      throw error;
+    }
+    
+    if (!data) {
+      console.error("Project not found by name:", name);
+      throw new Error("Project not found");
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      categories: data.categories || [],
+      description: data.description || "",
+      logo: data.logo || "",
+      status: data.status as "active" | "upcoming" | "ended",
+      installation_guide: data.installation_guide || "",
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+  } catch (error) {
+    console.error(`Failed to fetch project by name ${name}:`, error);
     throw error;
   }
 };
@@ -271,6 +311,16 @@ export const fetchProjectsByCategory = async (category: string): Promise<Project
     console.error(`Failed to fetch projects by category ${category}:`, error);
     throw error;
   }
+};
+
+// Get URL-friendly slug from project name
+export const getProjectSlug = (name: string): string => {
+  return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+};
+
+// Convert slug back to potential project name
+export const normalizeSlug = (slug: string): string => {
+  return slug.toLowerCase();
 };
 
 // Add sample projects to the database

@@ -3,27 +3,32 @@ import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ExternalLink, Copy, Check, Loader2, Edit } from "lucide-react";
+import { ArrowLeft, Copy, Check, Loader2, Edit } from "lucide-react";
 import Markdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
-import { useProject } from "@/hooks/use-projects";
+import { useProject, useProjectBySlug } from "@/hooks/use-projects";
 import { useProjectDetailsByType } from "@/hooks/use-project-details";
 import ProjectDetailsList from "@/components/project/ProjectDetailsList";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 const ProjectDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
   const { isAdminLoggedIn } = useAdminAuth();
   
-  // Use the React Query hook to fetch project data
-  const { data: project, isLoading, error } = useProject(id || "");
+  // Use the React Query hook to fetch project data by slug
+  const { 
+    data: project, 
+    isLoading, 
+    error 
+  } = useProjectBySlug(slug || "");
   
-  // Fetch project details by type
-  const { data: resources = [], isLoading: isLoadingResources } = useProjectDetailsByType(id || "", "resource");
-  const { data: communityLinks = [], isLoading: isLoadingCommunity } = useProjectDetailsByType(id || "", "community");
-  const { data: requirements = [], isLoading: isLoadingRequirements } = useProjectDetailsByType(id || "", "requirement");
+  // Fetch project details by type if we have a project
+  const projectId = project?.id || "";
+  const { data: resources = [], isLoading: isLoadingResources } = useProjectDetailsByType(projectId, "resource");
+  const { data: communityLinks = [], isLoading: isLoadingCommunity } = useProjectDetailsByType(projectId, "community");
+  const { data: requirements = [], isLoading: isLoadingRequirements } = useProjectDetailsByType(projectId, "requirement");
   
   // Handle code copy
   const copyCode = (code: string) => {

@@ -3,11 +3,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { 
   fetchProjects, 
-  fetchProjectById, 
+  fetchProjectById,
+  fetchProjectByName,
   createProject, 
   updateProject, 
   deleteProject,
-  fetchProjectsByCategory
+  fetchProjectsByCategory,
+  normalizeSlug
 } from "@/services/projectService";
 import { Project } from "@/types/project";
 
@@ -34,6 +36,18 @@ export function useProject(id: string) {
     queryKey: ["projects", id],
     queryFn: () => fetchProjectById(id),
     enabled: !!id, // Only run query if id is truthy
+  });
+}
+
+// Hook to fetch a single project by name/slug
+export function useProjectBySlug(slug: string) {
+  // Convert slug to normalized name for searching
+  const normalizedName = normalizeSlug(slug);
+  
+  return useQuery({
+    queryKey: ["projects", "slug", normalizedName],
+    queryFn: () => fetchProjectByName(normalizedName),
+    enabled: !!slug, // Only run query if slug is truthy
   });
 }
 
@@ -65,6 +79,7 @@ export function useUpdateProject() {
       // Update projects cache
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["projects", updatedProject.id] });
+      queryClient.invalidateQueries({ queryKey: ["projects", "slug", updatedProject.name.toLowerCase()] });
       toast.success("Project updated successfully");
     },
     onError: (error) => {
