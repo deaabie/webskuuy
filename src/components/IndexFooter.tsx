@@ -78,17 +78,17 @@ const IndexFooter = () => {
             <h3 className="text-lg font-bold mb-4">Socials</h3>
             <ul className="space-y-2">
               <li>
-                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
+                <a href="https://twitter.com/BrigadirCurva" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
                   Twitter
                 </a>
               </li>
               <li>
-                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
+                <a href="https://github.com/deabie" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
                   GitHub
                 </a>
               </li>
               <li>
-                <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
+                <a href="https://t.me/suncomefaster" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
                   Telegram
                 </a>
               </li>
