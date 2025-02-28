@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
+import Header from "./components/Header";
 import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
@@ -27,10 +28,11 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <div className="flex flex-col min-h-screen">
-          <div className="flex-grow">
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <BrowserRouter>
+            <Header />
+            <div className="flex-grow">
+              <Toaster />
+              <Sonner />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<Admin />} />
@@ -41,9 +43,9 @@ const App = () => {
                 <Route path="/tools" element={<Tools />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              <Footer />
-            </BrowserRouter>
-          </div>
+            </div>
+            <Footer />
+          </BrowserRouter>
         </div>
       </TooltipProvider>
     </QueryClientProvider>
