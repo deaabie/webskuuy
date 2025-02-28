@@ -1,0 +1,103 @@
+
+import React from "react";
+import { Link } from "react-router-dom";
+
+const IndexFooter = () => {
+  return (
+    <footer className="bg-[#111827] text-white py-12">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Our Products Column */}
+          <div>
+            <h3 className="text-lg font-bold mb-4">Our Products</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="#" className="text-gray-400 hover:text-white transition">
+                  Explorers
+                </Link>
+              </li>
+              <li>
+                <Link to="#" className="text-gray-400 hover:text-white transition">
+                  Staking
+                </Link>
+              </li>
+              <li>
+                <Link to="/tools" className="text-gray-400 hover:text-white transition">
+                  Tools
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Company Column */}
+          <div>
+            <h3 className="text-lg font-bold mb-4">Company</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/contact" className="text-gray-400 hover:text-white transition">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="text-gray-400 hover:text-white transition">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link to="#" className="text-gray-400 hover:text-white transition">
+                  Careers
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Support Column */}
+          <div>
+            <h3 className="text-lg font-bold mb-4">Support</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="#" className="text-gray-400 hover:text-white transition">
+                  Feedback & Bug Report
+                </Link>
+              </li>
+              <li>
+                <Link to="#" className="text-gray-400 hover:text-white transition">
+                  Help Center
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-gray-400 hover:text-white transition">
+                  FAQ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Socials Column */}
+          <div>
+            <h3 className="text-lg font-bold mb-4">Socials</h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
+                  Twitter
+                </a>
+              </li>
+              <li>
+                <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
+                  GitHub
+                </a>
+              </li>
+              <li>
+                <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition">
+                  Telegram
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default IndexFooter;
