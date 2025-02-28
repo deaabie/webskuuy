@@ -1,104 +1,11 @@
-
-import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Mail, Phone, MapPin, Send } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { Mail, Phone, MapPin } from "lucide-react";
 
 const Contact = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // Call the Supabase edge function to send the email
-      const { data, error } = await supabase.functions.invoke('send-contact-email', {
-        body: { name, email, message }
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      toast.success("Message sent successfully! Our node operators will get back to you soon.");
-      // Clear the form after successful submission
-      setName("");
-      setEmail("");
-      setMessage("");
-    } catch (error: any) {
-      console.error("Error submitting form:", error);
-      toast.error(error.message || "Failed to send message. Please try again later.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
     <div className="container mx-auto py-10 px-4 md:px-6">
       <h1 className="text-4xl font-bold mb-6 text-center">Contact Node Support</h1>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Get in Touch</CardTitle>
-            <CardDescription>
-              Have questions about setting up your node or need technical assistance with your Web3 infrastructure? Our team is ready to help.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-1">
-                  Name
-                </label>
-                <Input
-                  id="name"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium mb-1">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your.email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium mb-1">
-                  Message
-                </label>
-                <Textarea
-                  id="message"
-                  placeholder="Describe your node setup or technical issue"
-                  rows={5}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Sending..." : "Send Message"} <Send className="ml-2 h-4 w-4" />
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
+      <div className="grid grid-cols-1 gap-8">
         <Card>
           <CardHeader>
             <CardTitle>Node Support Information</CardTitle>
