@@ -6,9 +6,9 @@ const IndexFooter = () => {
   return (
     <footer className="bg-[#111827] text-white py-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 justify-center">
           {/* Our Products Column */}
-          <div>
+          <div className="text-center">
             <h3 className="text-lg font-bold mb-4">Our Products</h3>
             <ul className="space-y-2">
               <li>
@@ -30,7 +30,7 @@ const IndexFooter = () => {
           </div>
 
           {/* Company Column */}
-          <div>
+          <div className="text-center">
             <h3 className="text-lg font-bold mb-4">Company</h3>
             <ul className="space-y-2">
               <li>
@@ -52,7 +52,7 @@ const IndexFooter = () => {
           </div>
 
           {/* Support Column */}
-          <div>
+          <div className="text-center">
             <h3 className="text-lg font-bold mb-4">Support</h3>
             <ul className="space-y-2">
               <li>
@@ -74,7 +74,7 @@ const IndexFooter = () => {
           </div>
 
           {/* Socials Column */}
-          <div>
+          <div className="text-center">
             <h3 className="text-lg font-bold mb-4">Socials</h3>
             <ul className="space-y-2">
               <li>
@@ -94,6 +94,13 @@ const IndexFooter = () => {
               </li>
             </ul>
           </div>
+        </div>
+        
+        {/* Copyright Section */}
+        <div className="mt-8 text-center border-t border-gray-700 pt-6">
+          <p className="text-sm text-gray-400">
+            © 2025 Skuuy. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
