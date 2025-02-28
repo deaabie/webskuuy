@@ -95,9 +95,13 @@ const IndexFooter = () => {
             </ul>
           </div>
         </div>
+
+
         
         {/* Horizontal Border Line */}
         <div className="border-t border-gray-700 mt-8"></div>
+
+        
         
         {/* Copyright Section */}
         <div className="mt-6 text-center">
