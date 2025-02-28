@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Save, Upload } from "lucide-react";
 import { Project } from "@/types/project";
+import { useState, useEffect } from "react";
+import { getProjectSlug } from "@/services/projectService";
 
 interface ProjectFormProps {
   project: Partial<Project>;
@@ -26,6 +28,19 @@ const ProjectForm = ({
   onCancel 
 }: ProjectFormProps) => {
   const categories = ["Bitcoin", "Cosmos", "EVM", "Solana", "Polkadot", "Other"];
+  const [slug, setSlug] = useState<string>(project.slug || '');
+  
+  // Update slug when project name changes
+  useEffect(() => {
+    if (project.name) {
+      const generatedSlug = getProjectSlug(project.name);
+      setSlug(generatedSlug);
+      // Only automatically update slug if not manually edited or if creating a new project
+      if (!isEditing || !project.slug) {
+        onFieldChange("slug", generatedSlug);
+      }
+    }
+  }, [project.name, isEditing, onFieldChange]);
   
   return (
     <Card>
@@ -49,6 +64,35 @@ const ProjectForm = ({
         </div>
         
         <div className="space-y-2">
+          <Label htmlFor="slug">URL Slug</Label>
+          <div className="flex items-center gap-2">
+            <Input 
+              id="slug" 
+              placeholder="project-url-slug" 
+              value={slug}
+              onChange={(e) => {
+                setSlug(e.target.value);
+                onFieldChange("slug", e.target.value);
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => {
+                const generatedSlug = getProjectSlug(project.name || '');
+                setSlug(generatedSlug);
+                onFieldChange("slug", generatedSlug);
+              }}
+            >
+              Reset
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            The URL for this project will be: /project/{slug || 'project-slug'}
+          </p>
+        </div>
+        
+        <div className="space-y-2">
           <Label>Categories</Label>
           <div className="flex flex-wrap gap-2">
             {categories.map(category => (
@@ -57,6 +101,7 @@ const ProjectForm = ({
                 variant={project.categories?.includes(category) ? "default" : "outline"}
                 size="sm"
                 onClick={() => onCategoryToggle(category)}
+                type="button"
               >
                 {category}
               </Button>
@@ -83,7 +128,7 @@ const ProjectForm = ({
               value={project.logo || ''}
               onChange={(e) => onFieldChange("logo", e.target.value)}
             />
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" type="button">
               <Upload size={16} />
             </Button>
           </div>
@@ -120,16 +165,16 @@ const ProjectForm = ({
       <CardFooter className={isEditing ? "flex justify-between" : ""}>
         {isEditing ? (
           <>
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} type="button">
               Cancel
             </Button>
-            <Button onClick={onSubmit}>
+            <Button onClick={onSubmit} type="button">
               <Save size={16} className="mr-2" />
               Save Changes
             </Button>
           </>
         ) : (
-          <Button onClick={onSubmit} className="w-full">
+          <Button onClick={onSubmit} className="w-full" type="button">
             <Plus size={16} className="mr-2" />
             Create Project
           </Button>

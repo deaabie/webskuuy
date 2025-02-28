@@ -86,6 +86,7 @@ export type Database = {
           installation_guide: string | null
           logo: string | null
           name: string
+          slug: string | null
           status: string | null
           updated_at: string | null
         }
@@ -97,6 +98,7 @@ export type Database = {
           installation_guide?: string | null
           logo?: string | null
           name: string
+          slug?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -108,6 +110,7 @@ export type Database = {
           installation_guide?: string | null
           logo?: string | null
           name?: string
+          slug?: string | null
           status?: string | null
           updated_at?: string | null
         }

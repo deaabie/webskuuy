@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Project } from "@/types/project";
 
@@ -23,6 +22,7 @@ export const fetchProjects = async (): Promise<Project[]> => {
     const formattedProjects = data.map(project => ({
       id: project.id,
       name: project.name,
+      slug: project.slug || getProjectSlug(project.name), // Fallback to generating slug if not in DB
       categories: project.categories || [],
       description: project.description || "",
       logo: project.logo || "",
@@ -61,6 +61,7 @@ export const fetchProjectById = async (id: string): Promise<Project> => {
     return {
       id: data.id,
       name: data.name,
+      slug: data.slug || getProjectSlug(data.name), // Fallback to generating slug if not in DB
       categories: data.categories || [],
       description: data.description || "",
       logo: data.logo || "",
@@ -75,31 +76,97 @@ export const fetchProjectById = async (id: string): Promise<Project> => {
   }
 };
 
-// Fetch project by name (slug)
-export const fetchProjectByName = async (name: string): Promise<Project> => {
+// Fetch project by slug
+export const fetchProjectBySlug = async (slug: string): Promise<Project> => {
   try {
-    // Make the search case-insensitive by converting to lowercase
-    const normalizedName = name.toLowerCase();
-    
+    // Look up directly by slug
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .ilike('name', normalizedName)
+      .eq('slug', slug)
       .maybeSingle();
     
     if (error) {
-      console.error("Error fetching project by name:", error);
+      console.error("Error fetching project by slug:", error);
       throw error;
     }
     
     if (!data) {
-      console.error("Project not found by name:", name);
+      console.error("Project not found by slug:", slug);
       throw new Error("Project not found");
     }
     
     return {
       id: data.id,
       name: data.name,
+      slug: data.slug || getProjectSlug(data.name), // Should always have a slug, but fallback just in case
+      categories: data.categories || [],
+      description: data.description || "",
+      logo: data.logo || "",
+      status: data.status as "active" | "upcoming" | "ended",
+      installation_guide: data.installation_guide || "",
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+  } catch (error) {
+    console.error(`Failed to fetch project by slug ${slug}:`, error);
+    throw error;
+  }
+};
+
+// For backwards compatibility - fetch by name still works
+export const fetchProjectByName = async (name: string): Promise<Project> => {
+  try {
+    // First try to find by exact slug match (more reliable)
+    const normalizedSlug = getProjectSlug(name);
+    
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('slug', normalizedSlug)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error fetching project by slug:", error);
+      throw error;
+    }
+    
+    // If not found by slug, try a case-insensitive name search as fallback
+    if (!data) {
+      const { data: nameData, error: nameError } = await supabase
+        .from('projects')
+        .select('*')
+        .ilike('name', name)
+        .maybeSingle();
+      
+      if (nameError) {
+        console.error("Error fetching project by name:", nameError);
+        throw nameError;
+      }
+      
+      if (!nameData) {
+        console.error("Project not found by name:", name);
+        throw new Error("Project not found");
+      }
+      
+      return {
+        id: nameData.id,
+        name: nameData.name,
+        slug: nameData.slug || getProjectSlug(nameData.name),
+        categories: nameData.categories || [],
+        description: nameData.description || "",
+        logo: nameData.logo || "",
+        status: nameData.status as "active" | "upcoming" | "ended",
+        installation_guide: nameData.installation_guide || "",
+        created_at: nameData.created_at,
+        updated_at: nameData.updated_at
+      };
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      slug: data.slug || getProjectSlug(data.name),
       categories: data.categories || [],
       description: data.description || "",
       logo: data.logo || "",
@@ -115,18 +182,21 @@ export const fetchProjectByName = async (name: string): Promise<Project> => {
 };
 
 // Create new project
-export const createProject = async (project: Omit<Project, "id">): Promise<Project> => {
+export const createProject = async (project: Omit<Project, "id" | "slug">): Promise<Project> => {
   try {
-    // Check if a project with this name already exists
+    // Generate the slug from the project name
+    const slug = getProjectSlug(project.name);
+    
+    // Check if a project with this slug already exists
     const { data: existingProject } = await supabase
       .from('projects')
       .select('id')
-      .eq('name', project.name)
+      .eq('slug', slug)
       .maybeSingle();
     
     if (existingProject) {
       // Update the existing project instead
-      return updateProjectByName(project);
+      return updateProjectBySlug({ ...project, slug });
     }
     
     // Otherwise, insert a new project
@@ -134,6 +204,7 @@ export const createProject = async (project: Omit<Project, "id">): Promise<Proje
       .from('projects')
       .insert([{
         name: project.name,
+        slug: slug,
         description: project.description,
         categories: project.categories,
         logo: project.logo,
@@ -155,6 +226,7 @@ export const createProject = async (project: Omit<Project, "id">): Promise<Proje
     return {
       id: data[0].id,
       name: data[0].name,
+      slug: data[0].slug,
       categories: data[0].categories || [],
       description: data[0].description || "",
       logo: data[0].logo || "",
@@ -169,12 +241,13 @@ export const createProject = async (project: Omit<Project, "id">): Promise<Proje
   }
 };
 
-// Update project by name (used for upsert operations)
-const updateProjectByName = async (project: Omit<Project, "id">): Promise<Project> => {
+// Update project by slug (used for upsert operations)
+const updateProjectBySlug = async (project: Omit<Project, "id">): Promise<Project> => {
   try {
     const { data, error } = await supabase
       .from('projects')
       .update({
+        name: project.name,
         description: project.description,
         categories: project.categories,
         logo: project.logo,
@@ -182,22 +255,23 @@ const updateProjectByName = async (project: Omit<Project, "id">): Promise<Projec
         installation_guide: project.installation_guide,
         updated_at: new Date().toISOString()
       })
-      .eq('name', project.name)
+      .eq('slug', project.slug)
       .select();
     
     if (error) {
-      console.error("Error updating project by name:", error);
+      console.error("Error updating project by slug:", error);
       throw error;
     }
     
     if (!data || data.length === 0) {
-      console.error("Failed to update project by name, no data returned");
-      throw new Error("Failed to update project by name");
+      console.error("Failed to update project by slug, no data returned");
+      throw new Error("Failed to update project by slug");
     }
     
     return {
       id: data[0].id,
       name: data[0].name,
+      slug: data[0].slug,
       categories: data[0].categories || [],
       description: data[0].description || "",
       logo: data[0].logo || "",
@@ -207,7 +281,7 @@ const updateProjectByName = async (project: Omit<Project, "id">): Promise<Projec
       updated_at: data[0].updated_at
     };
   } catch (error) {
-    console.error(`Failed to update project ${project.name}:`, error);
+    console.error(`Failed to update project ${project.slug}:`, error);
     throw error;
   }
 };
@@ -215,10 +289,17 @@ const updateProjectByName = async (project: Omit<Project, "id">): Promise<Projec
 // Update project
 export const updateProject = async (project: Project): Promise<Project> => {
   try {
+    // First check if the slug needs to be updated
+    let slug = project.slug;
+    if (!slug || slug.trim() === '') {
+      slug = getProjectSlug(project.name);
+    }
+    
     const { data, error } = await supabase
       .from('projects')
       .update({
         name: project.name,
+        slug: slug, // Ensure slug is always updated to match the name if needed
         description: project.description,
         categories: project.categories,
         logo: project.logo,
@@ -242,6 +323,7 @@ export const updateProject = async (project: Project): Promise<Project> => {
     return {
       id: data[0].id,
       name: data[0].name,
+      slug: data[0].slug,
       categories: data[0].categories || [],
       description: data[0].description || "",
       logo: data[0].logo || "",
@@ -297,6 +379,7 @@ export const fetchProjectsByCategory = async (category: string): Promise<Project
     const formattedProjects = data.map(project => ({
       id: project.id,
       name: project.name,
+      slug: project.slug || getProjectSlug(project.name),
       categories: project.categories || [],
       description: project.description || "",
       logo: project.logo || "",
@@ -318,7 +401,7 @@ export const getProjectSlug = (name: string): string => {
   return name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 };
 
-// Convert slug back to potential project name
+// Convert slug back to potential project name (deprecated, kept for compatibility)
 export const normalizeSlug = (slug: string): string => {
   return slug.toLowerCase();
 };

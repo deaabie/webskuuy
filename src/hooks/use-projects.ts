@@ -4,12 +4,12 @@ import { toast } from "sonner";
 import { 
   fetchProjects, 
   fetchProjectById,
-  fetchProjectByName,
+  fetchProjectBySlug,
   createProject, 
   updateProject, 
   deleteProject,
   fetchProjectsByCategory,
-  normalizeSlug
+  getProjectSlug
 } from "@/services/projectService";
 import { Project } from "@/types/project";
 
@@ -39,14 +39,11 @@ export function useProject(id: string) {
   });
 }
 
-// Hook to fetch a single project by name/slug
+// Hook to fetch a single project by slug
 export function useProjectBySlug(slug: string) {
-  // Convert slug to normalized name for searching
-  const normalizedName = normalizeSlug(slug);
-  
   return useQuery({
-    queryKey: ["projects", "slug", normalizedName],
-    queryFn: () => fetchProjectByName(normalizedName),
+    queryKey: ["projects", "slug", slug],
+    queryFn: () => fetchProjectBySlug(slug),
     enabled: !!slug, // Only run query if slug is truthy
   });
 }
@@ -56,7 +53,7 @@ export function useCreateProject() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (newProject: Omit<Project, "id">) => createProject(newProject),
+    mutationFn: (newProject: Omit<Project, "id" | "slug">) => createProject(newProject),
     onSuccess: () => {
       // Invalidate projects cache to trigger refetch
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -79,7 +76,7 @@ export function useUpdateProject() {
       // Update projects cache
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["projects", updatedProject.id] });
-      queryClient.invalidateQueries({ queryKey: ["projects", "slug", updatedProject.name.toLowerCase()] });
+      queryClient.invalidateQueries({ queryKey: ["projects", "slug", updatedProject.slug] });
       toast.success("Project updated successfully");
     },
     onError: (error) => {
