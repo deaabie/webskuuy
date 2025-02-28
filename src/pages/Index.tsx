@@ -117,7 +117,7 @@ const Index = () => {
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-12">
           <div className={`relative rounded-full overflow-hidden border ${darkMode ? 'border-gray-700' : 'border-gray-300'}`}>
-            <input type="text" placeholder="Enter project" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={`w-full py-3 px-6 pr-12 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} focus:outline-none`} />
+            <input type="text" placeholder="Search Nodes" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className={`w-full py-3 px-6 pr-12 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} focus:outline-none`} />
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
               <Search size={20} className="text-gray-500" />
             </div>
