@@ -12,6 +12,7 @@ import {
   useDeleteProject 
 } from "@/hooks/use-projects";
 import { useToast } from "@/hooks/use-toast";
+import { getProjectSlug } from "@/services/projectService";
 
 const TabContent = () => {
   const [activeTab, setActiveTab] = useState("projects");
@@ -29,6 +30,7 @@ const TabContent = () => {
   // Form states for new project creation
   const [newProject, setNewProject] = useState<Omit<Project, "id">>({
     name: "",
+    slug: "", // Add the slug property here
     categories: [],
     description: "",
     logo: "",
@@ -90,6 +92,7 @@ const TabContent = () => {
         // Reset form
         setNewProject({
           name: "",
+          slug: "", // Add the slug property here
           categories: [],
           description: "",
           logo: "",

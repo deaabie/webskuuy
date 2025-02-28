@@ -53,7 +53,13 @@ export function useCreateProject() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (newProject: Omit<Project, "id" | "slug">) => createProject(newProject),
+    mutationFn: (newProject: Omit<Project, "id">) => {
+      // If slug is empty, generate it from the name
+      if (!newProject.slug || newProject.slug.trim() === '') {
+        newProject.slug = getProjectSlug(newProject.name);
+      }
+      return createProject(newProject);
+    },
     onSuccess: () => {
       // Invalidate projects cache to trigger refetch
       queryClient.invalidateQueries({ queryKey: ["projects"] });
