@@ -19,9 +19,18 @@ import Header from "./components/Header";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Set default dark mode
+  // Set default dark mode on initial load
   useEffect(() => {
-    document.documentElement.classList.add("dark");
+    // Check localStorage first
+    const savedDarkMode = localStorage.getItem("darkMode");
+    
+    if (savedDarkMode === null || savedDarkMode === "true") {
+      // Either no preference or explicitly set to true, apply dark mode
+      document.documentElement.classList.add("dark");
+    } else {
+      // Explicitly set to false, ensure dark mode is not applied
+      document.documentElement.classList.remove("dark");
+    }
   }, []);
 
   return (
