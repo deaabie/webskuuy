@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Search, Moon, Sun, Menu, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -65,7 +66,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="font-bold text-xl flex items-center">
-              <span className="text-purple-500">Skuuy.</span>
+              <Link to="/" className="text-purple-500 hover:text-purple-400 transition-colors">Skuuy.</Link>
               <span>com</span>
             </div>
           </div>
