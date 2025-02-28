@@ -4,10 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Minus } from "lucide-react";
+import Header from "@/components/Header";
 
 const Faq = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedQuestions, setExpandedQuestions] = useState<number[]>([0]); // Default expand first question
+  const [darkMode, setDarkMode] = useState(true);
+
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.documentElement.classList.toggle("dark");
+  };
 
   const faqs = [
     {
@@ -58,83 +65,86 @@ const Faq = () => {
   );
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
-      <div className="text-center mb-10">
-        <h1 className="text-4xl font-bold mb-4">Node Operator FAQ</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Find answers to common questions about running nodes and validators across different blockchain networks.
-        </p>
-      </div>
-
-      <div className="max-w-2xl mx-auto mb-8">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
-          <Input
-            className="pl-10"
-            placeholder="Search for node operation questions..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle>Node Operation Questions</CardTitle>
-            <CardDescription>
-              Essential information for blockchain validators and node runners
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="divide-y">
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((faq, index) => (
-                <div key={index} className="py-4">
-                  <button
-                    onClick={() => toggleQuestion(index)}
-                    className="flex justify-between items-center w-full text-left font-medium"
-                  >
-                    <span>{faq.question}</span>
-                    {expandedQuestions.includes(index) ? (
-                      <Minus className="h-5 w-5 text-primary flex-shrink-0" />
-                    ) : (
-                      <Plus className="h-5 w-5 text-primary flex-shrink-0" />
-                    )}
-                  </button>
-                  {expandedQuestions.includes(index) && (
-                    <div className="mt-2 text-muted-foreground">
-                      {faq.answer}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="py-8 text-center">
-                <p className="text-muted-foreground">No results found for "{searchQuery}"</p>
-                <Button 
-                  variant="link" 
-                  onClick={() => setSearchQuery("")}
-                  className="mt-2"
-                >
-                  Clear search
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="mt-10 text-center">
-          <h2 className="text-2xl font-bold mb-4">More Validator Questions?</h2>
-          <p className="text-muted-foreground mb-6">
-            If you have more specific questions about running nodes on particular networks, our support team can help.
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} transition-colors duration-300`}>
+      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+      <div className="container mx-auto py-10 px-4 md:px-6">
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-bold mb-4">Node Operator FAQ</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Find answers to common questions about running nodes and validators across different blockchain networks.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild variant="outline">
-              <a href="/contact">Contact Node Support</a>
-            </Button>
-            <Button asChild>
-              <a href="#">View Validation Guides</a>
-            </Button>
+        </div>
+
+        <div className="max-w-2xl mx-auto mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
+            <Input
+              className="pl-10"
+              placeholder="Search for node operation questions..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          <Card>
+            <CardHeader>
+              <CardTitle>Node Operation Questions</CardTitle>
+              <CardDescription>
+                Essential information for blockchain validators and node runners
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="divide-y">
+              {filteredFaqs.length > 0 ? (
+                filteredFaqs.map((faq, index) => (
+                  <div key={index} className="py-4">
+                    <button
+                      onClick={() => toggleQuestion(index)}
+                      className="flex justify-between items-center w-full text-left font-medium"
+                    >
+                      <span>{faq.question}</span>
+                      {expandedQuestions.includes(index) ? (
+                        <Minus className="h-5 w-5 text-primary flex-shrink-0" />
+                      ) : (
+                        <Plus className="h-5 w-5 text-primary flex-shrink-0" />
+                      )}
+                    </button>
+                    {expandedQuestions.includes(index) && (
+                      <div className="mt-2 text-muted-foreground">
+                        {faq.answer}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-muted-foreground">No results found for "{searchQuery}"</p>
+                  <Button 
+                    variant="link" 
+                    onClick={() => setSearchQuery("")}
+                    className="mt-2"
+                  >
+                    Clear search
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="mt-10 text-center">
+            <h2 className="text-2xl font-bold mb-4">More Validator Questions?</h2>
+            <p className="text-muted-foreground mb-6">
+              If you have more specific questions about running nodes on particular networks, our support team can help.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild variant="outline">
+                <a href="/contact">Contact Node Support</a>
+              </Button>
+              <Button asChild>
+                <a href="#">View Validation Guides</a>
+              </Button>
+            </div>
           </div>
         </div>
       </div>

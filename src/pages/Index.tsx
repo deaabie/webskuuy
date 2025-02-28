@@ -1,11 +1,13 @@
 
 import { useState, useEffect } from "react";
-import { Search, Moon, Sun, Menu, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
+import { Search, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
+import Header from "@/components/Header";
+
 const Index = () => {
   const [darkMode, setDarkMode] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,25 +64,7 @@ const Index = () => {
   };
   return <div className={`min-h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'} transition-colors duration-300`}>
       {/* Header */}
-      <header className={`sticky top-0 z-50 ${darkMode ? 'bg-gray-900' : 'bg-white'} border-b ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="font-bold text-xl flex items-center">
-              <Link to="/" className="text-purple-500 hover:text-purple-400 transition-colors">Skuuy.</Link>
-              <span>com</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <button onClick={toggleDarkMode} className="btn btn-ghost btn-circle">
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-            <button className="btn btn-ghost btn-circle md:hidden">
-              <Menu size={20} />
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       
       {/* Ad Banner */}
       <div className={`py-2 px-4 ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} flex justify-between items-center`}>
@@ -252,46 +236,6 @@ const Index = () => {
             </button>
           </div>}
       </section>
-      
-      {/* Footer */}
-      <footer className={`py-12 ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-bold mb-4">Our Products</h3>
-              <ul className="space-y-2">
-                <li><a href="https://explorer.skuuy.com" className="text-gray-500 hover:text-purple-500">Explorers</a></li>
-                <li><a href="https://explorer.skuuy.com" className="text-gray-500 hover:text-purple-500">Staking</a></li>
-                <li><a href="https://skuuy.com" className="text-gray-500 hover:text-purple-500">Tools</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Company</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Contact Us</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">About</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Support</h3>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Feedback & Bug Report</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">Help Center</a></li>
-                <li><a href="#" className="text-gray-500 hover:text-purple-500">FAQ</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold mb-4">Socials</h3>
-              <ul className="space-y-2">
-                <li><a href="https://x.com/BrigadirCurva" className="text-gray-500 hover:text-purple-500">Twitter</a></li>
-                <li><a href="https://github.com/deaabie" className="text-gray-500 hover:text-purple-500">GitHub</a></li>
-                <li><a href="https://t.me/suncomefaster" className="text-gray-500 hover:text-purple-500">Telegram</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>;
 };
 export default Index;
