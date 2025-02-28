@@ -14,6 +14,7 @@ import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
 import Footer from "./components/Footer";
+import Header from "./components/Header";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <Header />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<Admin />} />
