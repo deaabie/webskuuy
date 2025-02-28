@@ -13,7 +13,6 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
-import Header from "./components/Header";
 import Footer from "./components/Footer";
 
 const queryClient = new QueryClient();
@@ -32,7 +31,6 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <Header />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<Admin />} />
