@@ -15,7 +15,6 @@ import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
-import IndexFooter from "./components/IndexFooter";
 
 const queryClient = new QueryClient();
 
@@ -53,7 +52,7 @@ const AppContent = () => {
           <Route path="/tools" element={<Tools />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        {location.pathname === "/" ? <IndexFooter /> : <Footer />}
+        {location.pathname !== "/" && <Footer />}
       </div>
     </div>
   );
