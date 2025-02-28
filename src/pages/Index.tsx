@@ -192,7 +192,7 @@ const Index = () => {
                   </div>
                   <div className="h-5 bg-gray-700 rounded w-1/2 mt-2"></div>
                 </div>
-              </div>) : filteredProjects.length > 0 ? filteredProjects.map(project => <Link to={`/project/${project.id}`} key={project.id} className="block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 bg-gray-800 hover:bg-gray-750 relative">
+              </div>) : filteredProjects.length > 0 ? filteredProjects.map(project => <Link to={`/project/${project.slug}`} key={project.id} className="block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 bg-gray-800 hover:bg-gray-750 relative">
                 {/* Status Badge */}
                 <div className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full ${project.status === 'active' ? 'bg-green-700 text-white' : project.status === 'upcoming' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'}`}>
                   {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
