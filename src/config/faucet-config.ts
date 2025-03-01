@@ -13,7 +13,7 @@ export const CLAIM_AMOUNT = "0.001";
 export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   ethereum_sepolia: {
     id: "ethereum_sepolia",
-    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public gateway with API key
+    rpcUrl: 'https://sepolia.drpc.org', // Public gateway with API key
     chainId: 11155111, // Sepolia
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
@@ -29,8 +29,8 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   },
   ethereum_base: {
     id: "ethereum_base",
-    rpcUrl: 'https://goerli.base.org',
-    chainId: 84531, // Base Goerli
+    rpcUrl: 'https://sepolia.base.org',
+    chainId: 84532, // Base Goerli
     name: 'Ethereum Base',
     symbol: 'ETH',
     explorer: 'https://sepolia.basescan.org/tx/'
