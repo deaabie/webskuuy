@@ -69,9 +69,6 @@ const ProjectsGrid = ({ isLoading, filteredProjects, theme }: ProjectsGridProps)
                   {project.categories.join("/")}
                 </div>
                 
-                {/* Project name moved to middle of card */}
-                <h3 className="text-lg font-semibold text-center mb-4">{project.name}</h3>
-                
                 <div className="flex-grow flex items-center justify-center py-4">
                   <div className={`w-20 h-20 rounded-full ${theme === "dark" ? 'bg-gray-700' : 'bg-gray-300'} flex items-center justify-center`}>
                     <img 
@@ -85,6 +82,7 @@ const ProjectsGrid = ({ isLoading, filteredProjects, theme }: ProjectsGridProps)
                     />
                   </div>
                 </div>
+                <h3 className="text-lg font-semibold text-center mt-2">{project.name}</h3>
               </div>
             </Link>
           ))
