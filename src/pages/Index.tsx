@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Search, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -13,9 +12,7 @@ const Index = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("active");
   const [showAdBanner, setShowAdBanner] = useState(true);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
 
   // Use React Query hook to fetch projects
   const {
