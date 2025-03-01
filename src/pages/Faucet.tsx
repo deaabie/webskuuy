@@ -3,7 +3,7 @@ import FaucetHeader from "@/components/faucet/FaucetHeader";
 import FaucetForm from "@/components/faucet/FaucetForm";
 import FaucetInfo from "@/components/faucet/FaucetInfo";
 import FaucetFooter from "@/components/faucet/FaucetFooter";
-import { NETWORK_CONFIG } from "@/integrations/supabase/client";
+import { NETWORK_CONFIG } from "@/config/faucet-config";
 
 const Faucet = () => {
   // Use the network configuration directly
