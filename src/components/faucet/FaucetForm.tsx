@@ -15,9 +15,6 @@ import {
 import { supabase, NETWORK_CONFIG, FAUCET_PRIVATE_KEY, CLAIM_AMOUNT } from "@/integrations/supabase/client";
 import { NetworkConfig } from "./types";
 import TransactionDetails from "./TransactionDetails";
-
-// Add ethers.js for wallet functionality
-<lov-add-dependency>ethers@6.8.1</lov-add-dependency>
 import { ethers } from "ethers";
 
 interface FaucetFormProps {
