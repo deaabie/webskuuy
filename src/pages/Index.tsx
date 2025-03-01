@@ -1,17 +1,16 @@
+
 import { useState, useEffect } from "react";
-import { Search, Filter, ArrowDown, Bitcoin, Coins } from "lucide-react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { toast } from "sonner";
 import { useProjects } from "@/hooks/use-projects";
 import IndexFooter from "@/components/IndexFooter";
+import AdBanner from "@/components/index/AdBanner";
+import HeroSection from "@/components/index/HeroSection";
+import ProjectsGrid from "@/components/index/ProjectsGrid";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = useState<string>("active");
-  const [showAdBanner, setShowAdBanner] = useState(true);
   const { toast } = useToast();
 
   // Use React Query hook to fetch projects
@@ -54,10 +53,6 @@ const Index = () => {
     }
   };
 
-  const closeAdBanner = () => {
-    setShowAdBanner(false);
-  };
-
   // Get current theme
   const [theme, setTheme] = useState<string>("dark");
   
@@ -83,190 +78,32 @@ const Index = () => {
     return () => observer.disconnect();
   }, []);
 
-  return <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"} transition-colors duration-300`}>
+  return (
+    <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"} transition-colors duration-300`}>
+      <AdBanner theme={theme} />
       
-      {/* Ad Banner */}
-      {showAdBanner && (
-        <div className={`py-2 px-4 ${theme === "dark" ? "bg-gray-800" : "bg-gray-200"} flex justify-between items-center`}>
-          <div className="flex items-center gap-2">
-            <span className="text-xs bg-blue-500 text-white px-1 rounded">Ad</span>
-            <span className="text-sm">SPACE AVAILABLE * SPACE AVAILABLE * SPACE AVAILABLE</span>
-          </div>
-          <button className={`${theme === "dark" ? "text-gray-500" : "text-gray-600"}`} onClick={closeAdBanner}>&times;</button>
-        </div>
-      )}
+      <HeroSection
+        theme={theme}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        selectedCategories={selectedCategories}
+        toggleCategory={toggleCategory}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+        activeCount={activeCount}
+        upcomingCount={upcomingCount}
+        endedCount={endedCount}
+      />
       
-      {/* Hero Section */}
-      <section className="py-12 text-center">
-        
-        <motion.h2 className="text-3xl md:text-4xl font-bold mb-6" initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        duration: 0.5,
-        delay: 0.1
-      }}>Skuuy is Your Gateway to Web3 Node Operation</motion.h2>
-        <motion.p className={`text-lg ${theme === "dark" ? "text-gray-400" : "text-gray-600"} mb-8`} initial={{
-        opacity: 0,
-        y: 20
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        duration: 0.5,
-        delay: 0.2
-      }}>Comprehensive guides and tools for setting up and managing blockchain nodes</motion.p>
-        
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-12">
-          <div className="relative rounded-full overflow-hidden border border-gray-700">
-            <input 
-              type="text" 
-              placeholder="Search Nodes" 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-              className={`w-full py-3 px-6 pr-12 ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"} focus:outline-none`} 
-            />
-            <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-              <Search size={20} className="text-gray-500" />
-            </div>
-          </div>
-        </div>
-        
-        {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Bitcoin') ? 'bg-purple-500 text-white' : theme === "dark" ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Bitcoin')}>
-              <Bitcoin size={16} />
-              <span>Bitcoin</span>
-            </button>
-          </div>
-          <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Cosmos') ? 'bg-purple-500 text-white' : theme === "dark" ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Cosmos')}>
-              <Coins size={16} />
-              <span>Cosmos</span>
-            </button>
-          </div>
-          <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('EVM') ? 'bg-purple-500 text-white' : theme === "dark" ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('EVM')}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M11 5L5 12l6 7" />
-                <path d="M19 5l-6 7 6 7" />
-              </svg>
-              <span>EVM</span>
-            </button>
-          </div>
-          <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Solana') ? 'bg-purple-500 text-white' : theme === "dark" ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Solana')}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v4" />
-                <path d="M12 14h.01" />
-              </svg>
-              <span>Solana</span>
-            </button>
-          </div>
-          <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Polkadot') ? 'bg-purple-500 text-white' : theme === "dark" ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Polkadot')}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <span>Polkadot</span>
-            </button>
-          </div>
-          <div className="flex items-center">
-            <button className={`px-3 py-1 rounded-full flex items-center gap-2 ${selectedCategories.includes('Other') ? 'bg-purple-500 text-white' : theme === "dark" ? 'bg-gray-800 text-gray-300' : 'bg-gray-200 text-gray-700'}`} onClick={() => toggleCategory('Other')}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M8 12h8" />
-              </svg>
-              <span>Other</span>
-            </button>
-          </div>
-        </div>
-        
-        {/* Status Tabs */}
-        <div className="flex flex-wrap justify-center gap-8 mb-8">
-          <button className={`flex items-center ${selectedStatus === 'active' ? 'text-purple-500' : theme === "dark" ? 'text-gray-500' : 'text-gray-600'}`} onClick={() => setSelectedStatus('active')}>
-            <span>Active</span>
-            <span className={`ml-2 text-xs px-2 py-1 rounded-full ${theme === "dark" ? 'bg-gray-800' : 'bg-gray-200'}`}>{activeCount}</span>
-          </button>
-          <button className={`flex items-center ${selectedStatus === 'upcoming' ? 'text-purple-500' : theme === "dark" ? 'text-gray-500' : 'text-gray-600'}`} onClick={() => setSelectedStatus('upcoming')}>
-            <span>Upcoming</span>
-            <span className={`ml-2 text-xs px-2 py-1 rounded-full ${theme === "dark" ? 'bg-gray-800' : 'bg-gray-200'}`}>{upcomingCount}</span>
-          </button>
-          <button className={`flex items-center ${selectedStatus === 'ended' ? 'text-purple-500' : theme === "dark" ? 'text-gray-500' : 'text-gray-600'}`} onClick={() => setSelectedStatus('ended')}>
-            <span>Ended</span>
-            <span className={`ml-2 text-xs px-2 py-1 rounded-full ${theme === "dark" ? 'bg-gray-800' : 'bg-gray-200'}`}>{endedCount}</span>
-          </button>
-        </div>
-        
-        {/* Sort Options */}
-        <div className="flex justify-end max-w-6xl mx-auto mb-4">
-          <button className="flex items-center gap-1 text-sm text-gray-500">
-            <span>Newest</span>
-            <Filter size={16} />
-          </button>
-        </div>
-        
-        {/* Projects Grid */}
-        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 px-4">
-          {isLoading ?
-            // Loading skeleton
-            Array.from({
-              length: 8
-            }).map((_, index) => <div key={index} className={`block rounded-lg p-4 ${theme === "dark" ? 'bg-gray-800' : 'bg-gray-200'}`}>
-                <div className="animate-pulse flex flex-col h-full">
-                  <div className={`h-4 ${theme === "dark" ? 'bg-gray-700' : 'bg-gray-300'} rounded w-1/3 mb-2`}></div>
-                  <div className="flex-grow flex items-center justify-center py-4">
-                    <div className={`w-20 h-20 rounded-full ${theme === "dark" ? 'bg-gray-700' : 'bg-gray-300'}`}></div>
-                  </div>
-                  <div className={`h-5 ${theme === "dark" ? 'bg-gray-700' : 'bg-gray-300'} rounded w-1/2 mt-2`}></div>
-                </div>
-              </div>) : filteredProjects.length > 0 ? filteredProjects.map(project => <Link to={`/project/${project.slug}`} key={project.id} className={`block rounded-lg p-4 transition-transform duration-300 transform hover:scale-105 ${theme === "dark" ? 'bg-gray-800 hover:bg-gray-750' : 'bg-gray-100 hover:bg-gray-200'} relative`}>
-                {/* Status Badge */}
-                <div className={`absolute top-2 right-2 text-xs px-2 py-1 rounded-full ${project.status === 'active' ? 'bg-green-700 text-white' : project.status === 'upcoming' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'}`}>
-                  {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-                </div>
-                
-                <div className="flex flex-col h-full">
-                  <div className={`mb-2 text-sm ${theme === "dark" ? 'text-gray-500' : 'text-gray-600'}`}>
-                    {project.categories.join("/")}
-                  </div>
-                  <div className="flex-grow flex items-center justify-center py-4">
-                    <div className={`w-20 h-20 rounded-full ${theme === "dark" ? 'bg-gray-700' : 'bg-gray-300'} flex items-center justify-center`}>
-                      <img src={project.logo} alt={project.name} className="w-12 h-12 object-contain" onError={e => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "https://placehold.co/100x100?text=Logo";
-                }} />
-                    </div>
-                  </div>
-                  <h3 className="text-lg font-semibold mt-2">{project.name}</h3>
-                </div>
-              </Link>) : <div className="col-span-full text-center py-10">
-              <p className={theme === "dark" ? 'text-gray-500' : 'text-gray-600'}>No projects found. Try adjusting your filters.</p>
-            </div>}
-        </div>
-        
-        {/* Show More Button */}
-        {filteredProjects.length > 0 && <div className="mt-10">
-            <button className={`flex items-center gap-2 mx-auto px-6 py-2 rounded-full ${theme === "dark" ? 'bg-gray-800' : 'bg-gray-200'}`} onClick={() => toast({
-          title: "Coming Soon",
-          description: "More projects will be available soon!"
-        })}>
-              <span>Show more</span>
-              <ArrowDown size={16} />
-            </button>
-          </div>}
-      </section>
+      <ProjectsGrid 
+        isLoading={isLoading}
+        filteredProjects={filteredProjects}
+        theme={theme}
+      />
       
-      {/* Footer */}
       <IndexFooter />
-    </div>;
+    </div>
+  );
 };
 
 export default Index;
