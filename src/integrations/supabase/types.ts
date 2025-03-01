@@ -30,6 +30,39 @@ export type Database = {
         }
         Relationships: []
       }
+      faucet_claims: {
+        Row: {
+          address: string
+          amount: string
+          created_at: string
+          id: string
+          network: string
+          reason: string | null
+          status: string | null
+          tx_hash: string
+        }
+        Insert: {
+          address: string
+          amount: string
+          created_at?: string
+          id?: string
+          network: string
+          reason?: string | null
+          status?: string | null
+          tx_hash: string
+        }
+        Update: {
+          address?: string
+          amount?: string
+          created_at?: string
+          id?: string
+          network?: string
+          reason?: string | null
+          status?: string | null
+          tx_hash?: string
+        }
+        Relationships: []
+      }
       project_details: {
         Row: {
           created_at: string | null
