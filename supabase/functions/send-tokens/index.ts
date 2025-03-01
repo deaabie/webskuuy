@@ -7,38 +7,42 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// IMPORTANT: This is not secure for production use
+// Replace with your actual private key for the faucet wallet
+const FAUCET_PRIVATE_KEY = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+
 // Define RPC endpoints and network configuration
 const NETWORK_CONFIG = {
   ethereum_sepolia: {
-    rpcUrl: Deno.env.get('ETHEREUM_SEPOLIA_RPC_URL') || 'https://sepolia.infura.io/v3/your-project-id',
+    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public gateway
     chainId: 11155111, // Sepolia
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.etherscan.io/tx/'
   },
   ethereum_holesky: {
-    rpcUrl: Deno.env.get('ETHEREUM_HOLESKY_RPC_URL') || 'https://ethereum-holesky.publicnode.com',
+    rpcUrl: 'https://ethereum-holesky.publicnode.com',
     chainId: 17000, // Holesky
     name: 'Ethereum Holesky',
     symbol: 'ETH',
     explorer: 'https://holesky.etherscan.io/tx/'
   },
   ethereum_base: {
-    rpcUrl: Deno.env.get('ETHEREUM_BASE_RPC_URL') || 'https://goerli.base.org',
+    rpcUrl: 'https://goerli.base.org',
     chainId: 84531, // Base Goerli
     name: 'Ethereum Base',
     symbol: 'ETH',
     explorer: 'https://goerli.basescan.org/tx/'
   },
   ethereum_optimism: {
-    rpcUrl: Deno.env.get('ETHEREUM_OPTIMISM_RPC_URL') || 'https://goerli.optimism.io',
+    rpcUrl: 'https://goerli.optimism.io',
     chainId: 420, // Optimism Goerli
     name: 'Ethereum Optimism',
     symbol: 'ETH',
     explorer: 'https://goerli-optimism.etherscan.io/tx/'
   },
   ethereum_arbitrum: {
-    rpcUrl: Deno.env.get('ETHEREUM_ARBITRUM_RPC_URL') || 'https://goerli-rollup.arbitrum.io/rpc',
+    rpcUrl: 'https://goerli-rollup.arbitrum.io/rpc',
     chainId: 421613, // Arbitrum Goerli
     name: 'Ethereum Arbitrum',
     symbol: 'ETH',
@@ -46,7 +50,8 @@ const NETWORK_CONFIG = {
   }
 }
 
-// Create a Supabase client
+// Create a Supabase client - leave URLs as environment variables
+// since they're available in Edge Functions deployment
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const supabase = createClient(supabaseUrl, supabaseKey)
@@ -61,12 +66,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Get the private key from environment variables
-    const privateKey = Deno.env.get('FAUCET_PRIVATE_KEY')
-    if (!privateKey) {
-      throw new Error('FAUCET_PRIVATE_KEY environment variable not set')
-    }
-
     // Parse the request
     const { address, network, reason } = await req.json()
 
@@ -131,7 +130,7 @@ Deno.serve(async (req) => {
     const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
     
     // Create a wallet with the private key
-    const wallet = new ethers.Wallet(privateKey, provider)
+    const wallet = new ethers.Wallet(FAUCET_PRIVATE_KEY, provider)
     
     // Check wallet balance to ensure sufficient funds
     const balance = await wallet.provider.getBalance(wallet.address)
