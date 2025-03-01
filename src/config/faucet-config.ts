@@ -33,7 +33,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     chainId: 84531, // Base Goerli
     name: 'Ethereum Base',
     symbol: 'ETH',
-    explorer: 'https://goerli.basescan.org/tx/'
+    explorer: 'https://sepolia.basescan.org/tx/'
   },
   ethereum_optimism: {
     id: "ethereum_optimism",
@@ -41,7 +41,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     chainId: 420, // Optimism Goerli
     name: 'Ethereum Optimism',
     symbol: 'ETH',
-    explorer: 'https://goerli-optimism.etherscan.io/tx/'
+    explorer: 'https://sepolia-optimism.etherscan.io//tx/'
   },
   ethereum_arbitrum: {
     id: "ethereum_arbitrum",
