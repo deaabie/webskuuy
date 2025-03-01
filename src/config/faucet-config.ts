@@ -45,10 +45,10 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   },
   ethereum_arbitrum: {
     id: "ethereum_arbitrum",
-    rpcUrl: 'wss://arbitrum-sepolia-rpc.publicnode.com',
+    rpcUrl: 'https://endpoints.omniatech.io/v1/arbitrum/sepolia/public',
     chainId: 421613, // Arbitrum Goerli
     name: 'Ethereum Arbitrum',
     symbol: 'ETH',
-    explorer: 'https://goerli.arbiscan.io/tx/'
+    explorer: 'https://sepolia.arbiscan.io/tx/'
   }
 };
