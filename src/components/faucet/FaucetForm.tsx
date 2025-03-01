@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,10 @@ import {
 import { NetworkConfig } from "./types";
 import TransactionDetails from "./TransactionDetails";
 import { faucetService } from "@/services/faucetService";
+import ReCAPTCHA from "react-google-recaptcha";
+
+// Replace with your actual reCAPTCHA site key
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // This is Google's test key
 
 interface FaucetFormProps {
   networks: NetworkConfig[];
@@ -34,11 +38,17 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
     symbol: string;
     explorerUrl: string;
   } | null>(null);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { toast } = useToast();
 
   // Function to validate Ethereum address
   const isValidAddress = (address: string) => {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
+  };
+
+  const handleCaptchaChange = (token: string | null) => {
+    setCaptchaVerified(!!token);
   };
 
   const handleClaim = async () => {
@@ -64,6 +74,15 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
       return;
     }
 
+    if (!captchaVerified) {
+      toast({
+        title: "CAPTCHA verification required",
+        description: "Please complete the CAPTCHA verification",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     setTxDetails(null);
 
@@ -83,8 +102,11 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
       
       setCooldown(false);
 
+      // Get user IP address 
+      const ipAddress = await faucetService.getUserIp();
+      
       // Send tokens directly
-      const result = await faucetService.sendTransaction(address, network, reason);
+      const result = await faucetService.sendTransaction(address, network, reason, ipAddress);
       
       // Set transaction details for display
       setTxDetails({
@@ -101,10 +123,12 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
         description: `You've sent ${result.amount} ${result.symbol} on ${result.network}`,
       });
 
-      // Reset form
+      // Reset form and CAPTCHA
       setAddress("");
       setNetwork("");
       setReason("");
+      setCaptchaVerified(false);
+      recaptchaRef.current?.reset();
       
     } catch (error: any) {
       console.error("Faucet claim error:", error);
@@ -167,6 +191,14 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
           />
         </div>
         
+        <div className="flex justify-center my-4">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={RECAPTCHA_SITE_KEY}
+            onChange={handleCaptchaChange}
+          />
+        </div>
+        
         {errorMessage && (
           <div className="text-sm text-destructive border border-destructive/20 bg-destructive/10 p-3 rounded-md">
             {errorMessage}
@@ -175,7 +207,7 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
         
         <Button 
           onClick={handleClaim} 
-          disabled={loading || cooldown}
+          disabled={loading || cooldown || !captchaVerified}
           className="w-full mt-2" 
           size="lg"
         >

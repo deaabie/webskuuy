@@ -5,6 +5,7 @@ import { TransactionDetails } from "@/components/faucet/types";
 
 // Local storage keys
 const FAUCET_CLAIMS_KEY = "faucet_claims";
+const FAUCET_LOG_FILE = "faucet_logs.txt";
 
 interface ClaimRecord {
   address: string;
@@ -14,6 +15,7 @@ interface ClaimRecord {
   timestamp: number;
   reason?: string;
   status: 'pending' | 'completed' | 'failed';
+  ipAddress?: string;
 }
 
 // Helper to get claims from localStorage
@@ -33,8 +35,34 @@ const saveClaim = (claim: ClaimRecord) => {
     const claims = getClaims();
     claims.push(claim);
     localStorage.setItem(FAUCET_CLAIMS_KEY, JSON.stringify(claims));
+    
+    // Also log to file if we have IP address
+    if (claim.ipAddress) {
+      logClaimToFile(claim);
+    }
   } catch (error) {
     console.error("Error saving to localStorage:", error);
+  }
+};
+
+// Log claim to file
+const logClaimToFile = (claim: ClaimRecord) => {
+  try {
+    const logEntry = `[${new Date(claim.timestamp).toISOString()}] IP: ${claim.ipAddress}, Address: ${claim.address}, Network: ${claim.network}, TxHash: ${claim.txHash}, Amount: ${claim.amount}, Status: ${claim.status}, Reason: ${claim.reason || 'Not provided'}\n`;
+    
+    // In a browser environment, we need to create a downloadable file
+    // This creates a file that can be downloaded by admins and aggregated
+    const blob = new Blob([logEntry], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    // Append to log file (note: we can't directly write to a file from the browser)
+    // Instead, we'll store the log entries in local storage
+    const logs = localStorage.getItem('faucet_ip_logs') || '';
+    localStorage.setItem('faucet_ip_logs', logs + logEntry);
+    
+    console.log("Logged claim to storage:", logEntry);
+  } catch (error) {
+    console.error("Error logging to file:", error);
   }
 };
 
@@ -52,6 +80,18 @@ const updateClaimStatus = (txHash: string, status: 'pending' | 'completed' | 'fa
 };
 
 export const faucetService = {
+  // Get user IP address
+  getUserIp: async (): Promise<string> => {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error("Error fetching IP address:", error);
+      return "unknown";
+    }
+  },
+
   // Check if user is in cooldown period (24 hours)
   checkCooldown: async (address: string, network: string): Promise<{inCooldown: boolean, hoursLeft?: number}> => {
     try {
@@ -82,7 +122,7 @@ export const faucetService = {
   },
 
   // Send transaction and record claim
-  sendTransaction: async (to: string, networkId: string, reason?: string): Promise<TransactionDetails> => {
+  sendTransaction: async (to: string, networkId: string, reason?: string, ipAddress?: string): Promise<TransactionDetails> => {
     try {
       const networkConfig = NETWORK_CONFIG[networkId];
       if (!networkConfig) {
@@ -121,7 +161,8 @@ export const faucetService = {
         amount: CLAIM_AMOUNT,
         timestamp: Date.now(),
         reason: reason || "No reason provided",
-        status: 'pending'
+        status: 'pending',
+        ipAddress: ipAddress
       };
       
       saveClaim(claimRecord);
@@ -147,5 +188,24 @@ export const faucetService = {
       console.error("Transaction error:", error);
       throw error;
     }
+  },
+  
+  // Get logs (for admin purposes)
+  getLogs: (): string => {
+    return localStorage.getItem('faucet_ip_logs') || '';
+  },
+  
+  // Download logs as a text file
+  downloadLogs: () => {
+    const logs = localStorage.getItem('faucet_ip_logs') || 'No logs found';
+    const blob = new Blob([logs], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'faucet_logs.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 };
