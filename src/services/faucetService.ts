@@ -18,24 +18,37 @@ interface ClaimRecord {
 
 // Helper to get claims from localStorage
 const getClaims = (): ClaimRecord[] => {
-  const storedClaims = localStorage.getItem(FAUCET_CLAIMS_KEY);
-  return storedClaims ? JSON.parse(storedClaims) : [];
+  try {
+    const storedClaims = localStorage.getItem(FAUCET_CLAIMS_KEY);
+    return storedClaims ? JSON.parse(storedClaims) : [];
+  } catch (error) {
+    console.error("Error reading from localStorage:", error);
+    return [];
+  }
 };
 
 // Helper to save claims to localStorage
 const saveClaim = (claim: ClaimRecord) => {
-  const claims = getClaims();
-  claims.push(claim);
-  localStorage.setItem(FAUCET_CLAIMS_KEY, JSON.stringify(claims));
+  try {
+    const claims = getClaims();
+    claims.push(claim);
+    localStorage.setItem(FAUCET_CLAIMS_KEY, JSON.stringify(claims));
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+  }
 };
 
 // Helper to update claim status
 const updateClaimStatus = (txHash: string, status: 'pending' | 'completed' | 'failed') => {
-  const claims = getClaims();
-  const updatedClaims = claims.map(claim => 
-    claim.txHash === txHash ? { ...claim, status } : claim
-  );
-  localStorage.setItem(FAUCET_CLAIMS_KEY, JSON.stringify(updatedClaims));
+  try {
+    const claims = getClaims();
+    const updatedClaims = claims.map(claim => 
+      claim.txHash === txHash ? { ...claim, status } : claim
+    );
+    localStorage.setItem(FAUCET_CLAIMS_KEY, JSON.stringify(updatedClaims));
+  } catch (error) {
+    console.error("Error updating claim status:", error);
+  }
 };
 
 export const faucetService = {
@@ -84,7 +97,9 @@ export const faucetService = {
       
       // Check wallet balance
       const balance = await provider.getBalance(wallet.address);
-      if (balance < ethers.parseEther(CLAIM_AMOUNT)) {
+      const claimAmountBn = ethers.parseEther(CLAIM_AMOUNT);
+      
+      if (balance < claimAmountBn) {
         throw new Error(`Insufficient funds in faucet wallet for ${networkConfig.name}`);
       }
 
@@ -93,7 +108,7 @@ export const faucetService = {
       
       const tx = await wallet.sendTransaction({
         to: to,
-        value: ethers.parseEther(CLAIM_AMOUNT),
+        value: claimAmountBn,
       });
 
       console.log(`Transaction sent: ${tx.hash}`);
@@ -114,6 +129,7 @@ export const faucetService = {
       // Wait for transaction receipt in background
       tx.wait().then(receipt => {
         // Update transaction status
+        console.log(`Transaction confirmed: ${tx.hash}`);
         updateClaimStatus(tx.hash, 'completed');
       }).catch(error => {
         console.error('Error waiting for transaction:', error);

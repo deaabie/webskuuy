@@ -13,7 +13,7 @@ export const CLAIM_AMOUNT = "0.001";
 export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   ethereum_sepolia: {
     id: "ethereum_sepolia",
-    rpcUrl: 'https://sepolia.infura.io/', // Public gateway
+    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public gateway with API key
     chainId: 11155111, // Sepolia
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
@@ -45,8 +45,8 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   },
   ethereum_arbitrum: {
     id: "ethereum_arbitrum",
-    rpcUrl: 'https://endpoints.omniatech.io/v1/arbitrum/sepolia/public',
-    chainId: 421613, // Arbitrum Goerli
+    rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
+    chainId: 421613, // Arbitrum Sepolia
     name: 'Ethereum Arbitrum',
     symbol: 'ETH',
     explorer: 'https://sepolia.arbiscan.io/tx/'

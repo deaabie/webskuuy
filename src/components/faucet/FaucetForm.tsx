@@ -26,6 +26,7 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [txDetails, setTxDetails] = useState<{
     txHash: string;
     amount: string;
@@ -41,6 +42,9 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
   };
 
   const handleClaim = async () => {
+    // Reset error message
+    setErrorMessage(null);
+    
     // Validate inputs
     if (!address || !network) {
       toast({
@@ -102,8 +106,9 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
       setNetwork("");
       setReason("");
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Faucet claim error:", error);
+      setErrorMessage(error.message || "Failed to process your request. Please try again later.");
       toast({
         title: "Error",
         description: error.message || "Failed to process your request. Please try again later.",
@@ -161,6 +166,12 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
             rows={3}
           />
         </div>
+        
+        {errorMessage && (
+          <div className="text-sm text-destructive border border-destructive/20 bg-destructive/10 p-3 rounded-md">
+            {errorMessage}
+          </div>
+        )}
         
         <Button 
           onClick={handleClaim} 
