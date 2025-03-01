@@ -45,7 +45,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   },
   ethereum_arbitrum: {
     id: "ethereum_arbitrum",
-    rpcUrl: 'https://goerli-rollup.arbitrum.io/rpc',
+    rpcUrl: 'wss://arbitrum-sepolia-rpc.publicnode.com',
     chainId: 421613, // Arbitrum Goerli
     name: 'Ethereum Arbitrum',
     symbol: 'ETH',
