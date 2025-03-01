@@ -6,6 +6,7 @@ import IndexFooter from "@/components/IndexFooter";
 import AdBanner from "@/components/index/AdBanner";
 import HeroSection from "@/components/index/HeroSection";
 import ProjectsGrid from "@/components/index/ProjectsGrid";
+import FeaturedProjects from "@/components/index/FeaturedProjects";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,6 +94,12 @@ const Index = () => {
         activeCount={activeCount}
         upcomingCount={upcomingCount}
         endedCount={endedCount}
+      />
+      
+      {/* Featured Projects Section - Add before main project grid */}
+      <FeaturedProjects 
+        projects={projects.filter(p => p.status === "active")}
+        theme={theme}
       />
       
       <ProjectsGrid 
