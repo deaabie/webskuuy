@@ -16,11 +16,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { ExternalLink } from "lucide-react";
 
 const NETWORKS = [
-  { id: "ethereum", name: "Ethereum Sepolia", symbol: "ETH" },
-  { id: "polygon", name: "Polygon Mumbai", symbol: "MATIC" },
-  { id: "arbitrum", name: "Arbitrum Testnet", symbol: "ARB" },
-  { id: "optimism", name: "Optimism Testnet", symbol: "OP" },
-  { id: "base", name: "Base Testnet", symbol: "ETH" },
+  { id: "ethereum_sepolia", name: "Ethereum Sepolia", symbol: "ETH" },
+  { id: "ethereum_holesky", name: "Ethereum Holesky", symbol: "ETH" },
+  { id: "ethereum_base", name: "Ethereum Base", symbol: "ETH" },
+  { id: "ethereum_optimism", name: "Ethereum Optimism", symbol: "ETH" },
+  { id: "ethereum_arbitrum", name: "Ethereum Arbitrum", symbol: "ETH" },
 ];
 
 const Faucet = () => {

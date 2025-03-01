@@ -9,40 +9,40 @@ const corsHeaders = {
 
 // Define RPC endpoints and network configuration
 const NETWORK_CONFIG = {
-  ethereum: {
-    rpcUrl: Deno.env.get('ETHEREUM_RPC_URL') || 'https://sepolia.infura.io/v3/your-project-id',
+  ethereum_sepolia: {
+    rpcUrl: Deno.env.get('ETHEREUM_SEPOLIA_RPC_URL') || 'https://sepolia.infura.io/v3/your-project-id',
     chainId: 11155111, // Sepolia
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.etherscan.io/tx/'
   },
-  polygon: {
-    rpcUrl: Deno.env.get('POLYGON_RPC_URL') || 'https://rpc-mumbai.maticvigil.com',
-    chainId: 80001, // Mumbai
-    name: 'Polygon Mumbai',
-    symbol: 'MATIC',
-    explorer: 'https://mumbai.polygonscan.com/tx/'
+  ethereum_holesky: {
+    rpcUrl: Deno.env.get('ETHEREUM_HOLESKY_RPC_URL') || 'https://ethereum-holesky.publicnode.com',
+    chainId: 17000, // Holesky
+    name: 'Ethereum Holesky',
+    symbol: 'ETH',
+    explorer: 'https://holesky.etherscan.io/tx/'
   },
-  arbitrum: {
-    rpcUrl: Deno.env.get('ARBITRUM_RPC_URL') || 'https://goerli-rollup.arbitrum.io/rpc',
-    chainId: 421613, // Arbitrum Goerli
-    name: 'Arbitrum Testnet',
-    symbol: 'ARB',
-    explorer: 'https://goerli.arbiscan.io/tx/'
-  },
-  optimism: {
-    rpcUrl: Deno.env.get('OPTIMISM_RPC_URL') || 'https://goerli.optimism.io',
-    chainId: 420, // Optimism Goerli
-    name: 'Optimism Testnet',
-    symbol: 'OP',
-    explorer: 'https://goerli-optimism.etherscan.io/tx/'
-  },
-  base: {
-    rpcUrl: Deno.env.get('BASE_RPC_URL') || 'https://goerli.base.org',
+  ethereum_base: {
+    rpcUrl: Deno.env.get('ETHEREUM_BASE_RPC_URL') || 'https://goerli.base.org',
     chainId: 84531, // Base Goerli
-    name: 'Base Testnet',
+    name: 'Ethereum Base',
     symbol: 'ETH',
     explorer: 'https://goerli.basescan.org/tx/'
+  },
+  ethereum_optimism: {
+    rpcUrl: Deno.env.get('ETHEREUM_OPTIMISM_RPC_URL') || 'https://goerli.optimism.io',
+    chainId: 420, // Optimism Goerli
+    name: 'Ethereum Optimism',
+    symbol: 'ETH',
+    explorer: 'https://goerli-optimism.etherscan.io/tx/'
+  },
+  ethereum_arbitrum: {
+    rpcUrl: Deno.env.get('ETHEREUM_ARBITRUM_RPC_URL') || 'https://goerli-rollup.arbitrum.io/rpc',
+    chainId: 421613, // Arbitrum Goerli
+    name: 'Ethereum Arbitrum',
+    symbol: 'ETH',
+    explorer: 'https://goerli.arbiscan.io/tx/'
   }
 }
 
