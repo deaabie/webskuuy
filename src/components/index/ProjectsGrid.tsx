@@ -3,6 +3,7 @@ import { ArrowDown, Filter } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { Project } from "@/types/project";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface ProjectsGridProps {
   isLoading: boolean;
@@ -67,6 +68,10 @@ const ProjectsGrid = ({ isLoading, filteredProjects, theme }: ProjectsGridProps)
                 <div className={`mb-2 text-sm ${theme === "dark" ? 'text-gray-500' : 'text-gray-600'}`}>
                   {project.categories.join("/")}
                 </div>
+                
+                {/* Project name moved to middle of card */}
+                <h3 className="text-lg font-semibold text-center mb-4">{project.name}</h3>
+                
                 <div className="flex-grow flex items-center justify-center py-4">
                   <div className={`w-20 h-20 rounded-full ${theme === "dark" ? 'bg-gray-700' : 'bg-gray-300'} flex items-center justify-center`}>
                     <img 
@@ -80,7 +85,6 @@ const ProjectsGrid = ({ isLoading, filteredProjects, theme }: ProjectsGridProps)
                     />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mt-2">{project.name}</h3>
               </div>
             </Link>
           ))
