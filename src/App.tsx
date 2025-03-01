@@ -13,6 +13,7 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
+import Faucet from "./pages/Faucet";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 
@@ -50,6 +51,7 @@ const AppContent = () => {
           <Route path="/about" element={<About />} />
           <Route path="/faq" element={<Faq />} />
           <Route path="/tools" element={<Tools />} />
+          <Route path="/faucet" element={<Faucet />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {location.pathname !== "/" && <Footer />}
