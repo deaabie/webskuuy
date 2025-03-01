@@ -37,8 +37,8 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   },
   ethereum_optimism: {
     id: "ethereum_optimism",
-    rpcUrl: 'https://goerli.optimism.io',
-    chainId: 420, // Optimism Goerli
+    rpcUrl: 'https://sepolia.optimism.io',
+    chainId: 11155420, // Optimism Goerli
     name: 'Ethereum Optimism',
     symbol: 'ETH',
     explorer: 'https://sepolia-optimism.etherscan.io//tx/'
