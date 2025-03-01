@@ -19,7 +19,7 @@ export const CLAIM_AMOUNT = "0.001";
 export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   ethereum_sepolia: {
     id: "ethereum_sepolia",
-    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public gateway
+    rpcUrl: 'https://sepolia.infura.io/', // Public gateway
     chainId: 11155111, // Sepolia
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
