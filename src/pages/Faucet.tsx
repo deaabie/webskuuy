@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { ExternalLink } from "lucide-react";
 
 const NETWORKS = [
   { id: "ethereum", name: "Ethereum Sepolia", symbol: "ETH" },
@@ -28,6 +29,13 @@ const Faucet = () => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [txDetails, setTxDetails] = useState<{
+    txHash: string;
+    amount: string;
+    network: string;
+    symbol: string;
+    explorerUrl: string;
+  } | null>(null);
   const { toast } = useToast();
 
   // Function to validate Ethereum address
@@ -56,58 +64,42 @@ const Faucet = () => {
     }
 
     setLoading(true);
+    setTxDetails(null);
 
     try {
-      // Check for recent claims from the same address
-      const { data: existingClaims, error: fetchError } = await supabase
-        .from('faucet_claims')
-        .select('created_at')
-        .eq('address', address.toLowerCase())
-        .eq('network', network)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (fetchError) throw fetchError;
-
-      // Check cooldown period (24 hours)
-      if (existingClaims && existingClaims.length > 0) {
-        const lastClaim = new Date(existingClaims[0].created_at);
-        const cooldownTime = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000);
-        
-        if (cooldownTime > new Date()) {
-          const timeLeft = Math.ceil((cooldownTime.getTime() - new Date().getTime()) / (1000 * 60 * 60));
-          setCooldown(true);
-          toast({
-            title: "Cooldown period",
-            description: `You can claim again in approximately ${timeLeft} hours`,
-            variant: "destructive",
-          });
-          setLoading(false);
-          return;
+      // Call the Supabase Edge Function to handle the token sending
+      const { data, error } = await supabase.functions.invoke('send-tokens', {
+        body: {
+          address,
+          network,
+          reason: reason || "No reason provided"
         }
+      });
+
+      if (error) {
+        throw error;
       }
 
-      // Record the claim attempt
-      const { error: insertError } = await supabase
-        .from('faucet_claims')
-        .insert([
-          { 
-            address: address.toLowerCase(), 
-            network, 
-            reason: reason || "No reason provided" 
-          }
-        ]);
+      if (data.error) {
+        if (data.cooldown) {
+          setCooldown(true);
+        }
+        throw new Error(data.message || data.error);
+      }
 
-      if (insertError) throw insertError;
-
-      // Simulating token sending - in a real app, this would connect to a blockchain
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Set transaction details for display
+      setTxDetails({
+        txHash: data.txHash,
+        amount: data.amount,
+        network: data.network,
+        symbol: data.symbol,
+        explorerUrl: data.explorerUrl
+      });
 
       // Success message
-      const selectedNetwork = NETWORKS.find(n => n.id === network);
       toast({
-        title: "Tokens sent!",
-        description: `You've received test ${selectedNetwork?.symbol} on ${selectedNetwork?.name}`,
+        title: "Transaction sent!",
+        description: `You've sent ${data.amount} ${data.symbol} on ${data.network}`,
       });
 
       // Reset form
@@ -119,7 +111,7 @@ const Faucet = () => {
       console.error("Faucet claim error:", error);
       toast({
         title: "Error",
-        description: "Failed to process your request. Please try again later.",
+        description: error.message || "Failed to process your request. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -133,7 +125,7 @@ const Faucet = () => {
         <h1 className="text-4xl font-bold mb-4">Testnet Faucet</h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
           Get testnet tokens for development and testing purposes. 
-          Please only request what you need and remember there's a 24-hour cooldown period.
+          Each request provides 0.001 tokens with a 24-hour cooldown period.
         </p>
       </div>
 
@@ -193,6 +185,34 @@ const Faucet = () => {
             >
               {loading ? "Processing..." : "Claim Tokens"}
             </Button>
+
+            {txDetails && (
+              <div className="mt-4 p-4 bg-muted rounded-md border">
+                <h3 className="font-medium mb-2">Transaction Details</h3>
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <span className="font-medium">Amount:</span> {txDetails.amount} {txDetails.symbol}
+                  </p>
+                  <p>
+                    <span className="font-medium">Network:</span> {txDetails.network}
+                  </p>
+                  <p className="flex items-center gap-1">
+                    <span className="font-medium">Transaction:</span> 
+                    <a 
+                      href={txDetails.explorerUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline flex items-center"
+                    >
+                      View on explorer <ExternalLink className="h-3 w-3 ml-1" />
+                    </a>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Transaction may take a few minutes to complete.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
@@ -208,7 +228,7 @@ const Faucet = () => {
             <h3 className="font-medium mb-2">Request Limits</h3>
             <ul className="text-sm text-muted-foreground space-y-1">
               <li>• One request per network every 24 hours</li>
-              <li>• Maximum 5 tokens per request</li>
+              <li>• 0.001 tokens per request</li>
               <li>• Please use responsibly</li>
             </ul>
           </div>

@@ -1,0 +1,237 @@
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { ethers } from 'https://esm.sh/ethers@6.8.1'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Define RPC endpoints and network configuration
+const NETWORK_CONFIG = {
+  ethereum: {
+    rpcUrl: Deno.env.get('ETHEREUM_RPC_URL') || 'https://sepolia.infura.io/v3/your-project-id',
+    chainId: 11155111, // Sepolia
+    name: 'Ethereum Sepolia',
+    symbol: 'ETH',
+    explorer: 'https://sepolia.etherscan.io/tx/'
+  },
+  polygon: {
+    rpcUrl: Deno.env.get('POLYGON_RPC_URL') || 'https://rpc-mumbai.maticvigil.com',
+    chainId: 80001, // Mumbai
+    name: 'Polygon Mumbai',
+    symbol: 'MATIC',
+    explorer: 'https://mumbai.polygonscan.com/tx/'
+  },
+  arbitrum: {
+    rpcUrl: Deno.env.get('ARBITRUM_RPC_URL') || 'https://goerli-rollup.arbitrum.io/rpc',
+    chainId: 421613, // Arbitrum Goerli
+    name: 'Arbitrum Testnet',
+    symbol: 'ARB',
+    explorer: 'https://goerli.arbiscan.io/tx/'
+  },
+  optimism: {
+    rpcUrl: Deno.env.get('OPTIMISM_RPC_URL') || 'https://goerli.optimism.io',
+    chainId: 420, // Optimism Goerli
+    name: 'Optimism Testnet',
+    symbol: 'OP',
+    explorer: 'https://goerli-optimism.etherscan.io/tx/'
+  },
+  base: {
+    rpcUrl: Deno.env.get('BASE_RPC_URL') || 'https://goerli.base.org',
+    chainId: 84531, // Base Goerli
+    name: 'Base Testnet',
+    symbol: 'ETH',
+    explorer: 'https://goerli.basescan.org/tx/'
+  }
+}
+
+// Create a Supabase client
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Amount to send for each claim (in ether)
+const CLAIM_AMOUNT = "0.001"
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    // Get the private key from environment variables
+    const privateKey = Deno.env.get('FAUCET_PRIVATE_KEY')
+    if (!privateKey) {
+      throw new Error('FAUCET_PRIVATE_KEY environment variable not set')
+    }
+
+    // Parse the request
+    const { address, network, reason } = await req.json()
+
+    // Validate the request
+    if (!address || !network) {
+      return new Response(
+        JSON.stringify({ error: 'Address and network are required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    // Validate the Ethereum address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid wallet address format' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    // Get network configuration
+    const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG]
+    if (!networkConfig) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid network specified' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
+
+    // Check for recent claims from the same address
+    const { data: existingClaims, error: fetchError } = await supabase
+      .from('faucet_claims')
+      .select('created_at, tx_hash')
+      .eq('address', address.toLowerCase())
+      .eq('network', network)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    if (fetchError) {
+      console.error('Error fetching existing claims:', fetchError)
+      throw new Error('Failed to check claim history')
+    }
+
+    // Check cooldown period (24 hours)
+    if (existingClaims && existingClaims.length > 0) {
+      const lastClaim = new Date(existingClaims[0].created_at)
+      const cooldownTime = new Date(lastClaim.getTime() + 24 * 60 * 60 * 1000)
+      
+      if (cooldownTime > new Date()) {
+        const timeLeftHours = Math.ceil((cooldownTime.getTime() - new Date().getTime()) / (1000 * 60 * 60))
+        return new Response(
+          JSON.stringify({ 
+            error: 'Cooldown period',
+            message: `You can claim again in approximately ${timeLeftHours} hours`,
+            cooldown: true
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+        )
+      }
+    }
+
+    // Set up a provider with the network's RPC URL
+    const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
+    
+    // Create a wallet with the private key
+    const wallet = new ethers.Wallet(privateKey, provider)
+    
+    // Check wallet balance to ensure sufficient funds
+    const balance = await wallet.provider.getBalance(wallet.address)
+    if (balance < ethers.parseEther(CLAIM_AMOUNT)) {
+      console.error(`Insufficient funds in faucet wallet for ${network}`)
+      return new Response(
+        JSON.stringify({ error: 'Faucet is currently out of funds. Please try again later or contact the administrator.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
+    // Send transaction
+    console.log(`Sending ${CLAIM_AMOUNT} ${networkConfig.symbol} to ${address} on ${networkConfig.name}`)
+
+    const tx = await wallet.sendTransaction({
+      to: address,
+      value: ethers.parseEther(CLAIM_AMOUNT),
+    })
+
+    console.log(`Transaction sent: ${tx.hash}`)
+
+    // Record the claim in the database
+    const { error: insertError } = await supabase
+      .from('faucet_claims')
+      .insert([
+        { 
+          address: address.toLowerCase(), 
+          network,
+          reason: reason || "No reason provided",
+          tx_hash: tx.hash,
+          amount: CLAIM_AMOUNT,
+          status: 'pending'
+        }
+      ])
+
+    if (insertError) {
+      console.error('Error recording claim:', insertError)
+      // Continue anyway since the transaction was sent
+    }
+
+    // Set up a background task to update the transaction status
+    const updateTransactionStatus = async () => {
+      try {
+        // Wait for transaction to be mined
+        const receipt = await tx.wait()
+        
+        // Update the transaction status in the database
+        const { error: updateError } = await supabase
+          .from('faucet_claims')
+          .update({ status: 'completed' })
+          .eq('tx_hash', tx.hash)
+        
+        if (updateError) {
+          console.error('Error updating transaction status:', updateError)
+        }
+      } catch (error) {
+        console.error('Error waiting for transaction confirmation:', error)
+        
+        // Update the transaction status to failed
+        const { error: updateError } = await supabase
+          .from('faucet_claims')
+          .update({ status: 'failed' })
+          .eq('tx_hash', tx.hash)
+        
+        if (updateError) {
+          console.error('Error updating transaction status to failed:', updateError)
+        }
+      }
+    }
+
+    // Use Deno's EdgeRuntime.waitUntil to run the task in the background
+    EdgeRuntime.waitUntil(updateTransactionStatus())
+
+    // Return the transaction details
+    return new Response(
+      JSON.stringify({
+        success: true,
+        txHash: tx.hash,
+        amount: CLAIM_AMOUNT,
+        network: networkConfig.name,
+        symbol: networkConfig.symbol,
+        explorerUrl: networkConfig.explorer + tx.hash
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
+
+  } catch (error) {
+    // Log the error for debugging
+    console.error('Faucet error:', error)
+    
+    // Return a generic error message to the client
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to process the request',
+        message: error.message 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    )
+  }
+})
