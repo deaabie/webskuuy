@@ -54,6 +54,7 @@ const AppContent = () => {
           <Route path="/tools" element={<Tools />} />
           <Route path="/faucet" element={<Faucet />} />
           <Route path="/explorer" element={<CosmosExplorer />} />
+          <Route path="/cosmos-explorer" element={<CosmosExplorer />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {location.pathname !== "/" && <Footer />}
