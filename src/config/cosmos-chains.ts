@@ -32,67 +32,11 @@ const DEFAULT_CHAINS: ChainConfig[] = [
     gasPrice: "0.025uosmo",
     explorerUrl: "https://www.mintscan.io/osmosis",
     networkType: "mainnet"
-  },
-  {
-    id: "juno",
-    name: "juno",
-    prettyName: "Juno",
-    logo: "/cosmos-logos/juno.svg",
-    rpc: "https://rpc.juno.strange.love",
-    rest: "https://api.juno.strange.love",
-    denom: "ujuno",
-    symbol: "JUNO",
-    decimals: 6,
-    coinGeckoId: "juno-network",
-    gasPrice: "0.025ujuno",
-    explorerUrl: "https://www.mintscan.io/juno",
-    networkType: "mainnet"
-  },
-  {
-    id: "stargaze",
-    name: "stargaze",
-    prettyName: "Stargaze",
-    logo: "/cosmos-logos/stars.svg",
-    rpc: "https://rpc.stargaze-apis.com",
-    rest: "https://rest.stargaze-apis.com",
-    denom: "ustars",
-    symbol: "STARS",
-    decimals: 6,
-    coinGeckoId: "stargaze",
-    gasPrice: "0.025ustars",
-    explorerUrl: "https://www.mintscan.io/stargaze",
-    networkType: "mainnet"
   }
 ];
 
-// Mainnet chain configurations - in a real app, these would be loaded from JSON files
-const MAINNET_CHAINS: ChainConfig[] = [
-  ...DEFAULT_CHAINS
-];
-
-// Testnet chain configurations - in a real app, these would be loaded from JSON files
-const TESTNET_CHAINS: ChainConfig[] = [
-  {
-    id: "theta-testnet",
-    name: "theta-testnet",
-    prettyName: "Cosmos Hub Testnet",
-    logo: "/cosmos-logos/atom.svg",
-    rpc: "https://rpc.cosmos-testnet.network",
-    rest: "https://rest.cosmos-testnet.network",
-    denom: "uatom",
-    symbol: "ATOM",
-    decimals: 6,
-    gasPrice: "0.025uatom",
-    explorerUrl: "https://testnet.mintscan.io/cosmos-testnet",
-    networkType: "testnet"
-  }
-];
-
-// Combine all chains for the explorer
-export const COSMOS_CHAINS: ChainConfig[] = [
-  ...MAINNET_CHAINS,
-  ...TESTNET_CHAINS
-];
+// Initial array to hold chain configurations
+const COSMOS_CHAINS: ChainConfig[] = [];
 
 // Function to get a chain config by ID
 export const getChainConfig = (chainId: string): ChainConfig | undefined => {
@@ -107,20 +51,57 @@ export const getChainsByNetwork = (networkType?: "mainnet" | "testnet"): ChainCo
 
 // Function to load chain configurations from JSON files
 export const loadChainConfigs = async (): Promise<ChainConfig[]> => {
-  const chains: ChainConfig[] = [];
-  
   try {
-    // In a real implementation, this would load JSON files from 
-    // the public directory or fetch them from an API
-    // For example:
-    // const mainnetResponse = await fetch('/chains/mainnet/index.json');
-    // const mainnetChains = await mainnetResponse.json();
+    // Initialize chains array
+    COSMOS_CHAINS.length = 0;
     
-    // For now, we'll use the DEFAULT_CHAINS
+    // Load mainnet chains
+    const mainnetResponse = await fetch('/chains/mainnet/index.json');
+    const mainnetChains = await mainnetResponse.json();
+    
+    for (const filename of mainnetChains) {
+      try {
+        const response = await fetch(`/chains/mainnet/${filename}`);
+        const chainData = await response.json();
+        COSMOS_CHAINS.push({
+          ...chainData,
+          networkType: "mainnet"
+        });
+      } catch (error) {
+        console.error(`Error loading chain configuration from ${filename}:`, error);
+      }
+    }
+    
+    // Load testnet chains
+    const testnetResponse = await fetch('/chains/testnet/index.json');
+    const testnetChains = await testnetResponse.json();
+    
+    for (const filename of testnetChains) {
+      try {
+        const response = await fetch(`/chains/testnet/${filename}`);
+        const chainData = await response.json();
+        COSMOS_CHAINS.push({
+          ...chainData,
+          networkType: "testnet"
+        });
+      } catch (error) {
+        console.error(`Error loading chain configuration from ${filename}:`, error);
+      }
+    }
+    
+    // If no chains were loaded, use the default chains
+    if (COSMOS_CHAINS.length === 0) {
+      console.warn("No chain configurations found, using defaults");
+      COSMOS_CHAINS.push(...DEFAULT_CHAINS);
+    }
+    
     return COSMOS_CHAINS;
   } catch (error) {
     console.error("Error loading chain configurations:", error);
-    return DEFAULT_CHAINS;
+    // If there was an error loading the configurations, use the default chains
+    COSMOS_CHAINS.length = 0;
+    COSMOS_CHAINS.push(...DEFAULT_CHAINS);
+    return COSMOS_CHAINS;
   }
 };
 
@@ -158,7 +139,7 @@ export const removeChain = (chainId: string): boolean => {
   return false;
 };
 
-// Function to save chain configuration as JSON
+// Function to export chain configuration as JSON
 export const exportChainConfig = (chain: ChainConfig): string => {
   return JSON.stringify(chain, null, 2);
 };
@@ -178,12 +159,4 @@ export const importChainConfig = (json: string): ChainConfig | null => {
     console.error("Error parsing chain configuration:", error);
     return null;
   }
-};
-
-// Create sample JSON files for chains
-// This would be used in a development environment to generate sample config files
-export const generateSampleConfigs = (): void => {
-  DEFAULT_CHAINS.forEach(chain => {
-    console.log(`Chain ${chain.id} config:`, exportChainConfig(chain));
-  });
 };

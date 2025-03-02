@@ -1,0 +1,16 @@
+
+{
+  "id": "stargaze",
+  "name": "stargaze",
+  "prettyName": "Stargaze",
+  "logo": "/cosmos-logos/stars.svg",
+  "rpc": "https://rpc.stargaze-apis.com",
+  "rest": "https://rest.stargaze-apis.com",
+  "denom": "ustars",
+  "symbol": "STARS",
+  "decimals": 6,
+  "coinGeckoId": "stargaze",
+  "gasPrice": "0.025ustars",
+  "explorerUrl": "https://www.mintscan.io/stargaze",
+  "networkType": "mainnet"
+}

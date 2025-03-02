@@ -1,0 +1,16 @@
+
+{
+  "id": "juno",
+  "name": "juno",
+  "prettyName": "Juno",
+  "logo": "/cosmos-logos/juno.svg",
+  "rpc": "https://rpc.juno.strange.love",
+  "rest": "https://api.juno.strange.love",
+  "denom": "ujuno",
+  "symbol": "JUNO",
+  "decimals": 6,
+  "coinGeckoId": "juno-network",
+  "gasPrice": "0.025ujuno",
+  "explorerUrl": "https://www.mintscan.io/juno",
+  "networkType": "mainnet"
+}
