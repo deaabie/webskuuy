@@ -35,8 +35,8 @@ const DEFAULT_CHAINS: ChainConfig[] = [
   }
 ];
 
-// Initial array to hold chain configurations
-const COSMOS_CHAINS: ChainConfig[] = [];
+// Initial array to hold chain configurations - export it so it can be used elsewhere
+export const COSMOS_CHAINS: ChainConfig[] = [];
 
 // Function to get a chain config by ID
 export const getChainConfig = (chainId: string): ChainConfig | undefined => {
