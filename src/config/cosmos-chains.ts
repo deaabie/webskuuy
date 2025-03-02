@@ -1,4 +1,8 @@
+
 import { ChainConfig } from "@/types/cosmos";
+
+// Define network types for organization
+export type NetworkType = "mainnet" | "testnet";
 
 // Main configuration for supported Cosmos chains
 export const COSMOS_CHAINS: ChainConfig[] = [
@@ -14,7 +18,8 @@ export const COSMOS_CHAINS: ChainConfig[] = [
     decimals: 6,
     coinGeckoId: "cosmos",
     gasPrice: "0.025uatom",
-    explorerUrl: "https://www.mintscan.io/cosmos"
+    explorerUrl: "https://www.mintscan.io/cosmos",
+    network: "mainnet"
   },
   {
     id: "osmosis",
@@ -28,7 +33,8 @@ export const COSMOS_CHAINS: ChainConfig[] = [
     decimals: 6,
     coinGeckoId: "osmosis",
     gasPrice: "0.025uosmo",
-    explorerUrl: "https://www.mintscan.io/osmosis"
+    explorerUrl: "https://www.mintscan.io/osmosis",
+    network: "mainnet"
   },
   {
     id: "juno",
@@ -42,7 +48,8 @@ export const COSMOS_CHAINS: ChainConfig[] = [
     decimals: 6,
     coinGeckoId: "juno-network",
     gasPrice: "0.025ujuno",
-    explorerUrl: "https://www.mintscan.io/juno"
+    explorerUrl: "https://www.mintscan.io/juno",
+    network: "mainnet"
   },
   {
     id: "stargaze",
@@ -56,38 +63,116 @@ export const COSMOS_CHAINS: ChainConfig[] = [
     decimals: 6,
     coinGeckoId: "stargaze",
     gasPrice: "0.025ustars",
-    explorerUrl: "https://www.mintscan.io/stargaze"
+    explorerUrl: "https://www.mintscan.io/stargaze",
+    network: "mainnet"
   }
 ];
 
+// Dynamically loaded chains from config files
+let dynamicChains: ChainConfig[] = [];
+
 /**
- * Function to add a new chain configuration
+ * Load chain configurations from a JSON file
+ * @param jsonConfig The JSON configuration for chains
+ * @param network The network type (mainnet/testnet)
+ */
+export const loadChainsFromJson = (jsonConfig: any, network: NetworkType = "mainnet"): void => {
+  try {
+    if (!Array.isArray(jsonConfig)) {
+      // If it's a single chain object, convert to array
+      jsonConfig = [jsonConfig];
+    }
+    
+    const newChains = jsonConfig.map((config: any) => ({
+      ...config,
+      network: network,
+      // Ensure name is lowercase if not provided
+      name: config.name || config.id.toLowerCase(),
+      // Set default gas price if not provided
+      gasPrice: config.gasPrice || `0.025${config.denom}`
+    }));
+    
+    // Filter out any invalid configurations
+    const validChains = newChains.filter((chain: any) => 
+      chain.id && chain.rpc && chain.rest && chain.denom && chain.symbol
+    );
+    
+    // Add to dynamic chains, replacing any with the same ID
+    dynamicChains = dynamicChains.filter(chain => 
+      !validChains.some(newChain => newChain.id === chain.id)
+    ).concat(validChains);
+    
+    console.log(`Loaded ${validChains.length} chains for ${network} network`);
+  } catch (error) {
+    console.error("Error loading chain configurations:", error);
+  }
+};
+
+/**
+ * Get all chains, including both predefined and dynamically loaded ones
+ * @param network Optional filter by network type
+ * @returns Array of chain configurations
+ */
+export const getAllChains = (network?: NetworkType): ChainConfig[] => {
+  const allChains = [...COSMOS_CHAINS, ...dynamicChains];
+  
+  if (network) {
+    return allChains.filter(chain => 
+      chain.network === network || 
+      // For backward compatibility with chains that don't have network property
+      (network === "mainnet" && !chain.network)
+    );
+  }
+  
+  return allChains;
+};
+
+/**
+ * Add a new chain configuration
  * @param chainConfig The configuration for the new chain
  * @returns The updated array of chain configurations
  */
 export const addChainConfig = (chainConfig: ChainConfig): ChainConfig[] => {
-  // Check if chain with this ID already exists
-  const existingIndex = COSMOS_CHAINS.findIndex(chain => chain.id === chainConfig.id);
+  // Check if chain with this ID already exists in predefined chains
+  const existingPredefinedIndex = COSMOS_CHAINS.findIndex(chain => chain.id === chainConfig.id);
   
-  // If chain exists, update it
-  if (existingIndex >= 0) {
-    COSMOS_CHAINS[existingIndex] = chainConfig;
+  if (existingPredefinedIndex >= 0) {
+    // Update predefined chain
+    COSMOS_CHAINS[existingPredefinedIndex] = {
+      ...chainConfig,
+      network: chainConfig.network || "mainnet"
+    };
   } else {
-    // Otherwise add the new chain
-    COSMOS_CHAINS.push(chainConfig);
+    // Check if exists in dynamic chains
+    const existingDynamicIndex = dynamicChains.findIndex(chain => chain.id === chainConfig.id);
+    
+    if (existingDynamicIndex >= 0) {
+      // Update dynamic chain
+      dynamicChains[existingDynamicIndex] = {
+        ...chainConfig,
+        network: chainConfig.network || "mainnet"
+      };
+    } else {
+      // Add to dynamic chains
+      dynamicChains.push({
+        ...chainConfig,
+        network: chainConfig.network || "mainnet"
+      });
+    }
   }
   
-  return [...COSMOS_CHAINS];
+  return getAllChains();
 };
 
 /**
- * Function to remove a chain configuration
+ * Remove a chain configuration
  * @param chainId The ID of the chain to remove
  * @returns The updated array of chain configurations
  */
 export const removeChainConfig = (chainId: string): ChainConfig[] => {
-  const updatedChains = COSMOS_CHAINS.filter(chain => chain.id !== chainId);
-  return updatedChains;
+  // Can only remove from dynamic chains
+  dynamicChains = dynamicChains.filter(chain => chain.id !== chainId);
+  return getAllChains();
 };
 
 /**
@@ -96,7 +181,7 @@ export const removeChainConfig = (chainId: string): ChainConfig[] => {
  * @returns The chain configuration or undefined if not found
  */
 export const getChainConfig = (chainId: string): ChainConfig | undefined => {
-  return COSMOS_CHAINS.find(chain => chain.id === chainId);
+  return getAllChains().find(chain => chain.id === chainId);
 };
 
 /**
@@ -116,6 +201,7 @@ export const createChainConfig = (params: {
   explorerUrl?: string;
   coinGeckoId?: string;
   gasPrice?: string;
+  network?: NetworkType;
 }): ChainConfig => {
   return {
     id: params.id,
@@ -129,6 +215,28 @@ export const createChainConfig = (params: {
     decimals: params.decimals,
     coinGeckoId: params.coinGeckoId,
     gasPrice: params.gasPrice || `0.025${params.denom}`,
-    explorerUrl: params.explorerUrl
+    explorerUrl: params.explorerUrl,
+    network: params.network || "mainnet"
   };
+};
+
+/**
+ * Save a chain configuration to a JSON string
+ * @param chain The chain configuration to save
+ * @returns JSON string representation of the chain
+ */
+export const exportChainToJson = (chain: ChainConfig): string => {
+  return JSON.stringify(chain, null, 2);
+};
+
+/**
+ * Check if a hostname contains a network identifier
+ * @param hostname The hostname to check
+ * @returns The network type or undefined
+ */
+export const detectNetworkFromHostname = (hostname: string): NetworkType | undefined => {
+  if (hostname.includes("testnet")) {
+    return "testnet";
+  }
+  return "mainnet"; // Default to mainnet
 };
