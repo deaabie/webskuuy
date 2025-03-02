@@ -1,0 +1,14 @@
+
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="64" cy="64" r="64" fill="#750BBB"/>
+  <path d="M64 104C86.0914 104 104 86.0914 104 64C104 41.9086 86.0914 24 64 24C41.9086 24 24 41.9086 24 64C24 86.0914 41.9086 104 64 104Z" fill="#5E069E"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M63.9996 88C77.2544 88 88 77.2544 88 63.9996C88 50.7452 77.2544 40 63.9996 40C50.7452 40 40 50.7452 40 63.9996C40 77.2544 50.7452 88 63.9996 88ZM63.9996 80C72.8361 80 79.9996 72.8361 79.9996 63.9996C79.9996 55.1635 72.8361 48 63.9996 48C55.1635 48 48 55.1635 48 63.9996C48 72.8361 55.1635 80 63.9996 80Z" fill="white"/>
+  <path d="M64 40V28" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M64 100V88" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M88 64H100" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M28 64H40" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M81.6569 46.3431L90.1421 37.8579" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M37.8579 90.1421L46.3431 81.6569" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M81.6569 81.6569L90.1421 90.1421" stroke="white" stroke-width="4" stroke-linecap="round"/>
+  <path d="M37.8579 37.8579L46.3431 46.3431" stroke="white" stroke-width="4" stroke-linecap="round"/>
+</svg>
