@@ -1,0 +1,16 @@
+
+{
+  "id": "osmosis",
+  "name": "osmosis",
+  "prettyName": "Osmosis",
+  "logo": "/cosmos-logos/osmo.svg",
+  "rpc": "https://rpc.osmosis.zone",
+  "rest": "https://rest.osmosis.zone",
+  "denom": "uosmo",
+  "symbol": "OSMO",
+  "decimals": 6,
+  "coinGeckoId": "osmosis",
+  "gasPrice": "0.025uosmo",
+  "explorerUrl": "https://www.mintscan.io/osmosis",
+  "networkType": "mainnet"
+}

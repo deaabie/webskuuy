@@ -1,0 +1,15 @@
+
+{
+  "id": "theta-testnet",
+  "name": "theta-testnet",
+  "prettyName": "Cosmos Hub Testnet",
+  "logo": "/cosmos-logos/atom.svg",
+  "rpc": "https://rpc.sentry-01.theta-testnet.polypore.xyz",
+  "rest": "https://rest.sentry-01.theta-testnet.polypore.xyz",
+  "denom": "uatom",
+  "symbol": "ATOM",
+  "decimals": 6,
+  "gasPrice": "0.025uatom",
+  "explorerUrl": "https://testnet.mintscan.io/cosmos-testnet",
+  "networkType": "testnet"
+}

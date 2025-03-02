@@ -1,0 +1,16 @@
+
+{
+  "id": "cosmoshub",
+  "name": "cosmoshub",
+  "prettyName": "Cosmos Hub",
+  "logo": "/cosmos-logos/atom.svg",
+  "rpc": "https://rpc.cosmos.network",
+  "rest": "https://rest.cosmos.network",
+  "denom": "uatom",
+  "symbol": "ATOM",
+  "decimals": 6,
+  "coinGeckoId": "cosmos",
+  "gasPrice": "0.025uatom",
+  "explorerUrl": "https://www.mintscan.io/cosmos",
+  "networkType": "mainnet"
+}

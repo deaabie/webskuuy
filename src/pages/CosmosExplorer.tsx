@@ -1,8 +1,13 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Validator, Proposal, Block, CosmosExplorerStats } from "@/types/cosmos";
-import { COSMOS_CHAINS, getChainConfig } from "@/config/cosmos-chains";
+import { 
+  COSMOS_CHAINS, 
+  getChainConfig, 
+  getChainsByNetwork,
+  loadChainConfigs
+} from "@/config/cosmos-chains";
 import CosmosExplorerHeader from "@/components/cosmos/CosmosExplorerHeader";
 import ValidatorsList from "@/components/cosmos/ValidatorsList";
 import ProposalsList from "@/components/cosmos/ProposalsList";
@@ -19,7 +24,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 const CosmosExplorer: React.FC = () => {
-  const [selectedChainId, setSelectedChainId] = useState(COSMOS_CHAINS[0].id);
+  const [selectedChainId, setSelectedChainId] = useState(COSMOS_CHAINS[0]?.id || "");
+  const [selectedNetworkType, setSelectedNetworkType] = useState<"mainnet" | "testnet" | undefined>("mainnet");
   const [validators, setValidators] = useState<Validator[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -27,20 +33,40 @@ const CosmosExplorer: React.FC = () => {
   const [activeTab, setActiveTab] = useState("validators");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [availableChains, setAvailableChains] = useState(COSMOS_CHAINS);
   
   const selectedChain = getChainConfig(selectedChainId) || COSMOS_CHAINS[0];
 
   useEffect(() => {
+    const initChains = async () => {
+      try {
+        await loadChainConfigs();
+        const filteredChains = getChainsByNetwork(selectedNetworkType);
+        setAvailableChains(filteredChains);
+        
+        if (filteredChains.length > 0 && !selectedChainId) {
+          setSelectedChainId(filteredChains[0].id);
+        }
+      } catch (error) {
+        console.error("Error initializing chains:", error);
+        toast.error("Failed to load chain configurations");
+      }
+    };
+    
+    initChains();
+  }, [selectedNetworkType]);
+
+  useEffect(() => {
+    if (!selectedChain) return;
+    
     const loadData = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        // We'll fetch stats first as it's needed for the header
         const statsData = await fetchStats(selectedChain.rest);
         setStats(statsData);
         
-        // Fetch data based on the active tab to optimize loading
         if (activeTab === "validators" || !activeTab) {
           const validatorsData = await fetchValidators(selectedChain.rest);
           setValidators(validatorsData);
@@ -67,13 +93,11 @@ const CosmosExplorer: React.FC = () => {
     };
     
     loadData();
-  }, [selectedChainId, selectedChain.rest, activeTab]);
+  }, [selectedChainId, selectedChain?.rest, activeTab]);
 
-  // Data loading handler for tab changes
   const handleTabChange = async (value: string) => {
     setActiveTab(value);
     
-    // If we haven't loaded this tab's data yet, load it now
     if (value === "validators" && validators.length === 0) {
       try {
         setLoading(true);
@@ -116,13 +140,21 @@ const CosmosExplorer: React.FC = () => {
 
   const handleChainSelect = (chainId: string) => {
     setSelectedChainId(chainId);
-    // Clear existing data when changing chains
     setValidators([]);
     setProposals([]);
     setBlocks([]);
   };
 
-  // Loading state UI components
+  const handleNetworkTypeChange = (networkType: "mainnet" | "testnet" | undefined) => {
+    setSelectedNetworkType(networkType);
+    const filteredChains = getChainsByNetwork(networkType);
+    setAvailableChains(filteredChains);
+    
+    if (filteredChains.length > 0) {
+      handleChainSelect(filteredChains[0].id);
+    }
+  };
+
   const LoadingSkeleton = () => (
     <div className="space-y-4">
       <Skeleton className="h-12 w-full" />
@@ -135,9 +167,29 @@ const CosmosExplorer: React.FC = () => {
 
   return (
     <div className="container py-6 md:py-8 space-y-6 px-4 md:px-6">
+      <div className="flex flex-col md:flex-row gap-4 mb-4 items-start md:items-center">
+        <div className="w-full md:w-1/3">
+          <Select 
+            value={selectedNetworkType || "mainnet"} 
+            onValueChange={(value) => handleNetworkTypeChange(value as "mainnet" | "testnet" | undefined)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select network type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Network Type</SelectLabel>
+                <SelectItem value="mainnet">Mainnet</SelectItem>
+                <SelectItem value="testnet">Testnet</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
       <CosmosExplorerHeader
         selectedChain={selectedChain}
-        chains={COSMOS_CHAINS}
+        chains={availableChains}
         stats={stats}
         onChainSelect={handleChainSelect}
         loading={loading && !stats}

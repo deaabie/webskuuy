@@ -1,4 +1,3 @@
-
 export interface ChainConfig {
   id: string;
   name: string;
@@ -12,6 +11,7 @@ export interface ChainConfig {
   coinGeckoId?: string;
   gasPrice?: string;
   explorerUrl?: string;
+  networkType?: "mainnet" | "testnet";
 }
 
 export interface Validator {
