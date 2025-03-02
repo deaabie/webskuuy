@@ -7,6 +7,7 @@ import CosmosExplorerHeader from "@/components/cosmos/CosmosExplorerHeader";
 import ValidatorsList from "@/components/cosmos/ValidatorsList";
 import ProposalsList from "@/components/cosmos/ProposalsList";
 import BlocksList from "@/components/cosmos/BlocksList";
+import ChainConfigForm from "@/components/cosmos/ChainConfigForm";
 import { 
   fetchValidators, 
   fetchProposals, 
@@ -14,9 +15,11 @@ import {
   fetchStats 
 } from "@/services/cosmosService";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Settings } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const CosmosExplorer: React.FC = () => {
   const [selectedChainId, setSelectedChainId] = useState(COSMOS_CHAINS[0].id);
@@ -27,6 +30,7 @@ const CosmosExplorer: React.FC = () => {
   const [activeTab, setActiveTab] = useState("validators");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
   
   const selectedChain = getChainConfig(selectedChainId) || COSMOS_CHAINS[0];
 
@@ -122,6 +126,11 @@ const CosmosExplorer: React.FC = () => {
     setBlocks([]);
   };
 
+  const handleChainAdded = () => {
+    setConfigDialogOpen(false);
+    toast.success("Chain configuration updated. New chain is now available in the selector.");
+  };
+
   // Loading state UI components
   const LoadingSkeleton = () => (
     <div className="space-y-4">
@@ -135,13 +144,32 @@ const CosmosExplorer: React.FC = () => {
 
   return (
     <div className="container py-6 md:py-8 space-y-6 px-4 md:px-6">
-      <CosmosExplorerHeader
-        selectedChain={selectedChain}
-        chains={COSMOS_CHAINS}
-        stats={stats}
-        onChainSelect={handleChainSelect}
-        loading={loading && !stats}
-      />
+      <div className="flex justify-between items-center">
+        <CosmosExplorerHeader
+          selectedChain={selectedChain}
+          chains={COSMOS_CHAINS}
+          stats={stats}
+          onChainSelect={handleChainSelect}
+          loading={loading && !stats}
+        />
+        
+        <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="icon" title="Configure Chains">
+              <Settings className="h-4 w-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Chain Configuration</DialogTitle>
+              <DialogDescription>
+                Add and configure Cosmos chains for the explorer
+              </DialogDescription>
+            </DialogHeader>
+            <ChainConfigForm onSuccess={handleChainAdded} />
+          </DialogContent>
+        </Dialog>
+      </div>
       
       {error && (
         <Alert variant="destructive">
