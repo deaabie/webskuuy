@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,10 +15,6 @@ import {
 import { NetworkConfig } from "./types";
 import TransactionDetails from "./TransactionDetails";
 import { faucetService } from "@/services/faucetService";
-import ReCAPTCHA from "react-google-recaptcha";
-
-// Replace with your actual reCAPTCHA site key
-const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // This is Google's test key
 
 interface FaucetFormProps {
   networks: NetworkConfig[];
@@ -30,6 +26,7 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [mainnetBalance, setMainnetBalance] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [txDetails, setTxDetails] = useState<{
     txHash: string;
@@ -38,8 +35,6 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
     symbol: string;
     explorerUrl: string;
   } | null>(null);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const { toast } = useToast();
 
   // Function to validate Ethereum address
@@ -47,8 +42,40 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
     return /^0x[a-fA-F0-9]{40}$/.test(address);
   };
 
-  const handleCaptchaChange = (token: string | null) => {
-    setCaptchaVerified(!!token);
+  // Check mainnet balance when address changes
+  const checkMainnetBalance = async () => {
+    if (isValidAddress(address)) {
+      try {
+        const balance = await faucetService.getMainnetBalance(address);
+        setMainnetBalance(balance);
+      } catch (error) {
+        console.error("Error checking mainnet balance:", error);
+        setMainnetBalance(null);
+      }
+    } else {
+      setMainnetBalance(null);
+    }
+  };
+
+  const handleAddressChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newAddress = e.target.value;
+    setAddress(newAddress);
+    
+    // Only check balance if there's a valid address
+    if (isValidAddress(newAddress)) {
+      setLoading(true);
+      try {
+        const balance = await faucetService.getMainnetBalance(newAddress);
+        setMainnetBalance(balance);
+      } catch (error) {
+        console.error("Error checking mainnet balance:", error);
+        setMainnetBalance(null);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setMainnetBalance(null);
+    }
   };
 
   const handleClaim = async () => {
@@ -74,10 +101,11 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
       return;
     }
 
-    if (!captchaVerified) {
+    // Check if user has enough mainnet balance
+    if (!mainnetBalance || parseFloat(mainnetBalance) < 0.005) {
       toast({
-        title: "CAPTCHA verification required",
-        description: "Please complete the CAPTCHA verification",
+        title: "Insufficient mainnet balance",
+        description: "You need at least 0.005 ETH on Ethereum mainnet to claim tokens",
         variant: "destructive",
       });
       return;
@@ -123,12 +151,11 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
         description: `You've sent ${result.amount} ${result.symbol} on ${result.network}`,
       });
 
-      // Reset form and CAPTCHA
+      // Reset form
       setAddress("");
       setNetwork("");
       setReason("");
-      setCaptchaVerified(false);
-      recaptchaRef.current?.reset();
+      setMainnetBalance(null);
       
     } catch (error: any) {
       console.error("Faucet claim error:", error);
@@ -152,9 +179,14 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
             id="wallet-address"
             placeholder="0x..." 
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={handleAddressChange}
             className="mt-1"
           />
+          {mainnetBalance !== null && (
+            <div className={`text-sm mt-1 ${parseFloat(mainnetBalance) >= 0.005 ? 'text-green-600' : 'text-red-600'}`}>
+              Mainnet balance: {mainnetBalance} ETH {parseFloat(mainnetBalance) >= 0.005 ? '✓' : '✗'}
+            </div>
+          )}
         </div>
         
         <div>
@@ -191,23 +223,20 @@ const FaucetForm = ({ networks }: FaucetFormProps) => {
           />
         </div>
         
-        <div className="flex justify-center my-4">
-          <ReCAPTCHA
-            ref={recaptchaRef}
-            sitekey={RECAPTCHA_SITE_KEY}
-            onChange={handleCaptchaChange}
-          />
-        </div>
-        
         {errorMessage && (
           <div className="text-sm text-destructive border border-destructive/20 bg-destructive/10 p-3 rounded-md">
             {errorMessage}
           </div>
         )}
         
+        <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-amber-800 text-sm">
+          <p className="font-medium">Important Notice:</p>
+          <p>You need at least 0.005 ETH on Ethereum mainnet to claim tokens. This helps prevent faucet abuse.</p>
+        </div>
+        
         <Button 
           onClick={handleClaim} 
-          disabled={loading || cooldown || !captchaVerified}
+          disabled={loading || cooldown || !mainnetBalance || parseFloat(mainnetBalance) < 0.005}
           className="w-full mt-2" 
           size="lg"
         >

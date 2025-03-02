@@ -7,6 +7,9 @@ import { TransactionDetails } from "@/components/faucet/types";
 const FAUCET_CLAIMS_KEY = "faucet_claims";
 const FAUCET_LOG_FILE = "faucet_logs.txt";
 
+// Ethereum mainnet provider
+const MAINNET_RPC_URL = "https://eth.llamarpc.com";
+
 interface ClaimRecord {
   address: string;
   network: string;
@@ -92,6 +95,19 @@ export const faucetService = {
     }
   },
 
+  // Get mainnet balance for an address
+  getMainnetBalance: async (address: string): Promise<string> => {
+    try {
+      const provider = new ethers.JsonRpcProvider(MAINNET_RPC_URL);
+      const balanceWei = await provider.getBalance(address);
+      const balanceEth = ethers.formatEther(balanceWei);
+      return parseFloat(balanceEth).toFixed(6); // Format to 6 decimal places
+    } catch (error) {
+      console.error("Error fetching mainnet balance:", error);
+      throw new Error("Failed to fetch mainnet balance");
+    }
+  },
+
   // Check if user is in cooldown period (24 hours)
   checkCooldown: async (address: string, network: string): Promise<{inCooldown: boolean, hoursLeft?: number}> => {
     try {
@@ -124,6 +140,12 @@ export const faucetService = {
   // Send transaction and record claim
   sendTransaction: async (to: string, networkId: string, reason?: string, ipAddress?: string): Promise<TransactionDetails> => {
     try {
+      // First check if user has enough mainnet balance
+      const mainnetBalance = await faucetService.getMainnetBalance(to);
+      if (parseFloat(mainnetBalance) < 0.005) {
+        throw new Error("Insufficient Ethereum mainnet balance. You need at least 0.005 ETH.");
+      }
+
       const networkConfig = NETWORK_CONFIG[networkId];
       if (!networkConfig) {
         throw new Error("Invalid network selected");
