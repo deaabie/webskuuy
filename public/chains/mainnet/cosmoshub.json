@@ -1,11 +1,11 @@
 
 {
-  "id": "cosmoshub",
+  "id": "cosmoshub-4",
   "name": "cosmoshub",
   "prettyName": "Cosmos Hub",
   "logo": "/cosmos-logos/atom.svg",
-  "rpc": "https://rpc.cosmos.network",
-  "rest": "https://rest.cosmos.network",
+  "rpc": "https://cosmos-rpc.icycro.org",
+  "rest": "https://rest.cosmos.directory/cosmoshub",
   "denom": "uatom",
   "symbol": "ATOM",
   "decimals": 6,
