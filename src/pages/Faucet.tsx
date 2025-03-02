@@ -10,13 +10,13 @@ const Faucet = () => {
   const networks = Object.values(NETWORK_CONFIG);
   
   return (
-    <div className="container max-w-4xl py-12">
+    <div className="container max-w-4xl py-6 md:py-12 px-4 md:px-6">
       <FaucetHeader 
         title="Testnet Faucet"
         description="Get testnet tokens for development and testing purposes. Each request provides 0.001 tokens with a 24-hour cooldown period."
       />
 
-      <div className="grid gap-8 md:grid-cols-[1fr_300px]">
+      <div className="grid gap-6 md:gap-8 md:grid-cols-[1fr_300px]">
         <FaucetForm networks={networks} />
         <FaucetInfo />
       </div>
