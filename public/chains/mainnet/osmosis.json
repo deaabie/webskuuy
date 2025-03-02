@@ -1,11 +1,11 @@
 
 {
-  "id": "osmosis",
+  "id": "osmosis-1",
   "name": "osmosis",
   "prettyName": "Osmosis",
   "logo": "/cosmos-logos/osmo.svg",
   "rpc": "https://rpc.osmosis.zone",
-  "rest": "https://rest.osmosis.zone",
+  "rest": "https://lcd.osmosis.zone",
   "denom": "uosmo",
   "symbol": "OSMO",
   "decimals": 6,
