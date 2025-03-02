@@ -17,8 +17,8 @@ const IndexFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link to="#" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
-                  Staking
+                <Link to="/faucet" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
+                  Faucet
                 </Link>
               </li>
               <li>
