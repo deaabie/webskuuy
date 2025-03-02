@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,7 +25,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 const CosmosExplorer: React.FC = () => {
-  const [selectedChainId, setSelectedChainId] = useState(COSMOS_CHAINS[0]?.id || "");
+  const [selectedChainId, setSelectedChainId] = useState("");
   const [selectedNetworkType, setSelectedNetworkType] = useState<"mainnet" | "testnet" | undefined>("mainnet");
   const [validators, setValidators] = useState<Validator[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -35,7 +36,7 @@ const CosmosExplorer: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [availableChains, setAvailableChains] = useState(COSMOS_CHAINS);
   
-  const selectedChain = getChainConfig(selectedChainId) || COSMOS_CHAINS[0];
+  const selectedChain = selectedChainId ? getChainConfig(selectedChainId) : null;
 
   useEffect(() => {
     const initChains = async () => {
@@ -187,13 +188,15 @@ const CosmosExplorer: React.FC = () => {
         </div>
       </div>
       
-      <CosmosExplorerHeader
-        selectedChain={selectedChain}
-        chains={availableChains}
-        stats={stats}
-        onChainSelect={handleChainSelect}
-        loading={loading && !stats}
-      />
+      {selectedChain && (
+        <CosmosExplorerHeader
+          selectedChain={selectedChain}
+          chains={availableChains}
+          stats={stats}
+          onChainSelect={handleChainSelect}
+          loading={loading && !stats}
+        />
+      )}
       
       {error && (
         <Alert variant="destructive">
@@ -216,7 +219,7 @@ const CosmosExplorer: React.FC = () => {
         <TabsContent value="validators" className="space-y-4">
           {loading ? (
             <LoadingSkeleton />
-          ) : validators.length > 0 ? (
+          ) : validators.length > 0 && selectedChain ? (
             <ValidatorsList validators={validators} chain={selectedChain} />
           ) : (
             <Alert variant="default">
@@ -229,7 +232,7 @@ const CosmosExplorer: React.FC = () => {
         <TabsContent value="proposals" className="space-y-4">
           {loading ? (
             <LoadingSkeleton />
-          ) : proposals.length > 0 ? (
+          ) : proposals.length > 0 && selectedChain ? (
             <ProposalsList proposals={proposals} chain={selectedChain} />
           ) : (
             <Alert variant="default">
