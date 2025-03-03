@@ -126,6 +126,15 @@ The project includes an admin panel at `/admin`. Default credentials:
 
 Be sure to change these credentials in production!
 
+## Creating Installation Guides
+
+For guidance on creating effective installation guides using Markdown in the admin panel, check out:
+- [MARKDOWN_GUIDE.md](MARKDOWN_GUIDE.md) - Complete guide to writing installation guides
+- [INSTALLATION_GUIDE_TIPS.md](INSTALLATION_GUIDE_TIPS.md) - Tips and best practices
+- [INSTALLATION_GUIDE_TEMPLATES.md](INSTALLATION_GUIDE_TEMPLATES.md) - Templates for different blockchain types
+
+The admin panel also includes a built-in Markdown help guide that can be accessed when editing a project.
+
 ## Need Help?
 
 - Check the [Lovable Documentation](https://docs.lovable.dev/)

@@ -9,6 +9,7 @@ import { Plus, Save, Upload } from "lucide-react";
 import { Project } from "@/types/project";
 import { useState, useEffect } from "react";
 import { getProjectSlug } from "@/services/projectService";
+import MarkdownGuide from "./MarkdownGuide";
 
 interface ProjectFormProps {
   project: Partial<Project>;
@@ -152,7 +153,10 @@ const ProjectForm = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="guide">Installation Guide (Markdown)</Label>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="guide">Installation Guide (Markdown)</Label>
+            <MarkdownGuide />
+          </div>
           <Textarea 
             id="guide" 
             placeholder="# Installation Guide\n\n## Prerequisites\n- Required software\n- Hardware specs\n\n## Steps\n1. First step\n2. Second step"
