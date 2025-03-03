@@ -61,8 +61,8 @@ const MarkdownGuide = () => {
 
               <h3>Blockquotes</h3>
               <pre className="bg-slate-100 dark:bg-slate-800 p-2 rounded-md">
-                > Important note or warning message
-                > Multiple lines in the same blockquote
+                {">"}  Important note or warning message
+                {">"}  Multiple lines in the same blockquote
               </pre>
 
               <h3>Horizontal Rule</h3>
