@@ -14,7 +14,6 @@ import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
 import Faucet from "./pages/Faucet";
-import CosmosExplorer from "./pages/CosmosExplorer";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 
@@ -53,8 +52,6 @@ const AppContent = () => {
           <Route path="/faq" element={<Faq />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="/faucet" element={<Faucet />} />
-          <Route path="/explorer" element={<CosmosExplorer />} />
-          {/* Removed duplicate route: "/cosmos-explorer" */}
           <Route path="*" element={<NotFound />} />
         </Routes>
         {location.pathname !== "/" && <Footer />}
