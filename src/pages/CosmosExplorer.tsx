@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Globe, Server, Link, Activity, Search, GitBranch, Plus, Settings } from "lucide-react";
+import { Globe, Server, Link as LinkIcon, Activity, Search, GitBranch, Plus, Settings } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useQuery } from "@tanstack/react-query";
 
@@ -251,264 +251,73 @@ const CosmosExplorer = () => {
           </Button>
         </div>
       ) : (
-        // Chains grid
+        // Modified chains grid to link to chain dashboard
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
           {filteredChains.map((chain) => (
-            <Card 
-              key={chain.registry_name} 
-              className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setSelectedChain(chain)}
-            >
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
-                      <img 
-                        src={chain.logo} 
-                        alt={chain.chain_name}
-                        className="h-8 w-8 object-contain"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                        }}
-                      />
+            <Link to={`/chain/${chain.registry_name}`} key={chain.registry_name}>
+              <Card 
+                className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow h-full"
+              >
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
+                        <img 
+                          src={chain.logo} 
+                          alt={chain.chain_name}
+                          className="h-8 w-8 object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">{chain.chain_name}</CardTitle>
+                        <CardDescription>{chain.registry_name}</CardDescription>
+                      </div>
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{chain.chain_name}</CardTitle>
-                      <CardDescription>{chain.registry_name}</CardDescription>
+                    <Badge variant={chain.is_testnet ? "secondary" : "default"}>
+                      {chain.is_testnet ? "Testnet" : "Mainnet"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Assets */}
+                  <div>
+                    <p className="text-sm font-medium mb-1">Assets:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {chain.assets.map((asset) => (
+                        <Badge key={asset.base} variant="outline" className="flex items-center gap-1">
+                          <span>{asset.symbol}</span>
+                        </Badge>
+                      ))}
                     </div>
                   </div>
-                  <Badge variant={chain.is_testnet ? "secondary" : "default"}>
-                    {chain.is_testnet ? "Testnet" : "Mainnet"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Assets */}
-                <div>
-                  <p className="text-sm font-medium mb-1">Assets:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {chain.assets.map((asset) => (
-                      <Badge key={asset.base} variant="outline" className="flex items-center gap-1">
-                        <span>{asset.symbol}</span>
-                      </Badge>
-                    ))}
+                  
+                  {/* SDK Version */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <Server className="h-4 w-4 text-muted-foreground" />
+                    <span>SDK: {chain.sdk_version}</span>
                   </div>
-                </div>
-                
-                {/* SDK Version */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Server className="h-4 w-4 text-muted-foreground" />
-                  <span>SDK: {chain.sdk_version}</span>
-                </div>
-                
-                {/* RPC Endpoints Count */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Link className="h-4 w-4 text-muted-foreground" />
-                  <span>{chain.rpc.length} RPC Endpoint{chain.rpc.length > 1 ? 's' : ''}</span>
-                </div>
-              </CardContent>
-              <CardFooter className="bg-muted/50 p-2 pt-0">
-                <div className="flex justify-end w-full">
-                  <Button variant="ghost" size="sm">View Details</Button>
-                </div>
-              </CardFooter>
-            </Card>
+                  
+                  {/* RPC Endpoints Count */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                    <span>{chain.rpc.length} RPC Endpoint{chain.rpc.length > 1 ? 's' : ''}</span>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-muted/50 p-2 pt-0">
+                  <div className="flex justify-end w-full">
+                    <Button variant="ghost" size="sm">View Dashboard</Button>
+                  </div>
+                </CardFooter>
+              </Card>
+            </Link>
           ))}
         </div>
       )}
       
-      {/* Chain Details Modal (will be displayed when a chain is selected) */}
-      {selectedChain && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-lg w-full max-w-3xl max-h-[90vh] overflow-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-16 w-16 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex items-center justify-center">
-                    <img 
-                      src={selectedChain.logo} 
-                      alt={selectedChain.chain_name}
-                      className="h-10 w-10 object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">{selectedChain.chain_name}</h2>
-                    <p className="text-muted-foreground">{selectedChain.registry_name}</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant={selectedChain.is_testnet ? "secondary" : "default"}>
-                    {selectedChain.is_testnet ? "Testnet" : "Mainnet"}
-                  </Badge>
-                  <Button variant="outline" size="icon" onClick={() => setSelectedChain(null)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                      <path d="M18 6L6 18"></path>
-                      <path d="M6 6L18 18"></path>
-                    </svg>
-                    <span className="sr-only">Close</span>
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-6">
-                {/* Chain Details */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Prefix</p>
-                    <p className="font-mono">{selectedChain.addr_prefix}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Coin Type</p>
-                    <p className="font-mono">{selectedChain.coin_type}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">SDK Version</p>
-                    <p className="font-mono">{selectedChain.sdk_version}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm text-muted-foreground">Min TX Fee</p>
-                    <p className="font-mono">{selectedChain.min_tx_fee}</p>
-                  </div>
-                </div>
-                
-                {/* Assets */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Assets</h3>
-                  <div className="space-y-4">
-                    {selectedChain.assets.map((asset) => (
-                      <div key={asset.base} className="flex items-center p-3 bg-muted rounded-lg">
-                        <div className="h-8 w-8 rounded-full bg-background overflow-hidden flex items-center justify-center mr-3">
-                          <img 
-                            src={asset.logo} 
-                            alt={asset.symbol}
-                            className="h-6 w-6 object-contain"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src = "/placeholder.svg";
-                            }}
-                          />
-                        </div>
-                        <div className="flex-grow">
-                          <p className="font-semibold">{asset.symbol}</p>
-                          <p className="text-sm text-muted-foreground">Denom: {asset.base}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm">Exponent: {asset.exponent}</p>
-                          {asset.coingecko_id && (
-                            <a 
-                              href={`https://www.coingecko.com/en/coins/${asset.coingecko_id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline"
-                            >
-                              View on CoinGecko
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* API Endpoints */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">API Endpoints</h3>
-                  <div className="space-y-2">
-                    {selectedChain.api.map((api, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div>
-                          <p className="font-medium">{api.provider}</p>
-                          <p className="text-sm font-mono break-all">{api.address}</p>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => {
-                          navigator.clipboard.writeText(api.address);
-                          toast({
-                            title: "Copied to clipboard",
-                            description: "API endpoint copied to clipboard"
-                          });
-                        }}>
-                          Copy
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* RPC Endpoints */}
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">RPC Endpoints</h3>
-                  <div className="space-y-2">
-                    {selectedChain.rpc.map((rpc, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium">{rpc.provider}</p>
-                            <Badge variant="outline" className="h-5">
-                              <span className="flex items-center gap-1">
-                                <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                                Online
-                              </span>
-                            </Badge>
-                          </div>
-                          <p className="text-sm font-mono break-all">{rpc.address}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm" onClick={() => {
-                            navigator.clipboard.writeText(rpc.address);
-                            toast({
-                              title: "Copied to clipboard",
-                              description: "RPC endpoint copied to clipboard"
-                            });
-                          }}>
-                            Copy
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={() => {
-                            window.open(`${rpc.address}/status`, '_blank');
-                          }}>
-                            Check
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Keplr Integration */}
-                {selectedChain.keplr_features && selectedChain.keplr_features.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-3">Keplr Features</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedChain.keplr_features.map((feature) => (
-                        <Badge key={feature} variant="secondary">{feature}</Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* GitHub Repository */}
-                <div className="mt-6 pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <GitBranch className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      This chain's data is maintained in our GitHub repository. 
-                      <Button variant="link" className="h-auto p-0 text-sm" onClick={() => {
-                        toast({
-                          title: "GitHub Repository",
-                          description: "The link to submit PRs for chain updates will be available soon."
-                        });
-                      }}>
-                        Submit a PR to update this information.
-                      </Button>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Chain Details Modal - Remove as we now have a dedicated page */}
       
       {/* GitHub Repository Info */}
       <div className="bg-muted p-6 rounded-lg">
