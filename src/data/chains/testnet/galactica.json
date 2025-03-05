@@ -14,7 +14,7 @@
   "coin_type": "60",
   "min_tx_fee": "10000000000000000",
   "addr_prefix": "gala",
-  "logo": "/logos/galactica.png",
+  "logo": "https://raw.githubusercontent.com/deaabie/chainbase/refs/heads/main/galactica.png",
   "assets": [{
     "base": "agnet",
     "symbol": "GNET",
