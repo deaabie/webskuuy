@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 export interface ChainConfig {
@@ -148,8 +149,8 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
 
 export const getValidators = async (apiUrl: string): Promise<Validator[]> => {
   try {
-    // Fetch all validators with pagination
-    const response = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?pagination.limit=200`);
+    // Fetch up to 500 validators with pagination to ensure we get all active validators
+    const response = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?pagination.limit=500`);
     
     return response.data.validators.map((v: any) => ({
       address: v.operator_address,
