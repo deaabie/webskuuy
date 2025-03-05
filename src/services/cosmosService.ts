@@ -44,6 +44,8 @@ export interface Validator {
   commission: string;
   status: string;
   uptime: string;
+  consensus_address?: string;
+  hex_address?: string;
 }
 
 export interface Block {
@@ -170,6 +172,10 @@ export const getValidators = async (apiUrl: string): Promise<Validator[]> => {
       commission: (parseFloat(v.commission.commission_rates.rate) * 100).toFixed(2) + "%",
       status: v.status === 'BOND_STATUS_BONDED' ? 'Active' : 'Inactive',
       uptime: "100%", // This would require additional data
+      // Try to get consensus address if available
+      consensus_address: v.consensus_pubkey?.key ? v.consensus_pubkey.key : undefined,
+      // Convert operator address to hex format for chains that use hex in block proposer
+      hex_address: v.operator_address ? Buffer.from(v.operator_address).toString('hex') : undefined
     }));
   } catch (error) {
     console.error('Error fetching validators:', error);
