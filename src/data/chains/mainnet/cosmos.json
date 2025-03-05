@@ -1,7 +1,7 @@
 
 {
   "chain_name": "cosmos",
-  "display_name": "Cosmos Hub",
+  "display_name": "Cosmos",
   "chain_id": "cosmoshub-4",
   "api": [
     {"provider": "Publicnode", "address": "https://cosmos-rest.publicnode.com"}
