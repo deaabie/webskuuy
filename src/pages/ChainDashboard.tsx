@@ -21,6 +21,18 @@ import {
   getTransactions
 } from '@/services/cosmosService';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Server, 
+  Globe, 
+  Hash, 
+  Database, 
+  Clock,
+  BarChart,
+  FileCode,
+  Coins,
+  PieChart
+} from 'lucide-react';
+import { PieChart as RechartsChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const ChainDashboard: React.FC = () => {
   const { chainName } = useParams<{ chainName: string }>();
@@ -136,6 +148,23 @@ const ChainDashboard: React.FC = () => {
     );
   }
 
+  // Calculate bonded and unbonded tokens for the tokenomics chart
+  const calculateTokenomicsData = () => {
+    if (!stats) return [];
+    
+    const totalSupply = parseInt(stats.supply.total) || 0;
+    const bondedTokens = totalSupply * (parseFloat(stats.stakingAPR.replace('%', '')) / 100) || 0;
+    const unbondedTokens = totalSupply - bondedTokens;
+    
+    return [
+      { name: 'Bonded', value: bondedTokens },
+      { name: 'Unbonded', value: unbondedTokens },
+    ];
+  };
+
+  // Chart colors
+  const COLORS = ['#8B5CF6', '#D1D5DB'];
+
   return (
     <div className="container mx-auto py-8 px-4">
       <SEO 
@@ -163,10 +192,10 @@ const ChainDashboard: React.FC = () => {
       
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard title="Latest Block" value={formatNumber(stats.height)} />
-          <StatCard title="Active Validators" value={`${stats.validators.active}/${stats.validators.total}`} />
-          <StatCard title="Block Time" value={`${stats.blockTime} s`} />
-          <StatCard title="Staking APR" value={stats.stakingAPR} />
+          <StatCard title="Latest Block" value={formatNumber(stats.height)} icon={<Hash size={20} />} />
+          <StatCard title="Active Validators" value={`${stats.validators.active}/${stats.validators.total}`} icon={<Server size={20} />} />
+          <StatCard title="Block Time" value={`${stats.blockTime} s`} icon={<Clock size={20} />} />
+          <StatCard title="Staking APR" value={stats.stakingAPR} icon={<BarChart size={20} />} />
         </div>
       )}
       
@@ -183,53 +212,85 @@ const ChainDashboard: React.FC = () => {
             {/* Chain Info Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Chain Information</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-purple-500" />
+                  Chain Information
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <div className="text-sm font-medium mb-1">Chain ID</div>
-                    <div>{chain.chain_id}</div>
+                  <div className="flex items-center gap-2">
+                    <Hash className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-medium">Chain ID</div>
+                    <div className="ml-auto">{chain.chain_id}</div>
                   </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Address Prefix</div>
-                    <div>{chain.addr_prefix}</div>
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-medium">Address Prefix</div>
+                    <div className="ml-auto">{chain.addr_prefix}</div>
                   </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">SDK Version</div>
-                    <div>{chain.sdk_version}</div>
+                  <div className="flex items-center gap-2">
+                    <FileCode className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-medium">SDK Version</div>
+                    <div className="ml-auto">{chain.sdk_version}</div>
                   </div>
-                  <div>
-                    <div className="text-sm font-medium mb-1">Coin Type</div>
-                    <div>{chain.coin_type}</div>
+                  <div className="flex items-center gap-2">
+                    <Coins className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-medium">Coin Type</div>
+                    <div className="ml-auto">{chain.coin_type}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
             
-            {/* Assets Card */}
+            {/* Tokenomics Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Assets</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5 text-purple-500" />
+                  Tokenomics
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {chain.assets.map((asset, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <img 
-                        src={asset.logo}
-                        alt={asset.symbol}
-                        className="w-8 h-8 rounded-full"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                        }}
-                      />
-                      <div>
-                        <div className="font-medium">{asset.symbol}</div>
-                        <div className="text-sm text-muted-foreground">Denom: {asset.base}</div>
+                  <div className="h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsChart>
+                        <Pie
+                          data={calculateTokenomicsData()}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        >
+                          {calculateTokenomicsData().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => formatNumber(value)} />
+                      </RechartsChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  <div className="space-y-2 pt-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                        <span className="text-sm">Total Supply</span>
                       </div>
+                      <span className="font-medium">{formatNumber(stats?.supply.total || 0)} {chain.assets[0]?.symbol}</span>
                     </div>
-                  ))}
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <span className="text-sm">Inflation</span>
+                      </div>
+                      <span className="font-medium">{stats?.inflation}</span>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -238,7 +299,10 @@ const ChainDashboard: React.FC = () => {
           {/* Recent Blocks */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Blocks</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-purple-500" />
+                Recent Blocks
+              </CardTitle>
               <CardDescription>Last 5 blocks</CardDescription>
             </CardHeader>
             <CardContent>
@@ -270,7 +334,10 @@ const ChainDashboard: React.FC = () => {
           {/* Recent Transactions */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Transactions</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileCode className="h-5 w-5 text-purple-500" />
+                Recent Transactions
+              </CardTitle>
               <CardDescription>Last 5 transactions</CardDescription>
             </CardHeader>
             <CardContent>
@@ -418,7 +485,10 @@ const ChainDashboard: React.FC = () => {
       
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Endpoints</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Server className="h-5 w-5 text-purple-500" />
+            Endpoints
+          </CardTitle>
           <CardDescription>API and RPC endpoints for {chain.display_name}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -470,13 +540,17 @@ const ChainDashboard: React.FC = () => {
 interface StatCardProps {
   title: string;
   value: string;
+  icon: React.ReactNode;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+          {icon}
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
