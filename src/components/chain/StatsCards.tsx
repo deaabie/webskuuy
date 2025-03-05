@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Server, Clock, BarChart } from 'lucide-react';
+import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -10,29 +10,34 @@ interface StatsCardsProps {
 }
 
 const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
-  if (!stats) return null;
+  // Even if stats is null, we'll still render the cards with placeholder values
+  // This will prevent the UI from jumping around while data is loading
+  const height = stats?.height ? formatNumber(stats.height) : "0";
+  const validatorsCount = stats?.validators ? `${stats.validators.active}/${stats.validators.total}` : "0/0";
+  const blockTime = stats?.blockTime ? `${stats.blockTime} s` : "0 s";
+  const stakingAPR = stats?.stakingAPR || "0%";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
       <StatCard 
         title="Latest Block" 
-        value={formatNumber(stats.height)} 
+        value={height} 
         icon={<Hash size={20} className="text-purple-500" />} 
       />
       <StatCard 
         title="Active Validators" 
-        value={`${stats.validators.active}/${stats.validators.total}`} 
-        icon={<Server size={20} className="text-purple-500" />} 
+        value={validatorsCount} 
+        icon={<Users size={20} className="text-purple-500" />} 
       />
       <StatCard 
         title="Block Time" 
-        value={`${stats.blockTime} s`} 
+        value={blockTime} 
         icon={<Clock size={20} className="text-purple-500" />} 
       />
       <StatCard 
         title="Staking APR" 
-        value={stats.stakingAPR} 
-        icon={<BarChart size={20} className="text-purple-500" />} 
+        value={stakingAPR} 
+        icon={<TrendingUp size={20} className="text-purple-500" />} 
       />
     </div>
   );

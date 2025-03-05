@@ -38,6 +38,23 @@ const ChainDashboard: React.FC = () => {
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
 
+  // Create a stats placeholder to ensure UI renders consistently
+  const statsPlaceholder: BlockchainStats = {
+    height: 0,
+    validators: {
+      total: 0,
+      active: 0,
+    },
+    supply: {
+      total: "0",
+      circulating: "0",
+    },
+    blockTime: 0,
+    communityPool: "0",
+    inflation: "0%",
+    stakingAPR: "0%",
+  };
+
   const fetchBlockchainData = useCallback(async () => {
     if (!chain || !activeEndpoint.api || !activeEndpoint.rpc) return;
     
@@ -130,7 +147,7 @@ const ChainDashboard: React.FC = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  if (loading) {
+  if (loading && !chain) {
     return (
       <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[60vh]">
         <p>Loading chain data...</p>
@@ -171,10 +188,8 @@ const ChainDashboard: React.FC = () => {
         </div>
       </div>
       
-      {/* Stats Cards */}
-      {stats && (
-        <StatsCards stats={stats} formatNumber={formatNumber} />
-      )}
+      {/* Stats Cards - always show them, even during loading */}
+      <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
       
       <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-4">
