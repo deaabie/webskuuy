@@ -8,29 +8,26 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Copy, ExternalLink, RefreshCcw, CheckCircle, Database, Share2, SendHorizonal, Repeat } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, RefreshCcw, Database, Share2, SendHorizonal, Repeat, Clock, Activity, CheckCircle, X } from "lucide-react";
 import SEO from "@/components/SEO";
 import { useQuery } from "@tanstack/react-query";
-
-// Define types for blockchain stats
-interface BlockchainStats {
-  height: number;
-  validators: number;
-  supply: string;
-  bondedTokens: string;
-  inflation: string;
-  communityPool: string;
-}
+import { 
+  BlockchainStats, 
+  ValidatorInfo, 
+  BlockInfo, 
+  TransactionInfo,
+  fetchBlockchainStats,
+  fetchValidators,
+  fetchRecentBlocks,
+  fetchRecentTransactions,
+  startPollingUpdates
+} from "@/services/cosmosRpcService";
 
 interface WalletStats {
   balance: string;
   staking: string;
   reward: string;
   unbonding: string;
-}
-
-interface ChainDashboardProps {
-  // Any props if needed
 }
 
 const ChainDashboard = () => {
@@ -44,9 +41,17 @@ const ChainDashboard = () => {
     reward: "0",
     unbonding: "0"
   });
+  
+  // State for real-time data
+  const [chainStats, setChainStats] = useState<BlockchainStats | null>(null);
+  const [validators, setValidators] = useState<ValidatorInfo[]>([]);
+  const [recentBlocks, setRecentBlocks] = useState<BlockInfo[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<TransactionInfo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   // Get chain info from cosmos chains API or our sample data
-  const { data: chain, isLoading, error, refetch } = useQuery({
+  const { data: chain, isLoading: chainLoading, error: chainError, refetch } = useQuery({
     queryKey: ['chain-details', slug],
     queryFn: async () => {
       // In real implementation, this would fetch from a proper API
@@ -114,35 +119,76 @@ const ChainDashboard = () => {
       }
     },
   });
-
-  // Get blockchain stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['chain-stats', slug],
-    queryFn: async () => {
-      // In real implementation, this would fetch from RPC endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (slug === "galactica") {
-        return {
-          height: 4938342,
-          validators: 96,
-          supply: "1,049,991,637.7",
-          bondedTokens: "18,355,883.2",
-          inflation: "0%",
-          communityPool: "682.8k GNET"
-        };
-      } else {
-        return {
-          height: 24697256,
-          validators: 175,
-          supply: "390,769,490.3",
-          bondedTokens: "192,456,893.1",
-          inflation: "12.7%",
-          communityPool: "1.92M ATOM"
-        };
-      }
-    },
-  });
+  
+  // Set up real-time data polling when chain data is available
+  useEffect(() => {
+    if (!chain) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    // Get the primary API and RPC endpoints
+    const primaryRpc = chain.rpc[0]?.address;
+    const primaryApi = chain.api[0]?.address;
+    
+    if (!primaryRpc || !primaryApi) {
+      setError(new Error("No RPC or API endpoints available"));
+      setIsLoading(false);
+      return;
+    }
+    
+    // Load initial data
+    const promises = [
+      fetchBlockchainStats(primaryRpc, primaryApi)
+        .then(stats => setChainStats(stats))
+        .catch(err => {
+          console.error("Failed to fetch blockchain stats:", err);
+          throw err;
+        }),
+        
+      fetchValidators(primaryApi)
+        .then(data => setValidators(data))
+        .catch(err => {
+          console.error("Failed to fetch validators:", err);
+          // Don't throw here to avoid blocking other data
+          return [];
+        }),
+        
+      fetchRecentBlocks(primaryRpc)
+        .then(data => setRecentBlocks(data))
+        .catch(err => {
+          console.error("Failed to fetch recent blocks:", err);
+          return [];
+        }),
+        
+      fetchRecentTransactions(primaryApi)
+        .then(data => setRecentTransactions(data))
+        .catch(err => {
+          console.error("Failed to fetch recent transactions:", err);
+          return [];
+        })
+    ];
+    
+    Promise.all(promises)
+      .then(() => setIsLoading(false))
+      .catch(err => {
+        setError(err);
+        setIsLoading(false);
+      });
+    
+    // Start polling for updates (every 15 seconds)
+    const cleanup = startPollingUpdates(
+      primaryRpc,
+      primaryApi,
+      15000,
+      (stats) => setChainStats(stats),
+      (validators) => setValidators(validators),
+      (blocks) => setRecentBlocks(blocks),
+      (transactions) => setRecentTransactions(transactions)
+    );
+    
+    return cleanup;
+  }, [chain]);
 
   // Function to connect wallet
   const connectWallet = () => {
@@ -167,8 +213,44 @@ const ChainDashboard = () => {
       description: "Address copied to clipboard"
     });
   };
+  
+  // Function to force refresh data
+  const refreshData = () => {
+    if (!chain) return;
+    
+    const primaryRpc = chain.rpc[0]?.address;
+    const primaryApi = chain.api[0]?.address;
+    
+    if (!primaryRpc || !primaryApi) return;
+    
+    toast({
+      title: "Refreshing data",
+      description: "Fetching the latest blockchain data..."
+    });
+    
+    Promise.all([
+      fetchBlockchainStats(primaryRpc, primaryApi).then(stats => setChainStats(stats)),
+      fetchValidators(primaryApi).then(data => setValidators(data)),
+      fetchRecentBlocks(primaryRpc).then(data => setRecentBlocks(data)),
+      fetchRecentTransactions(primaryApi).then(data => setRecentTransactions(data))
+    ])
+    .then(() => {
+      toast({
+        title: "Data refreshed",
+        description: "Successfully updated with the latest blockchain data."
+      });
+    })
+    .catch(err => {
+      console.error("Refresh failed:", err);
+      toast({
+        title: "Refresh failed",
+        description: "Could not fetch the latest data. Please try again.",
+        variant: "destructive"
+      });
+    });
+  };
 
-  if (isLoading || !chain) {
+  if (chainLoading || isLoading || !chain) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center mb-6">
@@ -189,7 +271,7 @@ const ChainDashboard = () => {
     );
   }
 
-  if (error) {
+  if (chainError || error) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="flex items-center mb-6">
@@ -203,9 +285,12 @@ const ChainDashboard = () => {
             <div className="text-center py-12">
               <h2 className="text-2xl font-bold text-destructive mb-2">Error Loading Chain Data</h2>
               <p className="text-muted-foreground mb-4">
-                There was an error loading the chain information.
+                {chainError?.message || error?.message || "There was an error loading the chain information."}
               </p>
-              <Button onClick={() => refetch()}>
+              <Button onClick={() => {
+                refetch();
+                refreshData();
+              }}>
                 <RefreshCcw className="h-4 w-4 mr-2" />
                 Try Again
               </Button>
@@ -254,7 +339,7 @@ const ChainDashboard = () => {
           <Button variant="outline" size="sm" onClick={() => connectWallet()}>
             {connected ? "Connected" : "Connect Wallet"}
           </Button>
-          <Button variant="outline" size="sm" onClick={() => refetch()}>
+          <Button variant="outline" size="sm" onClick={refreshData}>
             <RefreshCcw className="h-4 w-4" />
             <span className="sr-only">Refresh</span>
           </Button>
@@ -268,7 +353,7 @@ const ChainDashboard = () => {
             <CardTitle className="text-xs text-muted-foreground">Height</CardTitle>
           </CardHeader>
           <CardContent className="py-0 px-4 pb-4">
-            <div className="text-2xl font-bold">{stats?.height.toLocaleString() || "0"}</div>
+            <div className="text-2xl font-bold">{chainStats?.height.toLocaleString() || "0"}</div>
           </CardContent>
         </Card>
         <Card>
@@ -276,7 +361,7 @@ const ChainDashboard = () => {
             <CardTitle className="text-xs text-muted-foreground">Validators</CardTitle>
           </CardHeader>
           <CardContent className="py-0 px-4 pb-4">
-            <div className="text-2xl font-bold">{stats?.validators || "0"}</div>
+            <div className="text-2xl font-bold">{validators.length || chainStats?.validators.total || "0"}</div>
           </CardContent>
         </Card>
         <Card>
@@ -284,7 +369,7 @@ const ChainDashboard = () => {
             <CardTitle className="text-xs text-muted-foreground">Supply</CardTitle>
           </CardHeader>
           <CardContent className="py-0 px-4 pb-4">
-            <div className="text-2xl font-bold">{stats?.supply || "0"}</div>
+            <div className="text-2xl font-bold">{chainStats?.supply || "0"}</div>
           </CardContent>
         </Card>
         <Card>
@@ -292,7 +377,7 @@ const ChainDashboard = () => {
             <CardTitle className="text-xs text-muted-foreground">Bonded Tokens</CardTitle>
           </CardHeader>
           <CardContent className="py-0 px-4 pb-4">
-            <div className="text-2xl font-bold">{stats?.bondedTokens || "0"}</div>
+            <div className="text-2xl font-bold">{chainStats?.bondedTokens || "0"}</div>
           </CardContent>
         </Card>
         <Card>
@@ -300,7 +385,7 @@ const ChainDashboard = () => {
             <CardTitle className="text-xs text-muted-foreground">Inflation</CardTitle>
           </CardHeader>
           <CardContent className="py-0 px-4 pb-4">
-            <div className="text-2xl font-bold">{stats?.inflation || "0%"}</div>
+            <div className="text-2xl font-bold">{chainStats?.inflation || "0%"}</div>
           </CardContent>
         </Card>
         <Card>
@@ -308,7 +393,7 @@ const ChainDashboard = () => {
             <CardTitle className="text-xs text-muted-foreground">Community Pool</CardTitle>
           </CardHeader>
           <CardContent className="py-0 px-4 pb-4">
-            <div className="text-2xl font-bold">{stats?.communityPool || "0"}</div>
+            <div className="text-2xl font-bold">{chainStats?.communityPool || "0"}</div>
           </CardContent>
         </Card>
       </div>
@@ -431,42 +516,200 @@ const ChainDashboard = () => {
 
         <TabsContent value="validators">
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-bold mb-2">Validators Data</h2>
-                <p className="text-muted-foreground mb-4">
-                  Validator list and staking information will be available soon.
-                </p>
-              </div>
+            <CardHeader>
+              <CardTitle>Validators ({validators.length})</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {validators.length === 0 ? (
+                <div className="text-center py-12">
+                  <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No validator data available</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 font-medium">Validator</th>
+                        <th className="text-right py-2 font-medium">Voting Power</th>
+                        <th className="text-right py-2 font-medium">Commission</th>
+                        <th className="text-right py-2 font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {validators.slice(0, 20).map((validator, index) => (
+                        <tr key={index} className="border-b hover:bg-muted/50">
+                          <td className="py-3">
+                            <div className="font-medium">{validator.moniker}</div>
+                            <div className="text-xs text-muted-foreground font-mono">{validator.address}</div>
+                          </td>
+                          <td className="text-right py-3">{validator.votingPower}</td>
+                          <td className="text-right py-3">{validator.commission}</td>
+                          <td className="text-right py-3">
+                            <div className="flex items-center justify-end">
+                              {validator.status === "active" ? (
+                                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                  <div className="flex items-center gap-1">
+                                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
+                                    Active
+                                  </div>
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                  <div className="flex items-center gap-1">
+                                    <span className="h-2 w-2 rounded-full bg-red-500"></span>
+                                    Inactive
+                                  </div>
+                                </Badge>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  {validators.length > 20 && (
+                    <div className="flex justify-center mt-4">
+                      <Button variant="outline">View All Validators</Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="blocks">
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-bold mb-2">Blocks Explorer</h2>
-                <p className="text-muted-foreground mb-4">
-                  Block explorer with detailed block information will be available soon.
-                </p>
-              </div>
+            <CardHeader>
+              <CardTitle>Recent Blocks</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentBlocks.length === 0 ? (
+                <div className="text-center py-12">
+                  <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No block data available</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 font-medium">Height</th>
+                        <th className="text-left py-2 font-medium">Hash</th>
+                        <th className="text-left py-2 font-medium">Proposer</th>
+                        <th className="text-center py-2 font-medium">Txs</th>
+                        <th className="text-right py-2 font-medium">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentBlocks.map((block, index) => (
+                        <tr key={index} className="border-b hover:bg-muted/50">
+                          <td className="py-3">
+                            <div className="font-medium">{block.height.toLocaleString()}</div>
+                          </td>
+                          <td className="py-3">
+                            <div className="text-xs text-muted-foreground font-mono truncate max-w-48">
+                              {block.hash}
+                            </div>
+                          </td>
+                          <td className="py-3">
+                            <div className="text-xs text-muted-foreground font-mono truncate max-w-48">
+                              {block.proposerAddress}
+                            </div>
+                          </td>
+                          <td className="text-center py-3">{block.txCount}</td>
+                          <td className="text-right py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span>{block.time}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  <div className="flex justify-center mt-4">
+                    <Button variant="outline">View More Blocks</Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="transactions">
           <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h2 className="text-xl font-bold mb-2">Transactions Explorer</h2>
-                <p className="text-muted-foreground mb-4">
-                  Transaction explorer with detailed transaction information will be available soon.
-                </p>
-              </div>
+            <CardHeader>
+              <CardTitle>Recent Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {recentTransactions.length === 0 ? (
+                <div className="text-center py-12">
+                  <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No transaction data available</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-2 font-medium">Tx Hash</th>
+                        <th className="text-left py-2 font-medium">Type</th>
+                        <th className="text-center py-2 font-medium">Height</th>
+                        <th className="text-center py-2 font-medium">Status</th>
+                        <th className="text-right py-2 font-medium">Fee</th>
+                        <th className="text-right py-2 font-medium">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentTransactions.map((tx, index) => (
+                        <tr key={index} className="border-b hover:bg-muted/50">
+                          <td className="py-3">
+                            <div className="text-xs text-muted-foreground font-mono truncate max-w-32">
+                              {tx.hash}
+                            </div>
+                          </td>
+                          <td className="py-3">
+                            <div className="font-medium">{tx.type || "Unknown"}</div>
+                          </td>
+                          <td className="text-center py-3">{tx.height.toLocaleString()}</td>
+                          <td className="text-center py-3">
+                            {tx.status === "success" ? (
+                              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                <div className="flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Success
+                                </div>
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                <div className="flex items-center gap-1">
+                                  <X className="h-3 w-3" />
+                                  Failed
+                                </div>
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="text-right py-3">{tx.fee}</td>
+                          <td className="text-right py-3">
+                            <div className="flex items-center justify-end gap-1">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              <span>{tx.time}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  
+                  <div className="flex justify-center mt-4">
+                    <Button variant="outline">View More Transactions</Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -478,7 +721,7 @@ const ChainDashboard = () => {
                 <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h2 className="text-xl font-bold mb-2">Governance Proposals</h2>
                 <p className="text-muted-foreground mb-4">
-                  Governance proposals and voting information will be available soon.
+                  No active proposals found for this chain.
                 </p>
               </div>
             </CardContent>
@@ -492,7 +735,7 @@ const ChainDashboard = () => {
                 <Database className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h2 className="text-xl font-bold mb-2">Chain Parameters</h2>
                 <p className="text-muted-foreground mb-4">
-                  Chain parameters and configuration information will be available soon.
+                  Chain parameters will be displayed here.
                 </p>
               </div>
             </CardContent>
