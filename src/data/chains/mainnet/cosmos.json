@@ -4,7 +4,7 @@
   "display_name": "Cosmos Hub",
   "chain_id": "cosmoshub-4",
   "api": [
-    {"provider": "Lava Network", "address": "https://cosmoshub.rest.lava.build/"}
+    {"provider": "Publicnode", "address": "https://cosmos-rest.publicnode.com"}
   ],
   "rpc": [
     {"provider": "Publicnode", "address": "https://cosmos-rpc.publicnode.com:443"}
