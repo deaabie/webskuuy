@@ -63,6 +63,17 @@ export interface Transaction {
   timestamp: string;
 }
 
+export interface Proposal {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  voting_start_time: string;
+  voting_end_time: string;
+  total_deposit: string;
+  proposer: string;
+}
+
 export interface ChainInfoExtended {
   chain_id: string;
   address_prefix: string;
@@ -319,6 +330,45 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
           return [];
         }
       }
+    }
+  }
+};
+
+export const getProposals = async (apiUrl: string, count: number = 10): Promise<Proposal[]> => {
+  try {
+    // Try fetching proposals with the latest cosmos SDK format
+    const response = await axios.get(`${apiUrl}/cosmos/gov/v1/proposals?pagination.limit=${count}`);
+    
+    return response.data.proposals.map((p: any) => ({
+      id: p.id,
+      title: p.title || p.content?.title || "No Title",
+      description: p.summary || p.content?.description || "No Description",
+      status: p.status,
+      voting_start_time: p.voting_start_time,
+      voting_end_time: p.voting_end_time,
+      total_deposit: p.total_deposit.length > 0 ? p.total_deposit[0].amount : "0",
+      proposer: p.proposer || "Unknown"
+    }));
+  } catch (error) {
+    console.error('Error with latest proposal format, trying fallback:', error);
+    
+    // Fallback for older cosmos SDK versions
+    try {
+      const fallbackResponse = await axios.get(`${apiUrl}/cosmos/gov/v1beta1/proposals?pagination.limit=${count}`);
+      
+      return fallbackResponse.data.proposals.map((p: any) => ({
+        id: p.proposal_id,
+        title: p.content?.title || "No Title",
+        description: p.content?.description || "No Description",
+        status: p.status,
+        voting_start_time: p.voting_start_time,
+        voting_end_time: p.voting_end_time,
+        total_deposit: p.total_deposit.length > 0 ? p.total_deposit[0].amount : "0",
+        proposer: "Unknown" // v1beta1 doesn't have proposer info
+      }));
+    } catch (fallbackError) {
+      console.error('Error with fallback proposal format:', fallbackError);
+      return [];
     }
   }
 };

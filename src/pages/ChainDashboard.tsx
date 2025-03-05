@@ -9,11 +9,13 @@ import {
   Validator, 
   Block, 
   Transaction,
+  Proposal,
   getChainConfigs,
   getBlockchainStats,
   getValidators,
   getBlocks,
-  getTransactions
+  getTransactions,
+  getProposals
 } from '@/services/cosmosService';
 
 // Import refactored components
@@ -21,7 +23,7 @@ import StatsCards from '@/components/chain/StatsCards';
 import OverviewTab from '@/components/chain/OverviewTab';
 import ValidatorsTab from '@/components/chain/ValidatorsTab';
 import BlocksTab from '@/components/chain/BlocksTab';
-import TransactionsTab from '@/components/chain/TransactionsTab';
+import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
 
 const ChainDashboard: React.FC = () => {
@@ -31,6 +33,7 @@ const ChainDashboard: React.FC = () => {
   const [validators, setValidators] = useState<Validator[]>([]);
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
@@ -52,7 +55,12 @@ const ChainDashboard: React.FC = () => {
         setBlocks(blocksData);
       }
       
-      if (activeTab === 'transactions' || activeTab === 'overview') {
+      if (activeTab === 'government' || activeTab === 'overview') {
+        const proposalsData = await getProposals(activeEndpoint.api);
+        setProposals(proposalsData);
+      }
+      
+      if (activeTab === 'transactions') {
         const txsData = await getTransactions(activeEndpoint.api);
         setTransactions(txsData);
       }
@@ -142,7 +150,7 @@ const ChainDashboard: React.FC = () => {
     <div className="container mx-auto py-8 px-4">
       <SEO 
         title={`${chain.display_name} Explorer`}
-        description={`Explore ${chain.display_name} blockchain statistics, validators, blocks, and transactions.`}
+        description={`Explore ${chain.display_name} blockchain statistics, validators, blocks, and governance proposals.`}
         canonicalUrl={`https://skuuy.com/explorer/${chain.chain_name}`}
       />
       
@@ -173,7 +181,7 @@ const ChainDashboard: React.FC = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="validators">Validators</TabsTrigger>
           <TabsTrigger value="blocks">Blocks</TabsTrigger>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="government">Governance</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-6 mt-6">
@@ -202,10 +210,10 @@ const ChainDashboard: React.FC = () => {
           />
         </TabsContent>
         
-        <TabsContent value="transactions" className="space-y-6 mt-6">
-          <TransactionsTab 
+        <TabsContent value="government" className="space-y-6 mt-6">
+          <GovernmentTab 
             chain={chain} 
-            transactions={transactions} 
+            proposals={proposals} 
             formatNumber={formatNumber} 
             formatDate={formatDate} 
           />
