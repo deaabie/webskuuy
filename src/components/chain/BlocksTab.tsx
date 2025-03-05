@@ -1,8 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { 
   Blocks,
@@ -10,7 +10,7 @@ import {
   Hash,
   User
 } from 'lucide-react';
-import { Block, ChainConfig, getValidators, Validator } from '@/services/cosmosService';
+import { Block, ChainConfig } from '@/services/cosmosService';
 
 interface BlocksTabProps {
   chain: ChainConfig;
@@ -21,38 +21,10 @@ interface BlocksTabProps {
 const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [validators, setValidators] = useState<Validator[]>([]);
-
-  useEffect(() => {
-    // Fetch validators when the component mounts
-    const fetchValidators = async () => {
-      if (chain && chain.api.length > 0) {
-        const validatorsData = await getValidators(chain.api[0].address);
-        setValidators(validatorsData);
-      }
-    };
-    
-    fetchValidators();
-  }, [chain]);
 
   const handleBlockClick = (block: Block) => {
     setSelectedBlock(block);
     setIsModalOpen(true);
-  };
-
-  // Find validator moniker by address
-  const getProposerMoniker = (proposerAddress: string): string => {
-    if (!proposerAddress) return 'Unknown';
-    
-    // Try to find the validator by address
-    const validator = validators.find(v => {
-      // Some chains use different address formats for the proposer
-      return v.address === proposerAddress || 
-             v.consensus_address === proposerAddress ||
-             v.hex_address === proposerAddress;
-    });
-    
-    return validator ? validator.moniker : proposerAddress.substring(0, 10) + '...';
   };
 
   return (
@@ -89,9 +61,7 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate }) => {
                     </Button>
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
-                  <TableCell className="font-mono text-xs truncate max-w-[150px]">
-                    {getProposerMoniker(block.proposer)}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.proposer}</TableCell>
                   <TableCell>{block.txs}</TableCell>
                   <TableCell>{formatDate(block.timestamp)}</TableCell>
                 </TableRow>
@@ -105,9 +75,6 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate }) => {
         <DialogContent className="sm:max-w-[550px]">
           <DialogHeader>
             <DialogTitle className="text-xl">Block #{selectedBlock?.height}</DialogTitle>
-            <DialogDescription>
-              Details for block {selectedBlock?.height} on {chain.display_name}
-            </DialogDescription>
           </DialogHeader>
           
           {selectedBlock && (
@@ -129,12 +96,7 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate }) => {
                   <User className="h-5 w-5 text-green-500" />
                   <span className="font-semibold">Proposer:</span>
                 </div>
-                <div>
-                  <span className="font-medium">{getProposerMoniker(selectedBlock.proposer)}</span>
-                  <div className="font-mono text-xs break-all text-muted-foreground mt-1">
-                    {selectedBlock.proposer}
-                  </div>
-                </div>
+                <div className="font-mono text-xs break-all">{selectedBlock.proposer}</div>
                 
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-amber-500" />
@@ -150,7 +112,7 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate }) => {
                     {selectedBlock.txs}
                   </span>
                 </div>
-                {parseInt(selectedBlock.txs.toString()) > 0 ? (
+                {parseInt(selectedBlock.txs) > 0 ? (
                   <p className="text-sm text-muted-foreground">
                     This block contains {selectedBlock.txs} transactions.
                   </p>
