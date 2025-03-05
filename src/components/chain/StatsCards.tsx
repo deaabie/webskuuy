@@ -13,11 +13,27 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
   if (!stats) return null;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <StatCard title="Latest Block" value={formatNumber(stats.height)} icon={<Hash size={20} />} />
-      <StatCard title="Active Validators" value={`${stats.validators.active}/${stats.validators.total}`} icon={<Server size={20} />} />
-      <StatCard title="Block Time" value={`${stats.blockTime} s`} icon={<Clock size={20} />} />
-      <StatCard title="Staking APR" value={stats.stakingAPR} icon={<BarChart size={20} />} />
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+      <StatCard 
+        title="Latest Block" 
+        value={formatNumber(stats.height)} 
+        icon={<Hash size={20} className="text-purple-500" />} 
+      />
+      <StatCard 
+        title="Active Validators" 
+        value={`${stats.validators.active}/${stats.validators.total}`} 
+        icon={<Server size={20} className="text-purple-500" />} 
+      />
+      <StatCard 
+        title="Block Time" 
+        value={`${stats.blockTime} s`} 
+        icon={<Clock size={20} className="text-purple-500" />} 
+      />
+      <StatCard 
+        title="Staking APR" 
+        value={stats.stakingAPR} 
+        icon={<BarChart size={20} className="text-purple-500" />} 
+      />
     </div>
   );
 };
@@ -30,7 +46,7 @@ interface StatCardProps {
 
 const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
   return (
-    <Card>
+    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
           {icon}
@@ -38,7 +54,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-3xl font-bold">{value}</div>
       </CardContent>
     </Card>
   );
