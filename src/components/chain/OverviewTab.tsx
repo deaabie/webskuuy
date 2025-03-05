@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +9,14 @@ import {
   Database, 
   FileCode,
   Coins,
-  PieChart
+  PieChart,
+  Clock,
+  Shield,
+  Wallet,
+  Info
 } from 'lucide-react';
 import { PieChart as RechartsChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Block, Transaction, BlockchainStats, ChainConfig } from '@/services/cosmosService';
+import { Block, Transaction, BlockchainStats, ChainConfig, ChainInfoExtended, getExtendedChainInfo } from '@/services/cosmosService';
 
 interface OverviewTabProps {
   chain: ChainConfig;
@@ -31,6 +35,23 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   formatNumber, 
   formatDate 
 }) => {
+  const [extendedInfo, setExtendedInfo] = useState<ChainInfoExtended | null>(null);
+  
+  useEffect(() => {
+    const fetchExtendedInfo = async () => {
+      if (chain && chain.rpc.length > 0 && chain.api.length > 0) {
+        const info = await getExtendedChainInfo(
+          chain.rpc[0].address,
+          chain.api[0].address,
+          chain
+        );
+        setExtendedInfo(info);
+      }
+    };
+    
+    fetchExtendedInfo();
+  }, [chain]);
+
   // Calculate bonded and unbonded tokens for the tokenomics chart
   const calculateTokenomicsData = () => {
     if (!stats) return [];
@@ -45,8 +66,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     ];
   };
 
-  // Enhanced chart colors
-  const CHART_COLORS = ['#8B5CF6', '#F97316', '#0EA5E9', '#D946EF', '#10B981'];
+  // Enhanced chart colors - a vibrant color scheme
+  const CHART_COLORS = ['#7E69AB', '#F97316', '#0EA5E9', '#D946EF', '#10B981'];
 
   return (
     <div className="space-y-6">
@@ -81,6 +102,30 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                 <div className="text-sm font-medium">Coin Type</div>
                 <div className="ml-auto">{chain.coin_type}</div>
               </div>
+              {extendedInfo && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-green-500" />
+                    <div className="text-sm font-medium">Latest Block Time</div>
+                    <div className="ml-auto">{formatDate(extendedInfo.latest_block_time)}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-4 w-4 text-indigo-500" />
+                    <div className="text-sm font-medium">Staking Ratio</div>
+                    <div className="ml-auto">{extendedInfo.staking_ratio}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-amber-500" />
+                    <div className="text-sm font-medium">Min Tx Fee</div>
+                    <div className="ml-auto">{formatNumber(parseInt(chain.min_tx_fee) / Math.pow(10, parseInt(chain.assets[0]?.exponent || "0")))} {chain.assets[0]?.symbol}</div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-cyan-500" />
+                    <div className="text-sm font-medium">Assets</div>
+                    <div className="ml-auto">{chain.assets.map(a => a.symbol).join(', ')}</div>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -131,6 +176,13 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                     <span className="text-sm">Inflation</span>
                   </div>
                   <span className="font-medium">{stats?.inflation}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[0] }}></div>
+                    <span className="text-sm">Bonded Tokens</span>
+                  </div>
+                  <span className="font-medium">{extendedInfo?.bonded_tokens_percentage || "0%"}</span>
                 </div>
               </div>
             </div>
@@ -194,19 +246,27 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {transactions.slice(0, 5).map((tx) => (
-                <TableRow key={tx.hash}>
-                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
-                  <TableCell>{tx.block}</TableCell>
-                  <TableCell>{tx.type}</TableCell>
-                  <TableCell>
-                    <Badge variant={tx.status === 'Success' ? 'default' : 'destructive'}>
-                      {tx.status}
-                    </Badge>
+              {transactions.length > 0 ? (
+                transactions.slice(0, 5).map((tx) => (
+                  <TableRow key={tx.hash}>
+                    <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
+                    <TableCell>{tx.block}</TableCell>
+                    <TableCell>{tx.type}</TableCell>
+                    <TableCell>
+                      <Badge variant={tx.status === 'Success' ? 'default' : 'destructive'}>
+                        {tx.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{formatDate(tx.timestamp)}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4">
+                    No transactions available
                   </TableCell>
-                  <TableCell>{formatDate(tx.timestamp)}</TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
