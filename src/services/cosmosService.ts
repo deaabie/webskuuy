@@ -148,11 +148,13 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
 
 export const getValidators = async (apiUrl: string): Promise<Validator[]> => {
   try {
-    const response = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?pagination.limit=100`);
+    // Fetch all validators with pagination
+    const response = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?pagination.limit=200`);
+    
     return response.data.validators.map((v: any) => ({
       address: v.operator_address,
-      moniker: v.description.moniker,
-      voting_power: v.tokens,
+      moniker: v.description.moniker || "Unknown",
+      voting_power: v.tokens || "0",
       commission: (parseFloat(v.commission.commission_rates.rate) * 100).toFixed(2) + "%",
       status: v.status === 'BOND_STATUS_BONDED' ? 'Active' : 'Inactive',
       uptime: "100%", // This would require additional data
