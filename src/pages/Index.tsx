@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useProjects } from "@/hooks/use-projects";
+import SEO from "@/components/SEO";
 import IndexFooter from "@/components/IndexFooter";
 import AdBanner from "@/components/index/AdBanner";
 import HeroSection from "@/components/index/HeroSection";
@@ -80,6 +81,12 @@ const Index = () => {
 
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-gray-900 text-white" : "bg-white text-gray-900"} transition-colors duration-300`}>
+      <SEO
+        title="Skuuy | Your Gateway to Web3 Node Operation"
+        description="Discover and learn about blockchain node operation with comprehensive guides, tools, and resources."
+        canonicalUrl="https://skuuy.com/"
+      />
+      
       <AdBanner theme={theme} />
       
       <HeroSection
