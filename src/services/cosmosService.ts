@@ -373,6 +373,49 @@ export const getProposals = async (apiUrl: string, count: number = 10): Promise<
   }
 };
 
+export const getProposalVotes = async (apiUrl: string, proposalId: string) => {
+  try {
+    // Try fetching with the newer v1 API format first
+    const response = await axios.get(`${apiUrl}/cosmos/gov/v1/proposals/${proposalId}/tally`);
+    
+    return {
+      yes: response.data.tally.yes_count || "0",
+      no: response.data.tally.no_count || "0",
+      abstain: response.data.tally.abstain_count || "0",
+      no_with_veto: response.data.tally.no_with_veto_count || "0",
+      total: (
+        BigInt(response.data.tally.yes_count || "0") +
+        BigInt(response.data.tally.no_count || "0") +
+        BigInt(response.data.tally.abstain_count || "0") +
+        BigInt(response.data.tally.no_with_veto_count || "0")
+      ).toString(),
+    };
+  } catch (error) {
+    console.error('Error with v1 tally format, trying fallback:', error);
+    
+    // Fallback for older cosmos SDK v1beta1
+    try {
+      const fallbackResponse = await axios.get(`${apiUrl}/cosmos/gov/v1beta1/proposals/${proposalId}/tally`);
+      
+      return {
+        yes: fallbackResponse.data.tally.yes || "0",
+        no: fallbackResponse.data.tally.no || "0",
+        abstain: fallbackResponse.data.tally.abstain || "0",
+        no_with_veto: fallbackResponse.data.tally.no_with_veto || "0",
+        total: (
+          BigInt(fallbackResponse.data.tally.yes || "0") +
+          BigInt(fallbackResponse.data.tally.no || "0") +
+          BigInt(fallbackResponse.data.tally.abstain || "0") +
+          BigInt(fallbackResponse.data.tally.no_with_veto || "0")
+        ).toString(),
+      };
+    } catch (fallbackError) {
+      console.error('Error with v1beta1 tally format:', fallbackError);
+      return null;
+    }
+  }
+};
+
 export const getExtendedChainInfo = async (rpcUrl: string, apiUrl: string, chain: ChainConfig): Promise<ChainInfoExtended> => {
   try {
     // Fetch latest block

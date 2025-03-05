@@ -112,7 +112,7 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate }) => {
                     {selectedBlock.txs}
                   </span>
                 </div>
-                {parseInt(selectedBlock.txs) > 0 ? (
+                {selectedBlock.txs > 0 ? (
                   <p className="text-sm text-muted-foreground">
                     This block contains {selectedBlock.txs} transactions.
                   </p>
