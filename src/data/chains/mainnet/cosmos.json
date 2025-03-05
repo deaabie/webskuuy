@@ -13,12 +13,12 @@
   "coin_type": "118",
   "min_tx_fee": "0",
   "addr_prefix": "cosmos",
-  "logo": "/logos/cosmos.png",
+  "logo": "https://ping.pub/logos/cosmos.svg",
   "assets": [{
     "base": "uatom",
     "symbol": "ATOM",
     "exponent": "6",
     "coingecko_id": "cosmos",
-    "logo": "/logos/cosmos.png"
+    "logo": "https://ping.pub/logos/cosmos.svg"
   }]
 }
