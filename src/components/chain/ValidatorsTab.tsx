@@ -2,11 +2,10 @@
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { 
   User,
   ShieldCheck,
@@ -26,6 +25,12 @@ interface ValidatorsTabProps {
 
 const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber }) => {
   const [selectedValidator, setSelectedValidator] = useState<Validator | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleValidatorClick = (validator: Validator) => {
+    setSelectedValidator(validator);
+    setIsSheetOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -50,15 +55,12 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
               {validators.filter(validator => validator.status === 'Active').map((validator, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
-                    <SheetTrigger asChild>
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto font-medium text-primary"
-                        onClick={() => setSelectedValidator(validator)}
-                      >
-                        {validator.moniker}
-                      </Button>
-                    </SheetTrigger>
+                    <span 
+                      className="cursor-pointer text-primary hover:underline"
+                      onClick={() => handleValidatorClick(validator)}
+                    >
+                      {validator.moniker}
+                    </span>
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{validator.address}</TableCell>
                   <TableCell>{formatNumber(validator.voting_power)}</TableCell>
@@ -77,7 +79,7 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
       </Card>
       
       {/* Validator Detail Sheet */}
-      <Sheet>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="sm:max-w-md">
           {selectedValidator && (
             <>
