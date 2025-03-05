@@ -33,76 +33,91 @@ const CosmosExplorer: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <SEO 
-        title="Cosmos Ecosystem Explorer"
-        description="Explore Cosmos ecosystem blockchains, including both mainnet and testnet networks."
-        canonicalUrl="https://skuuy.com/explorer"
-      />
-      
-      <div className="flex flex-col items-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Cosmos Ecosystem Explorer</h1>
-        <p className="text-muted-foreground">Explore Cosmos ecosystem blockchains</p>
-      </div>
-      
-      <Tabs defaultValue="mainnet" className="w-full max-w-5xl mx-auto mb-8">
-        <TabsList className="grid w-full grid-cols-2 mb-8 max-w-md mx-auto">
-          <TabsTrigger value="mainnet" onClick={() => setNetworkType('mainnet')}>
-            Mainnets <span className="ml-2 px-2 py-1 bg-background/20 rounded-full text-xs">{chains.length}</span>
-          </TabsTrigger>
-          <TabsTrigger value="testnet" onClick={() => setNetworkType('testnet')}>
-            Testnets <span className="ml-2 px-2 py-1 bg-background/20 rounded-full text-xs">{chains.length}</span>
-          </TabsTrigger>
-        </TabsList>
+    <div className="min-h-screen bg-black text-white">
+      <div className="container mx-auto py-8 px-4">
+        <SEO 
+          title="Cosmos Ecosystem Explorer"
+          description="Explore Cosmos ecosystem blockchains, including both mainnet and testnet networks."
+          canonicalUrl="https://skuuy.com/explorer"
+        />
         
-        {/* Search bar */}
-        <div className="relative max-w-xl mx-auto mb-8">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <Input
-            type="text"
-            placeholder="Enter network"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/50 border-muted rounded-full h-12"
-          />
+        <div className="flex flex-col items-center mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-center">Cosmos Ecosystem Explorer</h1>
+          <p className="text-muted-foreground text-center">Explore Cosmos ecosystem blockchains</p>
         </div>
         
-        <TabsContent value="mainnet" className="mt-6">
-          {loading ? (
-            <div className="flex justify-center p-4">
-              <p>Loading mainnet chains...</p>
+        <div className="max-w-3xl mx-auto">
+          <Tabs 
+            defaultValue="mainnet" 
+            className="w-full mb-8"
+            value={networkType === 'mainnet' ? 'mainnet' : 'testnet'}
+            onValueChange={(value) => setNetworkType(value as 'mainnet' | 'testnet')}
+          >
+            <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-800/50 rounded-lg p-1">
+              <TabsTrigger 
+                value="mainnet" 
+                className="data-[state=active]:bg-gray-750 rounded-md py-3"
+              >
+                Mainnets <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-gray-700/50">{networkType === 'mainnet' ? chains.length : 0}</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="testnet" 
+                className="data-[state=active]:bg-gray-750 rounded-md py-3"
+              >
+                Testnets <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-gray-700/50">{networkType === 'testnet' ? chains.length : 0}</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            {/* Search bar */}
+            <div className="relative mb-8">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-500" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Enter network"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-gray-800/50 border-none rounded-lg h-12 text-white"
+              />
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredChains.map((chain) => (
-                <ChainCard 
-                  key={chain.chain_name} 
-                  chain={chain} 
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="testnet" className="mt-6">
-          {loading ? (
-            <div className="flex justify-center p-4">
-              <p>Loading testnet chains...</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredChains.map((chain) => (
-                <ChainCard 
-                  key={chain.chain_name} 
-                  chain={chain} 
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+            
+            <TabsContent value="mainnet" className="mt-6">
+              {loading ? (
+                <div className="flex justify-center p-4">
+                  <p>Loading mainnet chains...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredChains.map((chain) => (
+                    <ChainCard 
+                      key={chain.chain_name} 
+                      chain={chain} 
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="testnet" className="mt-6">
+              {loading ? (
+                <div className="flex justify-center p-4">
+                  <p>Loading testnet chains...</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredChains.map((chain) => (
+                    <ChainCard 
+                      key={chain.chain_name} 
+                      chain={chain} 
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
@@ -114,9 +129,9 @@ interface ChainCardProps {
 const ChainCard: React.FC<ChainCardProps> = ({ chain }) => {
   return (
     <Link to={`/explorer/${chain.chain_name}`}>
-      <Card className="h-full hover:bg-accent/50 transition-colors duration-200 border border-border/50">
+      <Card className="bg-gray-800/30 hover:bg-gray-750 transition-colors duration-200 border-none rounded-lg">
         <CardContent className="flex items-center gap-4 p-4">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-muted flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700/50 flex items-center justify-center">
             <img 
               src={chain.logo} 
               alt={chain.display_name}
@@ -127,8 +142,8 @@ const ChainCard: React.FC<ChainCardProps> = ({ chain }) => {
             />
           </div>
           <div className="flex flex-col">
-            <div className="font-medium">{chain.display_name}</div>
-            <div className="text-xs text-muted-foreground">{chain.chain_id}</div>
+            <div className="font-medium text-white">{chain.display_name}</div>
+            <div className="text-xs text-gray-400">{chain.chain_id}</div>
           </div>
         </CardContent>
       </Card>
