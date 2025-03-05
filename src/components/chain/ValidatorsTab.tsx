@@ -32,17 +32,19 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
     setIsSheetOpen(true);
   };
 
-  // Sort validators by voting power (descending)
-  const sortedValidators = [...validators].sort((a, b) => 
-    parseFloat(b.voting_power) - parseFloat(a.voting_power)
-  );
+  // Filter active validators and sort by voting power (descending)
+  // Then limit to a maximum of 100 validators
+  const filteredAndSortedValidators = [...validators]
+    .filter(validator => validator.status === 'Active')
+    .sort((a, b) => parseFloat(b.voting_power) - parseFloat(a.voting_power))
+    .slice(0, 100);
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Validators</CardTitle>
-          <CardDescription>Click on validator name to see more details</CardDescription>
+          <CardTitle>Active Validators</CardTitle>
+          <CardDescription>Showing top 100 active validators by voting power. Click on validator name to see more details.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -57,7 +59,7 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedValidators.map((validator, index) => (
+              {filteredAndSortedValidators.map((validator, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
                     <span 
@@ -71,7 +73,7 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
                   <TableCell>{formatNumber(validator.voting_power)}</TableCell>
                   <TableCell>{validator.commission}</TableCell>
                   <TableCell>
-                    <Badge variant={validator.status === 'Active' ? 'default' : 'secondary'}>
+                    <Badge variant="default">
                       {validator.status}
                     </Badge>
                   </TableCell>
