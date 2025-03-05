@@ -2,136 +2,110 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { ChainConfig, getChainConfigs } from '@/services/cosmosService';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChainConfig, getChainConfigs, checkEndpointStatus } from '@/services/cosmosService';
+import { Badge } from '@/components/ui/badge';
 import SEO from '@/components/SEO';
 
 const CosmosExplorer: React.FC = () => {
   const [networkType, setNetworkType] = useState<'mainnet' | 'testnet'>('mainnet');
   const [chains, setChains] = useState<ChainConfig[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [endpointStatus, setEndpointStatus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchChains = async () => {
       setLoading(true);
       const chainsData = await getChainConfigs(networkType);
       setChains(chainsData);
+      
+      // Check endpoint status
+      const statusChecks: Record<string, boolean> = {};
+      for (const chain of chainsData) {
+        if (chain.api.length > 0) {
+          statusChecks[`${chain.chain_name}-api`] = await checkEndpointStatus(chain.api[0].address);
+        }
+        if (chain.rpc.length > 0) {
+          statusChecks[`${chain.chain_name}-rpc`] = await checkEndpointStatus(chain.rpc[0].address);
+        }
+      }
+      setEndpointStatus(statusChecks);
       setLoading(false);
     };
 
     fetchChains();
   }, [networkType]);
 
-  // Filter chains based on search query
-  const filteredChains = chains.filter(chain => 
-    chain.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chain.chain_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chain.chain_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto py-8 px-4">
-        <SEO 
-          title="Cosmos Ecosystem Explorer"
-          description="Explore Cosmos ecosystem blockchains, including both mainnet and testnet networks."
-          canonicalUrl="https://skuuy.com/explorer"
-        />
-        
-        <div className="flex flex-col items-center mb-8">
-          <h1 className="text-3xl font-bold mb-2 text-center">Cosmos Ecosystem Explorer</h1>
-          <p className="text-muted-foreground text-center">Explore Cosmos ecosystem blockchains</p>
-        </div>
-        
-        <div className="max-w-3xl mx-auto">
-          <Tabs 
-            defaultValue="mainnet" 
-            className="w-full mb-8"
-            value={networkType === 'mainnet' ? 'mainnet' : 'testnet'}
-            onValueChange={(value) => setNetworkType(value as 'mainnet' | 'testnet')}
-          >
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-gray-800/50 rounded-lg p-1">
-              <TabsTrigger 
-                value="mainnet" 
-                className="data-[state=active]:bg-gray-750 rounded-md py-3"
-              >
-                Mainnets <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-gray-700/50">{networkType === 'mainnet' ? chains.length : 0}</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="testnet" 
-                className="data-[state=active]:bg-gray-750 rounded-md py-3"
-              >
-                Testnets <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-gray-700/50">{networkType === 'testnet' ? chains.length : 0}</span>
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* Search bar */}
-            <div className="relative mb-8">
-              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-500" />
-              </div>
-              <Input
-                type="text"
-                placeholder="Enter network"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-gray-800/50 border-none rounded-lg h-12 text-white"
-              />
-            </div>
-            
-            <TabsContent value="mainnet" className="mt-6">
-              {loading ? (
-                <div className="flex justify-center p-4">
-                  <p>Loading mainnet chains...</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredChains.map((chain) => (
-                    <ChainCard 
-                      key={chain.chain_name} 
-                      chain={chain} 
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="testnet" className="mt-6">
-              {loading ? (
-                <div className="flex justify-center p-4">
-                  <p>Loading testnet chains...</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {filteredChains.map((chain) => (
-                    <ChainCard 
-                      key={chain.chain_name} 
-                      chain={chain} 
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
+    <div className="container mx-auto py-8 px-4">
+      <SEO 
+        title="Cosmos Ecosystem Explorer"
+        description="Explore Cosmos ecosystem blockchains, including both mainnet and testnet networks."
+        canonicalUrl="https://skuuy.com/explorer"
+      />
+      
+      <div className="flex flex-col items-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">Cosmos Ecosystem Explorer</h1>
+        <p className="text-muted-foreground">Explore Cosmos ecosystem blockchains</p>
       </div>
+      
+      <Tabs defaultValue="mainnet" className="w-full max-w-5xl mx-auto mb-8">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="mainnet" onClick={() => setNetworkType('mainnet')}>Mainnet</TabsTrigger>
+          <TabsTrigger value="testnet" onClick={() => setNetworkType('testnet')}>Testnet</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="mainnet" className="mt-6">
+          {loading ? (
+            <div className="flex justify-center p-4">
+              <p>Loading mainnet chains...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {chains.map((chain) => (
+                <ChainCard 
+                  key={chain.chain_name} 
+                  chain={chain} 
+                  endpointStatus={endpointStatus}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="testnet" className="mt-6">
+          {loading ? (
+            <div className="flex justify-center p-4">
+              <p>Loading testnet chains...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {chains.map((chain) => (
+                <ChainCard 
+                  key={chain.chain_name} 
+                  chain={chain} 
+                  endpointStatus={endpointStatus}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
 interface ChainCardProps {
   chain: ChainConfig;
+  endpointStatus: Record<string, boolean>;
 }
 
-const ChainCard: React.FC<ChainCardProps> = ({ chain }) => {
+const ChainCard: React.FC<ChainCardProps> = ({ chain, endpointStatus }) => {
   return (
-    <Link to={`/explorer/${chain.chain_name}`}>
-      <Card className="bg-gray-800/30 hover:bg-gray-750 transition-colors duration-200 border-none rounded-lg">
-        <CardContent className="flex items-center gap-4 p-4">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700/50 flex items-center justify-center">
+    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <Link to={`/explorer/${chain.chain_name}`}>
+        <CardHeader className="p-6 flex flex-row items-center space-y-0 gap-4">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-background flex items-center justify-center">
             <img 
               src={chain.logo} 
               alt={chain.display_name}
@@ -141,13 +115,35 @@ const ChainCard: React.FC<ChainCardProps> = ({ chain }) => {
               }}
             />
           </div>
-          <div className="flex flex-col">
-            <div className="font-medium text-white">{chain.display_name}</div>
-            <div className="text-xs text-gray-400">{chain.chain_id}</div>
+          <div>
+            <CardTitle className="text-xl">{chain.display_name}</CardTitle>
+            <div className="text-sm text-muted-foreground">{chain.chain_id}</div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 pt-0">
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div>
+              <div className="text-sm font-medium">API Status</div>
+              <Badge variant={endpointStatus[`${chain.chain_name}-api`] ? "default" : "destructive"}>
+                {endpointStatus[`${chain.chain_name}-api`] ? "Online" : "Offline"}
+              </Badge>
+            </div>
+            <div>
+              <div className="text-sm font-medium">RPC Status</div>
+              <Badge variant={endpointStatus[`${chain.chain_name}-rpc`] ? "default" : "destructive"}>
+                {endpointStatus[`${chain.chain_name}-rpc`] ? "Online" : "Offline"}
+              </Badge>
+            </div>
+          </div>
+          <div className="text-sm text-muted-foreground mb-2">
+            <span className="font-medium">Address Prefix:</span> {chain.addr_prefix}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            <span className="font-medium">Assets:</span> {chain.assets.map(a => a.symbol).join(', ')}
           </div>
         </CardContent>
-      </Card>
-    </Link>
+      </Link>
+    </Card>
   );
 };
 
