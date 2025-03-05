@@ -7,7 +7,7 @@
     {"provider": "Lava Network", "address": "https://cosmoshub.rest.lava.build/"}
   ],
   "rpc": [
-    {"provider": "icycro", "address": "https://cosmos-rpc.icycro.org"}
+    {"provider": "Publicnode", "address": "https://cosmos-rpc.publicnode.com:443"}
   ],
   "sdk_version": "0.45.1",
   "coin_type": "118",
