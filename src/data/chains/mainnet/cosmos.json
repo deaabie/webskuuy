@@ -1,0 +1,24 @@
+
+{
+  "chain_name": "cosmos",
+  "display_name": "Cosmos Hub",
+  "chain_id": "cosmoshub-4",
+  "api": [
+    {"provider": "Skuuy", "address": "https://api.cosmos.network"}
+  ],
+  "rpc": [
+    {"provider": "Skuuy", "address": "https://rpc.cosmos.network"}
+  ],
+  "sdk_version": "0.45.1",
+  "coin_type": "118",
+  "min_tx_fee": "0",
+  "addr_prefix": "cosmos",
+  "logo": "/logos/cosmos.png",
+  "assets": [{
+    "base": "uatom",
+    "symbol": "ATOM",
+    "exponent": "6",
+    "coingecko_id": "cosmos",
+    "logo": "/logos/cosmos.png"
+  }]
+}
