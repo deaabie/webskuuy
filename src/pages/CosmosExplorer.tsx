@@ -57,7 +57,7 @@ const sampleChains: CosmosChain[] = [
     coin_type: "60",
     min_tx_fee: "10000000000000000",
     addr_prefix: "gala",
-    logo: "/logos/galactica.png",
+    logo: "https://raw.githubusercontent.com/deaabie/chainbase/refs/heads/main/galactica.png",
     assets: [{
       base: "agnet",
       symbol: "GNET",
@@ -71,11 +71,11 @@ const sampleChains: CosmosChain[] = [
     chain_name: "Cosmos Hub",
     registry_name: "cosmoshub",
     api: [
-      { provider: "Skuuy", address: "https://api.cosmos.network" },
+      { provider: "Skuuy", address: "https://rest.cosmos.directory/cosmoshub" },
       { provider: "Keplr", address: "https://lcd-cosmoshub.keplr.app" }
     ],
     rpc: [
-      { provider: "Skuuy", address: "https://rpc.cosmos.network" },
+      { provider: "Skuuy", address: "https://cosmos-rpc.icycro.org" },
       { provider: "Keplr", address: "https://rpc-cosmoshub.keplr.app" }
     ],
     sdk_version: "0.45.1",
