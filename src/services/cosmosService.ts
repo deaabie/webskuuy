@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 export interface ChainConfig {
@@ -66,7 +65,16 @@ export interface Transaction {
 
 export const getChainConfigs = async (networkType: 'mainnet' | 'testnet'): Promise<ChainConfig[]> => {
   try {
-    const context = import.meta.glob(`/src/data/chains/${networkType}/*.json`, { eager: true });
+    let context;
+    
+    if (networkType === 'mainnet') {
+      context = import.meta.glob('/src/data/chains/mainnet/*.json', { eager: true });
+    } else if (networkType === 'testnet') {
+      context = import.meta.glob('/src/data/chains/testnet/*.json', { eager: true });
+    } else {
+      return [];
+    }
+    
     return Object.values(context).map((module: any) => module.default || module);
   } catch (error) {
     console.error(`Error loading ${networkType} chain configs:`, error);
