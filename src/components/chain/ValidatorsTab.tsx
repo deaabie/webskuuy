@@ -32,11 +32,16 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
     setIsSheetOpen(true);
   };
 
+  // Sort validators by voting power (descending)
+  const sortedValidators = [...validators].sort((a, b) => 
+    parseFloat(b.voting_power) - parseFloat(a.voting_power)
+  );
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Active Validators</CardTitle>
+          <CardTitle>Validators</CardTitle>
           <CardDescription>Click on validator name to see more details</CardDescription>
         </CardHeader>
         <CardContent>
@@ -52,7 +57,7 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {validators.filter(validator => validator.status === 'Active').map((validator, index) => (
+              {sortedValidators.map((validator, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
                     <span 
