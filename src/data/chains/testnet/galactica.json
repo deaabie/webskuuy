@@ -4,10 +4,10 @@
   "display_name": "Galactica",
   "chain_id": "galactica-testnet-1",
   "api": [
-    {"provider": "Skuuy", "address": "https://galactica-testnet-api.itrocket.net"}
+    {"provider": "ITRocket.net", "address": "https://galactica-testnet-api.itrocket.net"}
   ],
   "rpc": [
-    {"provider": "Skuuy", "address": "https://galactica-testnet-rpc.itrocket.net"}
+    {"provider": "ITRocket.net", "address": "https://galactica-testnet-rpc.itrocket.net"}
   ],
   "sdk_version": "0.47.6",
   "keplr_features": ["eth-address-gen", "eth-key-sign"],
