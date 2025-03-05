@@ -15,8 +15,6 @@ import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
 import Faucet from "./pages/Faucet";
-import CosmosExplorer from "./pages/CosmosExplorer";
-import ChainDashboard from "./pages/ChainDashboard";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 
@@ -55,8 +53,6 @@ const AppContent = () => {
           <Route path="/faq" element={<Faq />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="/faucet" element={<Faucet />} />
-          <Route path="/cosmos-explorer" element={<CosmosExplorer />} />
-          <Route path="/chain/:slug" element={<ChainDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {location.pathname !== "/" && <Footer />}
