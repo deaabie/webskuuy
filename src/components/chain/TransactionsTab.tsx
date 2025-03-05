@@ -37,20 +37,32 @@ const TransactionsTab: React.FC<TransactionsTabProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((tx) => (
-              <TableRow key={tx.hash}>
-                <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
-                <TableCell>{tx.block}</TableCell>
-                <TableCell>{tx.type}</TableCell>
-                <TableCell>{formatNumber(tx.fee)}</TableCell>
-                <TableCell>
-                  <Badge variant={tx.status === 'Success' ? 'default' : 'destructive'}>
-                    {tx.status}
-                  </Badge>
+            {transactions.length > 0 ? (
+              transactions.map((tx) => (
+                <TableRow key={tx.hash}>
+                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
+                  <TableCell>{tx.block}</TableCell>
+                  <TableCell>
+                    <span className="capitalize">
+                      {tx.type.replace(/([A-Z])/g, ' $1').trim()}
+                    </span>
+                  </TableCell>
+                  <TableCell>{formatNumber(tx.fee)}</TableCell>
+                  <TableCell>
+                    <Badge variant={tx.status === 'Success' ? 'default' : tx.status === 'Failed' ? 'destructive' : 'secondary'}>
+                      {tx.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{formatDate(tx.timestamp)}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8">
+                  No transactions available
                 </TableCell>
-                <TableCell>{formatDate(tx.timestamp)}</TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </CardContent>

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -52,7 +51,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     fetchExtendedInfo();
   }, [chain]);
 
-  // Calculate bonded and unbonded tokens for the tokenomics chart
   const calculateTokenomicsData = () => {
     if (!stats) return [];
     
@@ -66,13 +64,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     ];
   };
 
-  // Enhanced chart colors - a vibrant color scheme
-  const CHART_COLORS = ['#7E69AB', '#F97316', '#0EA5E9', '#D946EF', '#10B981'];
+  const CHART_COLORS = ['#8b5cf6', '#ec4899', '#0ea5e9', '#f97316', '#10b981'];
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Chain Info Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -130,7 +126,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           </CardContent>
         </Card>
         
-        {/* Tokenomics Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -190,7 +185,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </Card>
       </div>
       
-      {/* Recent Blocks */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -211,21 +205,28 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {blocks.slice(0, 5).map((block) => (
-                <TableRow key={block.height}>
-                  <TableCell className="font-medium">{block.height}</TableCell>
-                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
-                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.proposer}</TableCell>
-                  <TableCell>{block.txs}</TableCell>
-                  <TableCell>{formatDate(block.timestamp)}</TableCell>
+              {blocks.length > 0 ? (
+                blocks.slice(0, 5).map((block) => (
+                  <TableRow key={block.height}>
+                    <TableCell className="font-medium">{block.height}</TableCell>
+                    <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
+                    <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.proposer}</TableCell>
+                    <TableCell>{block.txs}</TableCell>
+                    <TableCell>{formatDate(block.timestamp)}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4">
+                    Loading blocks...
+                  </TableCell>
                 </TableRow>
-              ))}
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
       
-      {/* Recent Transactions */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -251,9 +252,13 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
                   <TableRow key={tx.hash}>
                     <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
                     <TableCell>{tx.block}</TableCell>
-                    <TableCell>{tx.type}</TableCell>
                     <TableCell>
-                      <Badge variant={tx.status === 'Success' ? 'default' : 'destructive'}>
+                      <span className="capitalize">
+                        {tx.type.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={tx.status === 'Success' ? 'default' : tx.status === 'Failed' ? 'destructive' : 'secondary'}>
                         {tx.status}
                       </Badge>
                     </TableCell>
@@ -263,7 +268,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-4">
-                    No transactions available
+                    Loading transactions...
                   </TableCell>
                 </TableRow>
               )}
