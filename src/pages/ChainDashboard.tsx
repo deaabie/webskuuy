@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import SEO from '@/components/SEO';
 import { 
   ChainConfig, 
@@ -30,7 +31,16 @@ import {
   BarChart,
   FileCode,
   Coins,
-  PieChart
+  PieChart,
+  User,
+  CheckCircle2,
+  XCircle,
+  Percent,
+  Activity,
+  Heart,
+  ShieldCheck,
+  ShieldAlert,
+  CalendarClock
 } from 'lucide-react';
 import { PieChart as RechartsChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
@@ -162,8 +172,10 @@ const ChainDashboard: React.FC = () => {
     ];
   };
 
-  // Chart colors
-  const COLORS = ['#8B5CF6', '#D1D5DB'];
+  // Enhanced chart colors
+  const CHART_COLORS = ['#8B5CF6', '#F97316', '#0EA5E9', '#D946EF'];
+
+  const [selectedValidator, setSelectedValidator] = useState<Validator | null>(null);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -220,22 +232,22 @@ const ChainDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
-                    <Hash className="h-4 w-4 text-muted-foreground" />
+                    <Hash className="h-4 w-4 text-purple-500" />
                     <div className="text-sm font-medium">Chain ID</div>
                     <div className="ml-auto">{chain.chain_id}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <Database className="h-4 w-4 text-orange-500" />
                     <div className="text-sm font-medium">Address Prefix</div>
                     <div className="ml-auto">{chain.addr_prefix}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <FileCode className="h-4 w-4 text-muted-foreground" />
+                    <FileCode className="h-4 w-4 text-blue-500" />
                     <div className="text-sm font-medium">SDK Version</div>
                     <div className="ml-auto">{chain.sdk_version}</div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Coins className="h-4 w-4 text-muted-foreground" />
+                    <Coins className="h-4 w-4 text-pink-500" />
                     <div className="text-sm font-medium">Coin Type</div>
                     <div className="ml-auto">{chain.coin_type}</div>
                   </div>
@@ -267,10 +279,10 @@ const ChainDashboard: React.FC = () => {
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         >
                           {calculateTokenomicsData().map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip formatter={(value) => formatNumber(value)} />
+                        <Tooltip formatter={(value: number) => formatNumber(value)} />
                       </RechartsChart>
                     </ResponsiveContainer>
                   </div>
@@ -285,7 +297,7 @@ const ChainDashboard: React.FC = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <div className="w-3 h-3 rounded-full bg-orange-500"></div>
                         <span className="text-sm">Inflation</span>
                       </div>
                       <span className="font-medium">{stats?.inflation}</span>
@@ -374,8 +386,8 @@ const ChainDashboard: React.FC = () => {
         <TabsContent value="validators" className="space-y-6 mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Validators</CardTitle>
-              <CardDescription>Active validators for {chain.display_name}</CardDescription>
+              <CardTitle>Active Validators</CardTitle>
+              <CardDescription>Click on validator name to see more details</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -390,9 +402,19 @@ const ChainDashboard: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {validators.map((validator, index) => (
+                  {validators.filter(validator => validator.status === 'Active').map((validator, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{validator.moniker}</TableCell>
+                      <TableCell className="font-medium">
+                        <SheetTrigger asChild>
+                          <Button 
+                            variant="link" 
+                            className="p-0 h-auto font-medium text-primary"
+                            onClick={() => setSelectedValidator(validator)}
+                          >
+                            {validator.moniker}
+                          </Button>
+                        </SheetTrigger>
+                      </TableCell>
                       <TableCell className="font-mono text-xs truncate max-w-[150px]">{validator.address}</TableCell>
                       <TableCell>{formatNumber(validator.voting_power)}</TableCell>
                       <TableCell>{validator.commission}</TableCell>
@@ -408,6 +430,114 @@ const ChainDashboard: React.FC = () => {
               </Table>
             </CardContent>
           </Card>
+          
+          {/* Validator Detail Sheet */}
+          <Sheet>
+            <SheetContent className="sm:max-w-md">
+              {selectedValidator && (
+                <>
+                  <SheetHeader className="mb-6">
+                    <SheetTitle className="flex items-center gap-2">
+                      <User className="h-5 w-5 text-purple-500" />
+                      Validator Details
+                    </SheetTitle>
+                    <SheetDescription>
+                      Information about {selectedValidator.moniker}
+                    </SheetDescription>
+                  </SheetHeader>
+                  
+                  <div className="space-y-6">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-purple-500" />
+                          <span className="font-medium">Moniker</span>
+                        </div>
+                        <span>{selectedValidator.moniker}</span>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4 text-green-500" />
+                          <span className="font-medium">Status</span>
+                        </div>
+                        <Badge variant={selectedValidator.status === 'Active' ? 'default' : 'secondary'}>
+                          {selectedValidator.status}
+                        </Badge>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <ShieldAlert className="h-4 w-4 text-orange-500" />
+                          <span className="font-medium">Jailed Status</span>
+                        </div>
+                        <Badge variant="outline">
+                          Not Jailed
+                        </Badge>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Hash className="h-4 w-4 text-blue-500" />
+                          <span className="font-medium">Address</span>
+                        </div>
+                        <span className="font-mono text-xs truncate max-w-[200px]">{selectedValidator.address}</span>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Percent className="h-4 w-4 text-pink-500" />
+                          <span className="font-medium">Commission</span>
+                        </div>
+                        <span>{selectedValidator.commission}</span>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Heart className="h-4 w-4 text-red-500" />
+                          <span className="font-medium">Uptime</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={parseFloat(selectedValidator.uptime)} className="w-[100px] h-2" />
+                          <span>{selectedValidator.uptime}</span>
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Activity className="h-4 w-4 text-green-500" />
+                          <span className="font-medium">Voting Power</span>
+                        </div>
+                        <span>{formatNumber(selectedValidator.voting_power)}</span>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4 text-gray-500" />
+                          <span className="font-medium">Last Update</span>
+                        </div>
+                        <span>{new Date().toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </SheetContent>
+          </Sheet>
         </TabsContent>
         
         <TabsContent value="blocks" className="space-y-6 mt-6">
