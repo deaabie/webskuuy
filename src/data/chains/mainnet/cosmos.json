@@ -4,10 +4,10 @@
   "display_name": "Cosmos Hub",
   "chain_id": "cosmoshub-4",
   "api": [
-    {"provider": "Skuuy", "address": "https://api.cosmos.network"}
+    {"provider": "Cosmos", "address": "https://rest.cosmos.directory/cosmoshub"}
   ],
   "rpc": [
-    {"provider": "Skuuy", "address": "https://rpc.cosmos.network"}
+    {"provider": "icycro", "address": "https://cosmos-rpc.icycro.org"}
   ],
   "sdk_version": "0.45.1",
   "coin_type": "118",
