@@ -1,25 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  Globe, 
-  Hash, 
-  Database, 
-  FileCode,
-  Coins,
-  PieChart,
-  Clock,
-  Shield,
-  Wallet,
-  Info,
-  Blocks,
-  User
-} from 'lucide-react';
-import { PieChart as RechartsChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Block, Transaction, BlockchainStats, ChainConfig, ChainInfoExtended, getExtendedChainInfo } from '@/services/cosmosService';
+
+// Import new component files
+import ChainInfoCard from './overview/ChainInfoCard';
+import TokenomicsCard from './overview/TokenomicsCard';
+import RecentBlocksCard from './overview/RecentBlocksCard';
+import RecentTransactionsCard from './overview/RecentTransactionsCard';
+import BlockDetailsModal from './overview/BlockDetailsModal';
 
 interface OverviewTabProps {
   chain: ChainConfig;
@@ -62,295 +50,41 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     fetchExtendedInfo();
   }, [chain]);
 
-  const calculateTokenomicsData = () => {
-    if (!stats) return [];
-    
-    const totalSupply = parseInt(stats.supply.total) || 0;
-    const bondedTokens = totalSupply * (parseFloat(stats.stakingAPR.replace('%', '')) / 100) || 0;
-    const unbondedTokens = totalSupply - bondedTokens;
-    
-    return [
-      { name: 'Bonded', value: bondedTokens },
-      { name: 'Unbonded', value: unbondedTokens },
-    ];
-  };
-
-  const CHART_COLORS = ['#8b5cf6', '#ec4899', '#0ea5e9', '#f97316', '#10b981'];
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-purple-500" />
-              Chain Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-purple-500" />
-                <div className="text-sm font-medium">Chain ID</div>
-                <div className="ml-auto">{chain.chain_id}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-orange-500" />
-                <div className="text-sm font-medium">Address Prefix</div>
-                <div className="ml-auto">{chain.addr_prefix}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <FileCode className="h-4 w-4 text-blue-500" />
-                <div className="text-sm font-medium">SDK Version</div>
-                <div className="ml-auto">{chain.sdk_version}</div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Coins className="h-4 w-4 text-pink-500" />
-                <div className="text-sm font-medium">Coin Type</div>
-                <div className="ml-auto">{chain.coin_type}</div>
-              </div>
-              {extendedInfo && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-green-500" />
-                    <div className="text-sm font-medium">Latest Block Time</div>
-                    <div className="ml-auto">{formatDate(extendedInfo.latest_block_time)}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-indigo-500" />
-                    <div className="text-sm font-medium">Staking Ratio</div>
-                    <div className="ml-auto">{extendedInfo.staking_ratio}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-amber-500" />
-                    <div className="text-sm font-medium">Min Tx Fee</div>
-                    <div className="ml-auto">{formatNumber(parseInt(chain.min_tx_fee) / Math.pow(10, parseInt(chain.assets[0]?.exponent || "0")))} {chain.assets[0]?.symbol}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Info className="h-4 w-4 text-cyan-500" />
-                    <div className="text-sm font-medium">Assets</div>
-                    <div className="ml-auto">{chain.assets.map(a => a.symbol).join(', ')}</div>
-                  </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        <ChainInfoCard 
+          chain={chain} 
+          extendedInfo={extendedInfo} 
+          formatDate={formatDate}
+          formatNumber={formatNumber}
+        />
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChart className="h-5 w-5 text-purple-500" />
-              Tokenomics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsChart>
-                    <Pie
-                      data={calculateTokenomicsData()}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {calculateTokenomicsData().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => formatNumber(value)} />
-                  </RechartsChart>
-                </ResponsiveContainer>
-              </div>
-              
-              <div className="space-y-2 pt-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                    <span className="text-sm">Total Supply</span>
-                  </div>
-                  <span className="font-medium">{formatNumber(stats?.supply.total || 0)} {chain.assets[0]?.symbol}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                    <span className="text-sm">Inflation</span>
-                  </div>
-                  <span className="font-medium">{stats?.inflation}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[0] }}></div>
-                    <span className="text-sm">Bonded Tokens</span>
-                  </div>
-                  <span className="font-medium">{extendedInfo?.bonded_tokens_percentage || "0%"}</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <TokenomicsCard 
+          chain={chain} 
+          stats={stats} 
+          extendedInfo={extendedInfo}
+          formatNumber={formatNumber} 
+        />
       </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5 text-purple-500" />
-            Recent Blocks
-          </CardTitle>
-          <CardDescription>Last 5 blocks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Height</TableHead>
-                <TableHead>Hash</TableHead>
-                <TableHead>Proposer</TableHead>
-                <TableHead>Txs</TableHead>
-                <TableHead>Time</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {blocks.length > 0 ? (
-                blocks.slice(0, 5).map((block) => (
-                  <TableRow key={block.height}>
-                    <TableCell className="font-medium">
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto font-medium text-primary hover:underline" 
-                        onClick={() => handleBlockClick(block)}
-                      >
-                        {block.height}
-                      </Button>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
-                    <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.proposer}</TableCell>
-                    <TableCell>{block.txs}</TableCell>
-                    <TableCell>{formatDate(block.timestamp)}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    Loading blocks...
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <RecentBlocksCard 
+        blocks={blocks} 
+        formatDate={formatDate}
+        onBlockClick={handleBlockClick}
+      />
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileCode className="h-5 w-5 text-purple-500" />
-            Recent Transactions
-          </CardTitle>
-          <CardDescription>Last 5 transactions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Hash</TableHead>
-                <TableHead>Block</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Time</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length > 0 ? (
-                transactions.slice(0, 5).map((tx) => (
-                  <TableRow key={tx.hash}>
-                    <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
-                    <TableCell>{tx.block}</TableCell>
-                    <TableCell>
-                      <span className="capitalize">
-                        {tx.type.replace(/([A-Z])/g, ' $1').trim()}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={tx.status === 'Success' ? 'default' : tx.status === 'Failed' ? 'destructive' : 'secondary'}>
-                        {tx.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{formatDate(tx.timestamp)}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    Loading transactions...
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <RecentTransactionsCard 
+        transactions={transactions} 
+        formatDate={formatDate} 
+      />
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[550px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Block #{selectedBlock?.height}</DialogTitle>
-          </DialogHeader>
-          
-          {selectedBlock && (
-            <div className="space-y-4 mt-2">
-              <div className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-3 items-start">
-                <div className="flex items-center gap-2">
-                  <Blocks className="h-5 w-5 text-purple-500" />
-                  <span className="font-semibold">Height:</span>
-                </div>
-                <div>{selectedBlock.height}</div>
-                
-                <div className="flex items-center gap-2">
-                  <Hash className="h-5 w-5 text-blue-500" />
-                  <span className="font-semibold">Hash:</span>
-                </div>
-                <div className="font-mono text-xs break-all">{selectedBlock.hash}</div>
-                
-                <div className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-green-500" />
-                  <span className="font-semibold">Proposer:</span>
-                </div>
-                <div className="font-mono text-xs break-all">{selectedBlock.proposer}</div>
-                
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber-500" />
-                  <span className="font-semibold">Time:</span>
-                </div>
-                <div>{formatDate(selectedBlock.timestamp)}</div>
-              </div>
-              
-              <div className="pt-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-semibold">Transactions:</span>
-                  <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 px-2 py-0.5 rounded-full text-xs">
-                    {selectedBlock.txs}
-                  </span>
-                </div>
-                {selectedBlock.txs > 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    This block contains {selectedBlock.txs} transactions.
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    This block contains no transactions.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <BlockDetailsModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        block={selectedBlock}
+        formatDate={formatDate}
+      />
     </div>
   );
 };
