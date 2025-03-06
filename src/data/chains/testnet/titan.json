@@ -1,0 +1,24 @@
+
+{
+  "chain_name": "Titan",
+  "display_name": "Titan",
+  "chain_id": "titan-test-4",
+  "api": [
+    {"provider": "Titan", "address": "https://lcd.titannet.io"}
+  ],
+  "rpc": [
+    {"provider": "Titan", "address": "https://rpc.titannet.io"}
+  ],
+  "sdk_version": "0.3.0-1-g167b7fd6",
+  "coin_type": "118",
+  "min_tx_fee": "500",
+  "addr_prefix": "titan",
+  "logo": "https://ping.pub/logos/titan.png",
+  "assets": [{
+    "base": "uttnt",
+    "symbol": "TTNT",
+    "exponent": "6",
+    "coingecko_id": "",
+    "logo": "https://ping.pub/logos/titan.png"
+  }]
+}
