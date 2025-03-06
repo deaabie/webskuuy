@@ -339,7 +339,7 @@ export const getProposals = async (apiUrl: string, count: number = 100): Promise
     // Try fetching proposals with the latest cosmos SDK format
     const response = await axios.get(`${apiUrl}/cosmos/gov/v1/proposals?pagination.limit=${count}`);
     
-    return response.data.proposals.map((p: any) => ({
+    const proposals = response.data.proposals.map((p: any) => ({
       id: p.id,
       title: p.title || p.content?.title || "No Title",
       description: p.summary || p.content?.description || "No Description",
@@ -349,6 +349,9 @@ export const getProposals = async (apiUrl: string, count: number = 100): Promise
       total_deposit: p.total_deposit.length > 0 ? p.total_deposit[0].amount : "0",
       proposer: p.proposer || "Unknown"
     }));
+    
+    // Sort proposals by voting_start_time in descending order (newest first)
+    return proposals.sort((a, b) => new Date(b.voting_start_time).getTime() - new Date(a.voting_start_time).getTime());
   } catch (error) {
     console.error('Error with latest proposal format, trying fallback:', error);
     
@@ -356,7 +359,7 @@ export const getProposals = async (apiUrl: string, count: number = 100): Promise
     try {
       const fallbackResponse = await axios.get(`${apiUrl}/cosmos/gov/v1beta1/proposals?pagination.limit=${count}`);
       
-      return fallbackResponse.data.proposals.map((p: any) => ({
+      const proposals = fallbackResponse.data.proposals.map((p: any) => ({
         id: p.proposal_id,
         title: p.content?.title || "No Title",
         description: p.content?.description || "No Description",
@@ -366,6 +369,9 @@ export const getProposals = async (apiUrl: string, count: number = 100): Promise
         total_deposit: p.total_deposit.length > 0 ? p.total_deposit[0].amount : "0",
         proposer: "Unknown" // v1beta1 doesn't have proposer info
       }));
+      
+      // Sort proposals by voting_start_time in descending order (newest first)
+      return proposals.sort((a, b) => new Date(b.voting_start_time).getTime() - new Date(a.voting_start_time).getTime());
     } catch (fallbackError) {
       console.error('Error with fallback proposal format:', fallbackError);
       return [];
