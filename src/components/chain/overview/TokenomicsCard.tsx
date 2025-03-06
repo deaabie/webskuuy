@@ -35,6 +35,26 @@ const TokenomicsCard: React.FC<TokenomicsCardProps> = ({
   };
 
   const tokenData = calculateTokenomicsData();
+  
+  // Calculate unbonded percentage safely, converting string percentages to numbers first
+  const getUnbondedPercentage = () => {
+    if (extendedInfo?.bonded_tokens_percentage) {
+      // Convert percentage string to number if it's a string
+      const bondedPercentage = typeof extendedInfo.bonded_tokens_percentage === 'string' 
+        ? parseFloat(extendedInfo.bonded_tokens_percentage.replace('%', ''))
+        : extendedInfo.bonded_tokens_percentage;
+        
+      // Ensure we're working with a number before subtracting
+      return typeof bondedPercentage === 'number' 
+        ? (100 - bondedPercentage).toFixed(2) + '%' 
+        : '0%';
+    }
+    
+    // Use calculated tokenData as fallback
+    return (100 - parseFloat(tokenData.bondedPercentage)).toFixed(2) + '%';
+  };
+  
+  const unbondedPercentage = getUnbondedPercentage();
 
   return (
     <Card className="shadow-md hover:shadow-lg transition-all">
@@ -58,9 +78,7 @@ const TokenomicsCard: React.FC<TokenomicsCardProps> = ({
             <div className="bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg p-4 text-white">
               <div className="flex flex-col items-center justify-center h-full space-y-2">
                 <Coins size={36} className="mb-2" />
-                <span className="text-xl font-bold">{extendedInfo && extendedInfo.bonded_tokens_percentage ? 
-                  (100 - parseFloat(extendedInfo.bonded_tokens_percentage)).toFixed(2) + '%' : 
-                  (100 - tokenData.bondedPercentage) + '%'}</span>
+                <span className="text-xl font-bold">{unbondedPercentage}</span>
                 <span className="text-sm opacity-90">Unbonded Tokens</span>
               </div>
             </div>
