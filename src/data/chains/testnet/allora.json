@@ -1,0 +1,24 @@
+
+{
+  "chain_name": "allora",
+  "display_name": "allora",
+  "chain_id": "allora-testnet-1",
+  "api": [
+    {"provider": "ITRocket.net", "address": "https://allora-testnet-api.itrocket.net"}
+  ],
+  "rpc": [
+    {"provider": "ITRocket.net", "address": "https://allora-testnet-rpc.itrocket.net"}
+  ],
+  "sdk_version": "v0.9.0",
+  "coin_type": "118",
+  "min_tx_fee": "1000",
+  "addr_prefix": "allo",
+  "logo": "https://raw.githubusercontent.com/deaabie/chainbase/refs/heads/main/allo-token.png",
+  "assets": [{
+    "base": "uallo",
+    "symbol": "ALLO",
+    "exponent": "18",
+    "coingecko_id": "",
+    "logo": "/logos/galactica.png"
+  }]
+}
