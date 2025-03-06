@@ -60,11 +60,6 @@ const ChainInfoCard: React.FC<ChainInfoCardProps> = ({
           {extendedInfo && (
             <>
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-green-500" />
-                <div className="text-sm font-medium">Latest Block Time</div>
-                <div className="ml-auto">{formatDate(extendedInfo.latest_block_time)}</div>
-              </div>
-              <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-indigo-500" />
                 <div className="text-sm font-medium">Staking Ratio</div>
                 <div className="ml-auto">{extendedInfo.staking_ratio}</div>
@@ -78,6 +73,11 @@ const ChainInfoCard: React.FC<ChainInfoCardProps> = ({
                 <Info className="h-4 w-4 text-cyan-500" />
                 <div className="text-sm font-medium">Assets</div>
                 <div className="ml-auto">{chain.assets.map(a => a.symbol).join(', ')}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-green-500" />
+                <div className="text-sm font-medium">Latest Block Time</div>
+                <div className="ml-auto">{formatDate(extendedInfo.latest_block_time)}</div>
               </div>
             </>
           )}
