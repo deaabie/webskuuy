@@ -16,6 +16,7 @@ interface OverviewTabProps {
   transactions: Transaction[];
   formatNumber: (num: number | string) => string;
   formatDate: (dateString: string) => string;
+  apiUrl?: string;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ 
@@ -24,7 +25,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   blocks, 
   transactions, 
   formatNumber, 
-  formatDate 
+  formatDate,
+  apiUrl
 }) => {
   const [extendedInfo, setExtendedInfo] = useState<ChainInfoExtended | null>(null);
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
@@ -76,7 +78,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       
       <RecentTransactionsCard 
         transactions={transactions} 
-        formatDate={formatDate} 
+        formatDate={formatDate}
+        apiUrl={apiUrl}
       />
 
       <BlockDetailsModal
@@ -84,6 +87,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         onOpenChange={setIsModalOpen}
         block={selectedBlock}
         formatDate={formatDate}
+        apiUrl={apiUrl}
       />
     </div>
   );

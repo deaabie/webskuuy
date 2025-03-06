@@ -1,22 +1,56 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Blocks, Hash, User, Clock } from 'lucide-react';
-import { Block } from '@/services/cosmosService';
+import { Block, Validator, getValidators } from '@/services/cosmosService';
 
 interface BlockDetailsModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   block: Block | null;
   formatDate: (dateString: string) => string;
+  apiUrl?: string;
 }
 
 const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({ 
   isOpen, 
   onOpenChange, 
   block, 
-  formatDate 
+  formatDate,
+  apiUrl
 }) => {
+  const [proposerName, setProposerName] = useState<string>("");
+  
+  useEffect(() => {
+    // Fetch validator info to get the moniker name
+    const fetchProposerInfo = async () => {
+      if (!block || !apiUrl) return;
+      
+      try {
+        const validators = await getValidators(apiUrl);
+        // Find the validator with the matching address
+        const proposerValidator = validators.find(v => 
+          v.address.toLowerCase() === block.proposer.toLowerCase()
+        );
+        
+        if (proposerValidator) {
+          setProposerName(proposerValidator.moniker);
+        } else {
+          // If no matching validator is found, show a shortened address
+          setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+        }
+      } catch (error) {
+        console.error("Error fetching proposer info:", error);
+        // Fallback to shortened address format
+        setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+      }
+    };
+    
+    if (isOpen && block) {
+      fetchProposerInfo();
+    }
+  }, [block, isOpen, apiUrl]);
+  
   if (!block) return null;
   
   return (
@@ -44,7 +78,11 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <User className="h-5 w-5 text-green-500" />
               <span className="font-semibold">Proposer:</span>
             </div>
-            <div className="font-mono text-xs break-all">{block.proposer}</div>
+            <div>
+              {proposerName || (
+                <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
+              )}
+            </div>
             
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-amber-500" />

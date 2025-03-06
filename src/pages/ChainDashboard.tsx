@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -18,7 +17,6 @@ import {
   getProposals
 } from '@/services/cosmosService';
 
-// Import refactored components
 import StatsCards from '@/components/chain/StatsCards';
 import OverviewTab from '@/components/chain/OverviewTab';
 import ValidatorsTab from '@/components/chain/ValidatorsTab';
@@ -38,7 +36,6 @@ const ChainDashboard: React.FC = () => {
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Create a stats placeholder to ensure UI renders consistently
   const statsPlaceholder: BlockchainStats = {
     height: 0,
     validators: {
@@ -73,7 +70,6 @@ const ChainDashboard: React.FC = () => {
       }
       
       if (activeTab === 'government' || activeTab === 'overview') {
-        // Fetch up to 100 proposals to ensure we get all of them
         const proposalsData = await getProposals(activeEndpoint.api, 100);
         setProposals(proposalsData);
       }
@@ -87,16 +83,13 @@ const ChainDashboard: React.FC = () => {
     }
   }, [chain, activeEndpoint, activeTab]);
 
-  // Initial data fetching
   useEffect(() => {
     const fetchChainData = async () => {
       setLoading(true);
       
-      // Try to find chain in mainnet
       let chainsData = await getChainConfigs('mainnet');
       let foundChain = chainsData.find(c => c.chain_name === chainName);
       
-      // If not found, try testnet
       if (!foundChain) {
         chainsData = await getChainConfigs('testnet');
         foundChain = chainsData.find(c => c.chain_name === chainName);
@@ -105,7 +98,6 @@ const ChainDashboard: React.FC = () => {
       if (foundChain) {
         setChain(foundChain);
         
-        // Set active endpoints
         if (foundChain.api.length > 0 && foundChain.rpc.length > 0) {
           setActiveEndpoint({
             api: foundChain.api[0].address,
@@ -120,30 +112,26 @@ const ChainDashboard: React.FC = () => {
     fetchChainData();
   }, [chainName]);
 
-  // Fetch data when chain or active endpoints change
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
       fetchBlockchainData();
     }
   }, [chain, activeEndpoint, fetchBlockchainData, activeTab]);
 
-  // Set up polling for real-time updates (every 10 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       if (chain && activeEndpoint.api && activeEndpoint.rpc) {
         fetchBlockchainData();
       }
-    }, 10000); // 10 seconds
+    }, 10000);
     
     return () => clearInterval(interval);
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
-  // Format number with commas
   const formatNumber = (num: number | string): string => {
     return Number(num).toLocaleString();
   };
 
-  // Format date
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleString();
   };
@@ -189,7 +177,6 @@ const ChainDashboard: React.FC = () => {
         </div>
       </div>
       
-      {/* Stats Cards - always show them, even during loading */}
       <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
       
       <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
@@ -207,7 +194,8 @@ const ChainDashboard: React.FC = () => {
             blocks={blocks} 
             transactions={transactions} 
             formatNumber={formatNumber} 
-            formatDate={formatDate} 
+            formatDate={formatDate}
+            apiUrl={activeEndpoint.api}
           />
         </TabsContent>
         
@@ -222,7 +210,8 @@ const ChainDashboard: React.FC = () => {
           <BlocksTab 
             chain={chain} 
             blocks={blocks} 
-            formatDate={formatDate} 
+            formatDate={formatDate}
+            apiUrl={activeEndpoint.api}
           />
         </TabsContent>
         

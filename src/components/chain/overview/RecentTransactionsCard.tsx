@@ -1,20 +1,54 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
 import { FileCode } from 'lucide-react';
-import { Transaction } from '@/services/cosmosService';
+import { Transaction, getTransactions } from '@/services/cosmosService';
 
 interface RecentTransactionsCardProps {
   transactions: Transaction[];
   formatDate: (dateString: string) => string;
+  apiUrl?: string;
 }
 
 const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({ 
-  transactions, 
-  formatDate 
+  transactions: propTransactions, 
+  formatDate,
+  apiUrl
 }) => {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Use transactions from props if available
+    if (propTransactions && propTransactions.length > 0) {
+      setTransactions(propTransactions.slice(0, 5));
+      setLoading(false);
+      return;
+    }
+
+    // If no transactions in props and API URL is available, fetch them directly
+    const fetchTransactions = async () => {
+      if (!apiUrl) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const txs = await getTransactions(apiUrl, 5);
+        setTransactions(txs);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, [propTransactions, apiUrl]);
+
   return (
     <Card>
       <CardHeader>
@@ -36,8 +70,8 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.length > 0 ? (
-              transactions.slice(0, 5).map((tx) => (
+            {!loading && transactions.length > 0 ? (
+              transactions.map((tx) => (
                 <TableRow key={tx.hash}>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{tx.hash}</TableCell>
                   <TableCell>{tx.block}</TableCell>
@@ -57,7 +91,7 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-4">
-                  Loading transactions...
+                  {loading ? "Loading transactions..." : "No transactions found"}
                 </TableCell>
               </TableRow>
             )}
