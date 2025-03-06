@@ -15,6 +15,7 @@ import {
   Info
 } from 'lucide-react';
 import { Proposal, ChainConfig, getProposalVotes } from '@/services/cosmosService';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 interface GovernmentTabProps {
   chain: ChainConfig;
@@ -39,6 +40,8 @@ const GovernmentTab: React.FC<GovernmentTabProps> = ({
     total: string;
   } | null>(null);
   const [loadingVotes, setLoadingVotes] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const proposalsPerPage = 10;
 
   const handleProposalClick = async (proposal: Proposal) => {
     setSelectedProposal(proposal);
@@ -71,6 +74,35 @@ const GovernmentTab: React.FC<GovernmentTabProps> = ({
     return status.replace('PROPOSAL_STATUS_', '');
   };
 
+  // Get current proposals for pagination
+  const indexOfLastProposal = currentPage * proposalsPerPage;
+  const indexOfFirstProposal = indexOfLastProposal - proposalsPerPage;
+  const currentProposals = proposals.slice(indexOfFirstProposal, indexOfLastProposal);
+  const totalPages = Math.ceil(proposals.length / proposalsPerPage);
+
+  const paginate = (pageNumber: number) => {
+    if (pageNumber > 0 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  // Generate page numbers for pagination
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 || 
+      i === totalPages || 
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      pageNumbers.push(i);
+    } else if (
+      (i === currentPage - 2 && currentPage > 3) || 
+      (i === currentPage + 2 && currentPage < totalPages - 2)
+    ) {
+      pageNumbers.push(null); // For ellipsis
+    }
+  }
+
   return (
     <>
       <Card>
@@ -79,7 +111,9 @@ const GovernmentTab: React.FC<GovernmentTabProps> = ({
             <Vote className="h-5 w-5 text-green-500" />
             Governance
           </CardTitle>
-          <CardDescription>Recent proposals from {chain.display_name}</CardDescription>
+          <CardDescription>
+            Displaying {proposals.length} proposals from {chain.display_name}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -94,8 +128,8 @@ const GovernmentTab: React.FC<GovernmentTabProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {proposals.length > 0 ? (
-                proposals.map((proposal) => (
+              {currentProposals.length > 0 ? (
+                currentProposals.map((proposal) => (
                   <TableRow key={proposal.id}>
                     <TableCell>{proposal.id}</TableCell>
                     <TableCell className="max-w-[300px] truncate">
@@ -126,6 +160,45 @@ const GovernmentTab: React.FC<GovernmentTabProps> = ({
               )}
             </TableBody>
           </Table>
+          
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      onClick={() => paginate(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                  
+                  {pageNumbers.map((pageNumber, index) => (
+                    pageNumber === null ? (
+                      <PaginationItem key={`ellipsis-${index}`}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    ) : (
+                      <PaginationItem key={pageNumber}>
+                        <PaginationLink 
+                          isActive={pageNumber === currentPage}
+                          onClick={() => paginate(pageNumber as number)}
+                        >
+                          {pageNumber}
+                        </PaginationLink>
+                      </PaginationItem>
+                    )
+                  ))}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      onClick={() => paginate(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          )}
         </CardContent>
       </Card>
 

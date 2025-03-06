@@ -73,7 +73,8 @@ const ChainDashboard: React.FC = () => {
       }
       
       if (activeTab === 'government' || activeTab === 'overview') {
-        const proposalsData = await getProposals(activeEndpoint.api);
+        // Fetch up to 100 proposals to ensure we get all of them
+        const proposalsData = await getProposals(activeEndpoint.api, 100);
         setProposals(proposalsData);
       }
       

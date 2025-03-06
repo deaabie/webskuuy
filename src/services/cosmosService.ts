@@ -334,7 +334,7 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
   }
 };
 
-export const getProposals = async (apiUrl: string, count: number = 10): Promise<Proposal[]> => {
+export const getProposals = async (apiUrl: string, count: number = 100): Promise<Proposal[]> => {
   try {
     // Try fetching proposals with the latest cosmos SDK format
     const response = await axios.get(`${apiUrl}/cosmos/gov/v1/proposals?pagination.limit=${count}`);
