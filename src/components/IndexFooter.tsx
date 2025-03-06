@@ -12,7 +12,7 @@ const IndexFooter = () => {
             <h3 className="text-lg font-bold mb-4">Our Products</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="https://explorer.skuuy.com" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
+                <Link to="/explorer" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
                   Explorers
                 </Link>
               </li>
