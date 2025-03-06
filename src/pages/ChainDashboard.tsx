@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -138,7 +139,7 @@ const ChainDashboard: React.FC = () => {
 
   if (loading && !chain) {
     return (
-      <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[60vh]">
+      <div className="min-h-[calc(100vh-64px)] flex justify-center items-center">
         <p>Loading chain data...</p>
       </div>
     );
@@ -146,90 +147,92 @@ const ChainDashboard: React.FC = () => {
 
   if (!chain) {
     return (
-      <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[60vh]">
+      <div className="min-h-[calc(100vh-64px)] flex justify-center items-center">
         <p>Chain not found</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="min-h-[calc(100vh-64px)] flex flex-col">
       <SEO 
         title={`${chain.display_name} Explorer`}
         description={`Explore ${chain.display_name} blockchain statistics, validators, blocks, and governance proposals.`}
         canonicalUrl={`https://skuuy.com/explorer/${chain.chain_name}`}
       />
       
-      <div className="flex flex-col items-center mb-8">
-        <div className="flex items-center gap-4 mb-4">
-          <img 
-            src={chain.logo}
-            alt={chain.display_name}
-            className="w-16 h-16 rounded-full"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = "/placeholder.svg";
-            }}
-          />
-          <div>
-            <h1 className="text-3xl font-bold">{chain.display_name}</h1>
-            <p className="text-muted-foreground">{chain.chain_id}</p>
+      <div className="container mx-auto py-8 px-4 flex-grow">
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <img 
+              src={chain.logo}
+              alt={chain.display_name}
+              className="w-16 h-16 rounded-full"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/placeholder.svg";
+              }}
+            />
+            <div>
+              <h1 className="text-3xl font-bold">{chain.display_name}</h1>
+              <p className="text-muted-foreground">{chain.chain_id}</p>
+            </div>
           </div>
         </div>
+        
+        <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
+        
+        <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="validators">Validators</TabsTrigger>
+            <TabsTrigger value="blocks">Blocks</TabsTrigger>
+            <TabsTrigger value="government">Governance</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            <OverviewTab 
+              chain={chain} 
+              stats={stats} 
+              blocks={blocks} 
+              transactions={transactions} 
+              formatNumber={formatNumber} 
+              formatDate={formatDate}
+              apiUrl={activeEndpoint.api}
+            />
+          </TabsContent>
+          
+          <TabsContent value="validators" className="space-y-6 mt-6">
+            <ValidatorsTab 
+              validators={validators} 
+              formatNumber={formatNumber} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="blocks" className="space-y-6 mt-6">
+            <BlocksTab 
+              chain={chain} 
+              blocks={blocks} 
+              formatDate={formatDate}
+              apiUrl={activeEndpoint.api}
+            />
+          </TabsContent>
+          
+          <TabsContent value="government" className="space-y-6 mt-6">
+            <GovernmentTab 
+              chain={chain} 
+              proposals={proposals} 
+              formatNumber={formatNumber} 
+              formatDate={formatDate} 
+            />
+          </TabsContent>
+        </Tabs>
+        
+        <EndpointsCard 
+          chain={chain} 
+          activeEndpoint={activeEndpoint} 
+          setActiveEndpoint={setActiveEndpoint} 
+        />
       </div>
-      
-      <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
-      
-      <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="validators">Validators</TabsTrigger>
-          <TabsTrigger value="blocks">Blocks</TabsTrigger>
-          <TabsTrigger value="government">Governance</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview" className="space-y-6 mt-6">
-          <OverviewTab 
-            chain={chain} 
-            stats={stats} 
-            blocks={blocks} 
-            transactions={transactions} 
-            formatNumber={formatNumber} 
-            formatDate={formatDate}
-            apiUrl={activeEndpoint.api}
-          />
-        </TabsContent>
-        
-        <TabsContent value="validators" className="space-y-6 mt-6">
-          <ValidatorsTab 
-            validators={validators} 
-            formatNumber={formatNumber} 
-          />
-        </TabsContent>
-        
-        <TabsContent value="blocks" className="space-y-6 mt-6">
-          <BlocksTab 
-            chain={chain} 
-            blocks={blocks} 
-            formatDate={formatDate}
-            apiUrl={activeEndpoint.api}
-          />
-        </TabsContent>
-        
-        <TabsContent value="government" className="space-y-6 mt-6">
-          <GovernmentTab 
-            chain={chain} 
-            proposals={proposals} 
-            formatNumber={formatNumber} 
-            formatDate={formatDate} 
-          />
-        </TabsContent>
-      </Tabs>
-      
-      <EndpointsCard 
-        chain={chain} 
-        activeEndpoint={activeEndpoint} 
-        setActiveEndpoint={setActiveEndpoint} 
-      />
     </div>
   );
 };
