@@ -9,7 +9,7 @@
   "rpc": [
     {"provider": "Titan", "address": "https://rpc.titannet.io"}
   ],
-  "sdk_version": "0.3.0-1-g167b7fd6",
+  "sdk_version": "v0.50.10",
   "coin_type": "118",
   "min_tx_fee": "500",
   "addr_prefix": "titan",
