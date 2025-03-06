@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from '@/components/ui/badge';
@@ -18,21 +19,16 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const lastTxHash = useRef<string | null>(null);
 
   useEffect(() => {
+    // Use transactions from props if available
     if (propTransactions && propTransactions.length > 0) {
-      setTransactions(prev => {
-        if (propTransactions[0].hash !== lastTxHash.current) {
-          lastTxHash.current = propTransactions[0].hash;
-          return propTransactions.slice(0, 5);
-        }
-        return prev;
-      });
+      setTransactions(propTransactions.slice(0, 5));
       setLoading(false);
       return;
     }
 
+    // If no transactions in props and API URL is available, fetch them directly
     const fetchTransactions = async () => {
       if (!apiUrl) {
         setLoading(false);
@@ -40,13 +36,9 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
       }
 
       try {
+        setLoading(true);
         const txs = await getTransactions(apiUrl, 5);
-        setTransactions(prev => {
-          if (txs.length > 0 && (!prev.length || txs[0].hash !== prev[0].hash)) {
-            return txs;
-          }
-          return prev;
-        });
+        setTransactions(txs);
       } catch (error) {
         console.error("Error fetching transactions:", error);
       } finally {
@@ -55,10 +47,6 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     };
 
     fetchTransactions();
-
-    const interval = setInterval(fetchTransactions, 100);
-
-    return () => clearInterval(interval);
   }, [propTransactions, apiUrl]);
 
   return (
