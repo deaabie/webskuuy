@@ -9,7 +9,7 @@
   "rpc": [
     {"provider": "Publicnode", "address": "https://cosmos-rpc.publicnode.com:443"}
   ],
-  "sdk_version": "0.45.1",
+  "sdk_version": "v22.3.0",
   "coin_type": "118",
   "min_tx_fee": "0",
   "addr_prefix": "cosmos",
