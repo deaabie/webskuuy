@@ -47,6 +47,14 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     };
 
     fetchTransactions();
+
+    // Set up interval for real-time updates
+    const intervalId = setInterval(() => {
+      fetchTransactions();
+    }, 2000); // Update every 2 seconds
+
+    // Clean up the interval on component unmount
+    return () => clearInterval(intervalId);
   }, [propTransactions, apiUrl]);
 
   return (

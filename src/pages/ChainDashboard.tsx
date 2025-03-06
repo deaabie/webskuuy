@@ -36,6 +36,13 @@ const ChainDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
+  const [lastFetchTime, setLastFetchTime] = useState<Record<string, number>>({
+    stats: 0,
+    validators: 0,
+    blocks: 0,
+    proposals: 0,
+    transactions: 0
+  });
 
   const statsPlaceholder: BlockchainStats = {
     height: 0,
@@ -53,36 +60,52 @@ const ChainDashboard: React.FC = () => {
     stakingAPR: "0%",
   };
 
-  const fetchBlockchainData = useCallback(async () => {
+  const fetchBlockchainData = useCallback(async (forceRefresh = false) => {
     if (!chain || !activeEndpoint.api || !activeEndpoint.rpc) return;
     
+    const now = Date.now();
+    const refreshInterval = 2000; // 2 seconds in milliseconds
+    
     try {
-      const statsData = await getBlockchainStats(activeEndpoint.rpc, activeEndpoint.api);
-      setStats(statsData);
+      // Always fetch stats for all tabs
+      if (forceRefresh || now - lastFetchTime.stats > refreshInterval) {
+        const statsData = await getBlockchainStats(activeEndpoint.rpc, activeEndpoint.api);
+        setStats(statsData);
+        setLastFetchTime(prev => ({ ...prev, stats: now }));
+      }
       
-      if (activeTab === 'validators' || activeTab === 'overview') {
+      // Fetch data based on active tab or if forced refresh
+      if ((activeTab === 'validators' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchTime.validators > refreshInterval)) {
         const validatorsData = await getValidators(activeEndpoint.api);
         setValidators(validatorsData);
+        setLastFetchTime(prev => ({ ...prev, validators: now }));
       }
       
-      if (activeTab === 'blocks' || activeTab === 'overview') {
+      if ((activeTab === 'blocks' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchTime.blocks > refreshInterval)) {
         const blocksData = await getBlocks(activeEndpoint.rpc);
         setBlocks(blocksData);
+        setLastFetchTime(prev => ({ ...prev, blocks: now }));
       }
       
-      if (activeTab === 'government' || activeTab === 'overview') {
+      if ((activeTab === 'government' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchTime.proposals > refreshInterval)) {
         const proposalsData = await getProposals(activeEndpoint.api, 100);
         setProposals(proposalsData);
+        setLastFetchTime(prev => ({ ...prev, proposals: now }));
       }
       
-      if (activeTab === 'transactions') {
+      if ((activeTab === 'transactions' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchTime.transactions > refreshInterval)) {
         const txsData = await getTransactions(activeEndpoint.api);
         setTransactions(txsData);
+        setLastFetchTime(prev => ({ ...prev, transactions: now }));
       }
     } catch (error) {
       console.error('Error fetching blockchain data:', error);
     }
-  }, [chain, activeEndpoint, activeTab]);
+  }, [chain, activeEndpoint, activeTab, lastFetchTime]);
 
   useEffect(() => {
     const fetchChainData = async () => {
@@ -113,18 +136,27 @@ const ChainDashboard: React.FC = () => {
     fetchChainData();
   }, [chainName]);
 
+  // Initial data fetch when chain and endpoints are ready
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-      fetchBlockchainData();
+      fetchBlockchainData(true); // Force refresh on initial load
     }
-  }, [chain, activeEndpoint, fetchBlockchainData, activeTab]);
+  }, [chain, activeEndpoint, fetchBlockchainData]);
 
+  // Fetch data on tab change
+  useEffect(() => {
+    if (chain && activeEndpoint.api && activeEndpoint.rpc) {
+      fetchBlockchainData(true); // Force refresh on tab change
+    }
+  }, [activeTab, fetchBlockchainData]);
+
+  // Set up regular interval for data updates
   useEffect(() => {
     const interval = setInterval(() => {
       if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-        fetchBlockchainData();
+        fetchBlockchainData(); // Regular updates every 2 seconds
       }
-    }, 10000);
+    }, 2000);
     
     return () => clearInterval(interval);
   }, [chain, activeEndpoint, fetchBlockchainData]);
