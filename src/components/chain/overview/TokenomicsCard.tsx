@@ -1,9 +1,9 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coins, TrendingUp, Wallet, Database } from 'lucide-react';
 import { ChainConfig, BlockchainStats } from '@/services/cosmosService';
 import axios from 'axios';
+import { toast } from '@/components/ui/use-toast';
 
 interface TokenomicsCardProps {
   chain: ChainConfig;
@@ -51,28 +51,38 @@ const TokenomicsCard: React.FC<TokenomicsCardProps> = ({
         
         // Fetch total supply
         const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
+        console.log('Supply response:', supplyResponse.data);
+        
         const totalSupplyData = supplyResponse.data.supply.find((s: any) => 
           s.denom === chain.assets[0]?.base
         ) || { amount: '0' };
         
         const totalSupply = totalSupplyData.amount || '0';
+        console.log('Total supply:', totalSupply, 'denom:', chain.assets[0]?.base);
         
         // Fetch staking pool to get bonded tokens
         const stakingPoolResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/pool`);
+        console.log('Staking pool response:', stakingPoolResponse.data);
+        
         const bondedTokens = stakingPoolResponse.data.pool.bonded_tokens || '0';
+        console.log('Bonded tokens:', bondedTokens);
         
-        // Calculate unbonded tokens
+        // Calculate unbonded tokens as difference between total supply and bonded tokens
         const unbondedTokens = BigInt(totalSupply) - BigInt(bondedTokens);
+        console.log('Unbonded tokens:', unbondedTokens.toString());
         
-        // Calculate percentages
+        // Calculate percentages safely
         const totalSupplyBigInt = BigInt(totalSupply);
-        const bondedPercentage = totalSupplyBigInt > 0 
-          ? (Number(BigInt(bondedTokens) * BigInt(10000) / totalSupplyBigInt) / 100).toFixed(2) 
-          : '0';
-          
-        const unbondedPercentage = totalSupplyBigInt > 0 
-          ? (Number(BigInt(unbondedTokens) * BigInt(10000) / totalSupplyBigInt) / 100).toFixed(2) 
-          : '0';
+        let bondedPercentage = '0';
+        let unbondedPercentage = '0';
+        
+        if (totalSupplyBigInt > 0n) {
+          bondedPercentage = (Number(BigInt(bondedTokens) * BigInt(10000) / totalSupplyBigInt) / 100).toFixed(2);
+          unbondedPercentage = (Number(BigInt(unbondedTokens) * BigInt(10000) / totalSupplyBigInt) / 100).toFixed(2);
+        }
+        
+        console.log('Bonded percentage:', bondedPercentage);
+        console.log('Unbonded percentage:', unbondedPercentage);
         
         setTokenomicsData({
           bonded: bondedTokens,
@@ -85,27 +95,52 @@ const TokenomicsCard: React.FC<TokenomicsCardProps> = ({
       } catch (error) {
         console.error('Error fetching tokenomics data:', error);
         
+        // Show error toast
+        toast({
+          title: "Error loading tokenomics data",
+          description: "Using fallback data from stats",
+          variant: "destructive"
+        });
+        
         // Fallback to stats data if direct API call fails
         if (stats) {
-          const totalSupply = stats.supply.total || '0';
-          const bondedTokens = extendedInfo?.bonded_tokens 
-            || (extendedInfo?.bonded_tokens_percentage 
-                ? BigInt(Number(parseFloat(extendedInfo.bonded_tokens_percentage) * 0.01) * Number(totalSupply)) 
-                : '0');
-          
-          const bondedPercentage = extendedInfo?.bonded_tokens_percentage 
-            ? extendedInfo.bonded_tokens_percentage.toString().replace(/%/g, '') 
-            : '0';
-          
-          const unbondedPercentage = (100 - Number(bondedPercentage)).toFixed(2);
-          
-          setTokenomicsData({
-            bonded: bondedTokens.toString(),
-            unbonded: (BigInt(totalSupply) - BigInt(bondedTokens.toString())).toString(),
-            totalSupply,
-            bondedPercentage: `${bondedPercentage}%`,
-            unbondedPercentage: `${unbondedPercentage}%`
-          });
+          try {
+            const totalSupply = stats.supply.total || '0';
+            
+            // Attempt to get bonded tokens
+            let bondedTokens;
+            if (extendedInfo?.bonded_tokens) {
+              bondedTokens = extendedInfo.bonded_tokens;
+            } else if (extendedInfo?.bonded_tokens_percentage) {
+              const bondedPercentage = parseFloat(extendedInfo.bonded_tokens_percentage.toString().replace(/%/g, ''));
+              bondedTokens = BigInt(Math.floor(bondedPercentage / 100 * parseFloat(totalSupply))).toString();
+            } else {
+              bondedTokens = '0';
+            }
+            
+            // Calculate percentages
+            const totalSupplyBigInt = BigInt(totalSupply);
+            let bondedPercentage = '0';
+            let unbondedPercentage = '0';
+            
+            if (totalSupplyBigInt > 0n) {
+              bondedPercentage = (Number(BigInt(bondedTokens) * BigInt(10000) / totalSupplyBigInt) / 100).toFixed(2);
+              unbondedPercentage = (100 - parseFloat(bondedPercentage)).toFixed(2);
+            }
+            
+            const unbondedTokens = (BigInt(totalSupply) - BigInt(bondedTokens)).toString();
+            
+            setTokenomicsData({
+              bonded: bondedTokens.toString(),
+              unbonded: unbondedTokens,
+              totalSupply,
+              bondedPercentage: `${bondedPercentage}%`,
+              unbondedPercentage: `${unbondedPercentage}%`
+            });
+          } catch (fallbackError) {
+            console.error('Error in fallback tokenomics calculations:', fallbackError);
+            // Keep default values
+          }
         }
       } finally {
         setIsLoading(false);
@@ -115,7 +150,7 @@ const TokenomicsCard: React.FC<TokenomicsCardProps> = ({
     fetchTokenomicsData();
   }, [chain, stats, extendedInfo]);
 
-  // Format numbers for display
+  // Format numbers for display with appropriate decimals
   const formatTokenAmount = (amount: string | number): string => {
     try {
       if (typeof amount === 'string' && amount.includes('E')) {
@@ -125,14 +160,23 @@ const TokenomicsCard: React.FC<TokenomicsCardProps> = ({
       // If we have a very large integer, format it properly
       if (typeof amount === 'string' && amount.length > 15) {
         const amountBigInt = BigInt(amount);
-        const divisor = BigInt(10 ** (chain.assets[0]?.exponent ? parseInt(chain.assets[0].exponent) : 6));
-        const formattedAmount = Number(amountBigInt / divisor);
+        const exponent = chain.assets[0]?.exponent ? parseInt(chain.assets[0].exponent) : 6;
+        const divisor = BigInt(10 ** exponent);
+        
+        if (divisor === 0n) {
+          return formatNumber(amount);
+        }
+        
+        const wholeNumber = Number(amountBigInt / divisor);
+        const fraction = Number((amountBigInt % divisor) * BigInt(100) / divisor) / 100;
+        const formattedAmount = wholeNumber + fraction;
+        
         return formatNumber(formattedAmount);
       }
       
       return formatNumber(amount);
     } catch (error) {
-      console.error('Error formatting token amount:', error);
+      console.error('Error formatting token amount:', error, amount);
       return '0';
     }
   };
