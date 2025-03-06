@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -67,7 +66,12 @@ const ChainDashboard: React.FC = () => {
       
       if (activeTab === 'blocks' || activeTab === 'overview') {
         const blocksData = await getBlocks(activeEndpoint.rpc);
-        setBlocks(blocksData);
+        setBlocks(prev => {
+          if (blocksData.length > 0 && (!prev.length || blocksData[0].height !== prev[0].height)) {
+            return blocksData;
+          }
+          return prev;
+        });
       }
       
       if (activeTab === 'government' || activeTab === 'overview') {
@@ -77,7 +81,12 @@ const ChainDashboard: React.FC = () => {
       
       if (activeTab === 'transactions') {
         const txsData = await getTransactions(activeEndpoint.api);
-        setTransactions(txsData);
+        setTransactions(prev => {
+          if (txsData.length > 0 && (!prev.length || txsData[0].hash !== prev[0].hash)) {
+            return txsData;
+          }
+          return prev;
+        });
       }
     } catch (error) {
       console.error('Error fetching blockchain data:', error);
@@ -127,6 +136,36 @@ const ChainDashboard: React.FC = () => {
     }, 10000);
     
     return () => clearInterval(interval);
+  }, [chain, activeEndpoint, fetchBlockchainData]);
+
+  useEffect(() => {
+    if (!chain || !activeEndpoint.rpc) return;
+
+    const wsUrl = activeEndpoint.rpc.replace('http', 'ws');
+    const ws = new WebSocket(`${wsUrl}/websocket`);
+
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        jsonrpc: "2.0",
+        method: "subscribe",
+        params: ["tm.event='NewBlock'"],
+        id: 1
+      }));
+    };
+
+    ws.onmessage = async (event) => {
+      const data = JSON.parse(event.data);
+      if (data.result?.data?.value?.block) {
+        fetchBlockchainData();
+      }
+    };
+
+    const interval = setInterval(fetchBlockchainData, 100);
+    
+    return () => {
+      ws.close();
+      clearInterval(interval);
+    };
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
   const formatNumber = (num: number | string): string => {
