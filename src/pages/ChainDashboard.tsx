@@ -24,6 +24,7 @@ import ValidatorsTab from '@/components/chain/ValidatorsTab';
 import BlocksTab from '@/components/chain/BlocksTab';
 import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
+import { toast } from '@/components/ui/use-toast';
 
 const ChainDashboard: React.FC = () => {
   const { chainName } = useParams<{ chainName: string }>();
@@ -74,36 +75,58 @@ const ChainDashboard: React.FC = () => {
         setLastFetchTime(prev => ({ ...prev, stats: now }));
       }
       
-      // Fetch data based on active tab or if forced refresh
-      if ((activeTab === 'validators' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchTime.validators > refreshInterval)) {
-        const validatorsData = await getValidators(activeEndpoint.api);
-        setValidators(validatorsData);
-        setLastFetchTime(prev => ({ ...prev, validators: now }));
+      // Fetch blocks for all tabs (needed for several tabs)
+      if (forceRefresh || now - lastFetchTime.blocks > refreshInterval) {
+        try {
+          const blocksData = await getBlocks(activeEndpoint.rpc);
+          setBlocks(blocksData);
+          setLastFetchTime(prev => ({ ...prev, blocks: now }));
+        } catch (error) {
+          console.error('Error fetching blocks:', error);
+        }
       }
       
-      if ((activeTab === 'blocks' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchTime.blocks > refreshInterval)) {
-        const blocksData = await getBlocks(activeEndpoint.rpc);
-        setBlocks(blocksData);
-        setLastFetchTime(prev => ({ ...prev, blocks: now }));
+      // Fetch data based on active tab
+      if ((activeTab === 'validators' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchTime.validators > refreshInterval)) {
+        try {
+          const validatorsData = await getValidators(activeEndpoint.api);
+          setValidators(validatorsData);
+          setLastFetchTime(prev => ({ ...prev, validators: now }));
+        } catch (error) {
+          console.error('Error fetching validators:', error);
+        }
       }
       
       if ((activeTab === 'government' || activeTab === 'overview') && 
           (forceRefresh || now - lastFetchTime.proposals > refreshInterval)) {
-        const proposalsData = await getProposals(activeEndpoint.api, 100);
-        setProposals(proposalsData);
-        setLastFetchTime(prev => ({ ...prev, proposals: now }));
+        try {
+          const proposalsData = await getProposals(activeEndpoint.api, 100);
+          setProposals(proposalsData);
+          setLastFetchTime(prev => ({ ...prev, proposals: now }));
+        } catch (error) {
+          console.error('Error fetching proposals:', error);
+        }
       }
       
       if ((activeTab === 'transactions' || activeTab === 'overview') && 
           (forceRefresh || now - lastFetchTime.transactions > refreshInterval)) {
-        const txsData = await getTransactions(activeEndpoint.api);
-        setTransactions(txsData);
-        setLastFetchTime(prev => ({ ...prev, transactions: now }));
+        try {
+          const txsData = await getTransactions(activeEndpoint.api);
+          setTransactions(txsData);
+          setLastFetchTime(prev => ({ ...prev, transactions: now }));
+        } catch (error) {
+          console.error('Error fetching transactions:', error);
+          // We won't show a toast here as it could be spammy with the regular updates
+        }
       }
     } catch (error) {
       console.error('Error fetching blockchain data:', error);
+      toast({
+        title: "Error fetching data",
+        description: "Could not retrieve blockchain data. Please try again later.",
+        variant: "destructive"
+      });
     }
   }, [chain, activeEndpoint, activeTab, lastFetchTime]);
 
@@ -111,26 +134,41 @@ const ChainDashboard: React.FC = () => {
     const fetchChainData = async () => {
       setLoading(true);
       
-      let chainsData = await getChainConfigs('mainnet');
-      let foundChain = chainsData.find(c => c.chain_name === chainName);
-      
-      if (!foundChain) {
-        chainsData = await getChainConfigs('testnet');
-        foundChain = chainsData.find(c => c.chain_name === chainName);
-      }
-      
-      if (foundChain) {
-        setChain(foundChain);
+      try {
+        let chainsData = await getChainConfigs('mainnet');
+        let foundChain = chainsData.find(c => c.chain_name === chainName);
         
-        if (foundChain.api.length > 0 && foundChain.rpc.length > 0) {
-          setActiveEndpoint({
-            api: foundChain.api[0].address,
-            rpc: foundChain.rpc[0].address
+        if (!foundChain) {
+          chainsData = await getChainConfigs('testnet');
+          foundChain = chainsData.find(c => c.chain_name === chainName);
+        }
+        
+        if (foundChain) {
+          setChain(foundChain);
+          
+          if (foundChain.api.length > 0 && foundChain.rpc.length > 0) {
+            setActiveEndpoint({
+              api: foundChain.api[0].address,
+              rpc: foundChain.rpc[0].address
+            });
+          }
+        } else {
+          toast({
+            title: "Chain not found",
+            description: `Could not find chain with name: ${chainName}`,
+            variant: "destructive"
           });
         }
+      } catch (error) {
+        console.error('Error fetching chain data:', error);
+        toast({
+          title: "Error loading chain",
+          description: "Could not load chain information. Please try again later.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
     
     fetchChainData();

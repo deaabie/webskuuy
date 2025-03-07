@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from '@/components/ui/badge';
 import { FileCode } from 'lucide-react';
 import { Transaction, getTransactions } from '@/services/cosmosService';
+import { toast } from '@/components/ui/use-toast';
 
 interface RecentTransactionsCardProps {
   transactions: Transaction[];
@@ -19,12 +20,14 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Use transactions from props if available
     if (propTransactions && propTransactions.length > 0) {
       setTransactions(propTransactions.slice(0, 5));
       setLoading(false);
+      setError(null);
       return;
     }
 
@@ -32,6 +35,7 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
     const fetchTransactions = async () => {
       if (!apiUrl) {
         setLoading(false);
+        setError("No API URL provided");
         return;
       }
 
@@ -39,8 +43,10 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
         setLoading(true);
         const txs = await getTransactions(apiUrl, 5);
         setTransactions(txs);
+        setError(null);
       } catch (error) {
         console.error("Error fetching transactions:", error);
+        setError("Could not load transactions");
       } finally {
         setLoading(false);
       }
@@ -50,7 +56,9 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
 
     // Set up interval for real-time updates
     const intervalId = setInterval(() => {
-      fetchTransactions();
+      if (apiUrl) {
+        fetchTransactions();
+      }
     }, 2000); // Update every 2 seconds
 
     // Clean up the interval on component unmount
@@ -99,7 +107,7 @@ const RecentTransactionsCard: React.FC<RecentTransactionsCardProps> = ({
             ) : (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-4">
-                  {loading ? "Loading transactions..." : "No transactions found"}
+                  {loading ? "Loading transactions..." : error ? error : "No transactions found"}
                 </TableCell>
               </TableRow>
             )}
