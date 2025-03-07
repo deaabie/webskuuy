@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import SEO from '@/components/SEO';
 import { 
   ChainConfig, 
@@ -17,18 +16,13 @@ import {
   getTransactions,
   getProposals
 } from '@/services/cosmosService';
-import axios from 'axios';
 
-import SearchBar from '@/components/index/SearchBar';
 import StatsCards from '@/components/chain/StatsCards';
 import OverviewTab from '@/components/chain/OverviewTab';
 import ValidatorsTab from '@/components/chain/ValidatorsTab';
 import BlocksTab from '@/components/chain/BlocksTab';
 import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
-import BlockDetailsModal from '@/components/chain/overview/BlockDetailsModal';
-import HashDetailsModal from '@/components/chain/overview/HashDetailsModal';
-import AccountDetailsModal from '@/components/chain/overview/AccountDetailsModal';
 import { toast } from '@/components/ui/use-toast';
 
 const ChainDashboard: React.FC = () => {
@@ -42,27 +36,6 @@ const ChainDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
-  
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  
-  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
-  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
-  
-  const [hashDetails, setHashDetails] = useState<{
-    hash: string;
-    height: number;
-    status: string;
-    time: string;
-    gas: string;
-    fee: string;
-    memo: string;
-  } | null>(null);
-  const [isHashModalOpen, setIsHashModalOpen] = useState(false);
-  
-  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
-  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   
   const lastFetchRef = useRef<Record<string, number>>({
     stats: 0,
@@ -94,106 +67,6 @@ const ChainDashboard: React.FC = () => {
     communityPool: "0",
     inflation: "0%",
     stakingAPR: "0%",
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !activeEndpoint.api || !activeEndpoint.rpc) return;
-    
-    setSearchLoading(true);
-    setSearchError(null);
-    
-    try {
-      if (/^\d+$/.test(searchQuery)) {
-        const blockHeight = parseInt(searchQuery);
-        const matchedBlock = blocks.find(block => block.height === blockHeight);
-        
-        if (matchedBlock) {
-          setSelectedBlock(matchedBlock);
-          setIsBlockModalOpen(true);
-        } else {
-          try {
-            const blockResponse = await axios.get(`${activeEndpoint.rpc}/block?height=${blockHeight}`);
-            const blockData = blockResponse.data.result;
-            
-            const fetchedBlock: Block = {
-              height: blockHeight,
-              hash: blockData.block_id.hash,
-              proposer: blockData.block.header.proposer_address,
-              txs: blockData.block.data.txs ? blockData.block.data.txs.length : 0,
-              timestamp: blockData.block.header.time,
-            };
-            
-            setSelectedBlock(fetchedBlock);
-            setIsBlockModalOpen(true);
-          } catch (error) {
-            setSearchError(`Block with height ${blockHeight} not found`);
-            toast({
-              title: "Block not found",
-              description: `Could not find block with height ${blockHeight}`,
-              variant: "destructive"
-            });
-          }
-        }
-      } else if (searchQuery.length > 40) {
-        if (searchQuery.startsWith('cosmos') || 
-            searchQuery.startsWith('osmo') || 
-            searchQuery.startsWith('juno') || 
-            searchQuery.startsWith('titan') || 
-            searchQuery.startsWith('akash')) {
-          setSelectedAccount(searchQuery);
-          setIsAccountModalOpen(true);
-        } else {
-          try {
-            const txResponse = await axios.get(`${activeEndpoint.api}/cosmos/tx/v1beta1/txs/${searchQuery}`);
-            const txData = txResponse.data.tx_response;
-            
-            if (txData) {
-              setHashDetails({
-                hash: txData.txhash,
-                height: parseInt(txData.height),
-                status: txData.code === 0 ? 'Success' : 'Failed',
-                time: txData.timestamp,
-                gas: txData.gas_used + ' / ' + txData.gas_wanted,
-                fee: txData.tx.auth_info.fee.amount.length > 0 
-                  ? `${txData.tx.auth_info.fee.amount[0].amount} ${txData.tx.auth_info.fee.amount[0].denom}` 
-                  : '0',
-                memo: txData.tx.body.memo || ''
-              });
-              setIsHashModalOpen(true);
-            }
-          } catch (error) {
-            console.error("Error fetching transaction details:", error);
-            setHashDetails({
-              hash: searchQuery,
-              height: 0,
-              status: 'Unknown',
-              time: new Date().toISOString(),
-              gas: 'Unknown',
-              fee: 'Unknown',
-              memo: ''
-            });
-            setIsHashModalOpen(true);
-          }
-        }
-      } else {
-        setSearchError("Invalid search input. Please enter a block height, transaction hash, or account address.");
-        toast({
-          title: "Invalid search",
-          description: "Please enter a valid block height, transaction hash, or account address",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Search error:", error);
-      setSearchError("An error occurred during search. Please try again.");
-      toast({
-        title: "Search error",
-        description: "An error occurred while searching. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setSearchLoading(false);
-    }
   };
 
   const fetchBlockchainData = useCallback(async (forceRefresh = false) => {
@@ -346,13 +219,13 @@ const ChainDashboard: React.FC = () => {
 
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-      fetchBlockchainData(true);
+      fetchBlockchainData(true); // Force refresh on initial load
     }
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-      fetchBlockchainData(true);
+      fetchBlockchainData(true); // Force refresh on tab change
     }
   }, [activeTab, fetchBlockchainData]);
 
@@ -361,7 +234,7 @@ const ChainDashboard: React.FC = () => {
     
     console.log("Setting up data refresh interval");
     const interval = setInterval(() => {
-      fetchBlockchainData();
+      fetchBlockchainData(); // Regular updates every 2 seconds
     }, 2000);
     
     return () => {
@@ -418,20 +291,6 @@ const ChainDashboard: React.FC = () => {
               <p className="text-muted-foreground">{chain.chain_id}</p>
             </div>
           </div>
-          
-          <Card className="w-full max-w-2xl mt-4">
-            <CardContent className="pt-4">
-              <SearchBar 
-                searchQuery={searchQuery} 
-                setSearchQuery={setSearchQuery} 
-                onSearch={handleSearch}
-                placeholder="Search by block height, transaction hash, or account address"
-              />
-              {searchError && (
-                <p className="text-sm text-red-500 mt-1">{searchError}</p>
-              )}
-            </CardContent>
-          </Card>
         </div>
         
         <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
@@ -486,29 +345,6 @@ const ChainDashboard: React.FC = () => {
           chain={chain} 
           activeEndpoint={activeEndpoint} 
           setActiveEndpoint={setActiveEndpoint} 
-        />
-        
-        <BlockDetailsModal
-          isOpen={isBlockModalOpen}
-          onOpenChange={setIsBlockModalOpen}
-          block={selectedBlock}
-          formatDate={formatDate}
-          apiUrl={activeEndpoint.api}
-        />
-        
-        <HashDetailsModal
-          isOpen={isHashModalOpen}
-          onOpenChange={setIsHashModalOpen}
-          hashDetails={hashDetails}
-          formatDate={formatDate}
-        />
-        
-        <AccountDetailsModal
-          isOpen={isAccountModalOpen}
-          onOpenChange={setIsAccountModalOpen}
-          account={selectedAccount}
-          apiUrl={activeEndpoint.api}
-          formatNumber={formatNumber}
         />
       </div>
     </div>
