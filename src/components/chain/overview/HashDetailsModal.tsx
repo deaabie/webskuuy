@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Hash, Clock, LayoutGrid, Coins, FileText, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { Hash, Clock, LayoutGrid, Coins, FileText, MessageSquare } from 'lucide-react';
 import { Transaction } from '@/services/cosmosService';
 
 interface HashDetailsModalProps {
@@ -59,22 +59,10 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
             <div>{transaction.type}</div>
             
             <div className="flex items-center gap-2">
-              {transaction.status === 'Success' || transaction.status === 'success' ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
-              )}
+              <FileText className="h-5 w-5 text-rose-500" />
               <span className="font-semibold">Status:</span>
             </div>
-            <div>
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                transaction.status === 'Success' || transaction.status === 'success' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
-                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-              }`}>
-                {transaction.status}
-              </span>
-            </div>
+            <div>{transaction.status}</div>
             
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-teal-500" />
