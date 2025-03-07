@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Hash, Clock, CircleDollarSign, Gauge, FileText } from 'lucide-react';
+import { Hash, Clock, CircleDollarSign, Gauge, FileText, AlertCircle } from 'lucide-react';
 
 interface HashDetailsModalProps {
   isOpen: boolean;
@@ -44,18 +44,27 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-semibold">Height:</span>
             </div>
-            <div>{hashDetails.height}</div>
+            <div>{hashDetails.height > 0 ? hashDetails.height : 'Unknown'}</div>
             
             <div className="flex items-center gap-2">
               <span className="font-semibold">Status:</span>
             </div>
             <div>
-              <span className={`px-2 py-0.5 rounded-full text-xs ${
-                hashDetails.status === 'Success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 
-                'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-              }`}>
-                {hashDetails.status}
-              </span>
+              {hashDetails.status === 'Unknown' ? (
+                <div className="flex items-center">
+                  <AlertCircle className="h-4 w-4 text-amber-500 mr-1" />
+                  <span className="px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">
+                    {hashDetails.status}
+                  </span>
+                </div>
+              ) : (
+                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  hashDetails.status === 'Success' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 
+                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                }`}>
+                  {hashDetails.status}
+                </span>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
