@@ -61,6 +61,8 @@ export interface Transaction {
   fee: string;
   status: string;
   timestamp: string;
+  gas?: string;
+  memo?: string;
 }
 
 export interface Proposal {

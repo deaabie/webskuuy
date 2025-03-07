@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Hash, Clock, LayoutGrid, Coins, FileText } from 'lucide-react';
+import { Hash, Clock, LayoutGrid, Coins, FileText, MessageSquare } from 'lucide-react';
 import { Transaction } from '@/services/cosmosService';
 
 interface HashDetailsModalProps {
@@ -63,6 +63,18 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
               <span className="font-semibold">Status:</span>
             </div>
             <div>{transaction.status}</div>
+            
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-teal-500" />
+              <span className="font-semibold">Memo:</span>
+            </div>
+            <div className="text-sm">{transaction.memo || "No memo"}</div>
+            
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-orange-500" />
+              <span className="font-semibold">Gas:</span>
+            </div>
+            <div>{transaction.gas || "Unknown"}</div>
           </div>
         </div>
       </DialogContent>
