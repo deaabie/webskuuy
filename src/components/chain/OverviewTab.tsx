@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Block, Transaction, BlockchainStats, ChainConfig } from '@/services/cosmosService';
-import RecentTransactionsCard from './overview/RecentTransactionsCard';
+import RecentBlocksCard from './overview/RecentBlocksCard';
 import BlockDetailsModal from './overview/BlockDetailsModal';
 
 interface OverviewTabProps {
@@ -31,10 +31,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <RecentTransactionsCard 
-        transactions={transactions} 
+      <RecentBlocksCard 
+        blocks={blocks} 
+        onBlockClick={handleBlockClick}
         formatDate={formatDate}
-        apiUrl={apiUrl}
       />
 
       <BlockDetailsModal

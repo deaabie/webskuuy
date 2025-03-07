@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SEO from '@/components/SEO';
@@ -37,12 +36,21 @@ const ChainDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
-  const [lastFetchTime, setLastFetchTime] = useState<Record<string, number>>({
+  
+  const lastFetchRef = useRef<Record<string, number>>({
     stats: 0,
     validators: 0,
     blocks: 0,
     proposals: 0,
     transactions: 0
+  });
+  
+  const fetchInProgressRef = useRef<Record<string, boolean>>({
+    stats: false,
+    validators: false,
+    blocks: false,
+    proposals: false,
+    transactions: false
   });
 
   const statsPlaceholder: BlockchainStats = {
@@ -65,70 +73,105 @@ const ChainDashboard: React.FC = () => {
     if (!chain || !activeEndpoint.api || !activeEndpoint.rpc) return;
     
     const now = Date.now();
-    const refreshInterval = 2000; // 2 seconds in milliseconds
+    const refreshInterval = 2000; // 2 seconds
     
     try {
-      // Always fetch stats for all tabs
-      if (forceRefresh || now - lastFetchTime.stats > refreshInterval) {
-        const statsData = await getBlockchainStats(activeEndpoint.rpc, activeEndpoint.api);
-        setStats(statsData);
-        setLastFetchTime(prev => ({ ...prev, stats: now }));
-      }
-      
-      // Fetch blocks for all tabs (needed for several tabs)
-      if (forceRefresh || now - lastFetchTime.blocks > refreshInterval) {
+      if ((forceRefresh || now - lastFetchRef.current.stats > refreshInterval) && !fetchInProgressRef.current.stats) {
+        fetchInProgressRef.current.stats = true;
         try {
-          const blocksData = await getBlocks(activeEndpoint.rpc);
-          setBlocks(blocksData);
-          setLastFetchTime(prev => ({ ...prev, blocks: now }));
+          console.log("Fetching stats...");
+          const statsData = await getBlockchainStats(activeEndpoint.rpc, activeEndpoint.api);
+          setStats(prev => {
+            if (!prev || statsData.height !== prev.height) {
+              return statsData;
+            }
+            return prev;
+          });
+          lastFetchRef.current.stats = now;
         } catch (error) {
-          console.error('Error fetching blocks:', error);
+          console.error('Error fetching stats:', error);
+        } finally {
+          fetchInProgressRef.current.stats = false;
         }
       }
       
-      // Fetch data based on active tab
-      if ((activeTab === 'validators' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchTime.validators > refreshInterval)) {
+      if ((forceRefresh || now - lastFetchRef.current.blocks > refreshInterval) && !fetchInProgressRef.current.blocks) {
+        fetchInProgressRef.current.blocks = true;
         try {
+          console.log("Fetching blocks...");
+          const blocksData = await getBlocks(activeEndpoint.rpc, 10);
+          setBlocks(prev => {
+            if (blocksData.length > 0 && (!prev.length || blocksData[0].height !== prev[0]?.height)) {
+              return blocksData;
+            }
+            return prev;
+          });
+          lastFetchRef.current.blocks = now;
+        } catch (error) {
+          console.error('Error fetching blocks:', error);
+        } finally {
+          fetchInProgressRef.current.blocks = false;
+        }
+      }
+      
+      if ((activeTab === 'validators' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchRef.current.validators > refreshInterval) && 
+          !fetchInProgressRef.current.validators) {
+        fetchInProgressRef.current.validators = true;
+        try {
+          console.log("Fetching validators...");
           const validatorsData = await getValidators(activeEndpoint.api);
           setValidators(validatorsData);
-          setLastFetchTime(prev => ({ ...prev, validators: now }));
+          lastFetchRef.current.validators = now;
         } catch (error) {
           console.error('Error fetching validators:', error);
+        } finally {
+          fetchInProgressRef.current.validators = false;
         }
       }
       
       if ((activeTab === 'government' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchTime.proposals > refreshInterval)) {
+          (forceRefresh || now - lastFetchRef.current.proposals > refreshInterval) && 
+          !fetchInProgressRef.current.proposals) {
+        fetchInProgressRef.current.proposals = true;
         try {
+          console.log("Fetching proposals...");
           const proposalsData = await getProposals(activeEndpoint.api, 100);
           setProposals(proposalsData);
-          setLastFetchTime(prev => ({ ...prev, proposals: now }));
+          lastFetchRef.current.proposals = now;
         } catch (error) {
           console.error('Error fetching proposals:', error);
+        } finally {
+          fetchInProgressRef.current.proposals = false;
         }
       }
       
-      if ((activeTab === 'transactions' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchTime.transactions > refreshInterval)) {
+      if ((activeTab === 'blocks' || activeTab === 'overview') && 
+          (forceRefresh || now - lastFetchRef.current.transactions > refreshInterval) && 
+          !fetchInProgressRef.current.transactions) {
+        fetchInProgressRef.current.transactions = true;
         try {
+          console.log("Fetching transactions...");
           const txsData = await getTransactions(activeEndpoint.api);
           setTransactions(txsData);
-          setLastFetchTime(prev => ({ ...prev, transactions: now }));
+          lastFetchRef.current.transactions = now;
         } catch (error) {
           console.error('Error fetching transactions:', error);
-          // We won't show a toast here as it could be spammy with the regular updates
+        } finally {
+          fetchInProgressRef.current.transactions = false;
         }
       }
     } catch (error) {
       console.error('Error fetching blockchain data:', error);
-      toast({
-        title: "Error fetching data",
-        description: "Could not retrieve blockchain data. Please try again later.",
-        variant: "destructive"
-      });
+      if (forceRefresh) {
+        toast({
+          title: "Error fetching data",
+          description: "Could not retrieve blockchain data. Please try again later.",
+          variant: "destructive"
+        });
+      }
     }
-  }, [chain, activeEndpoint, activeTab, lastFetchTime]);
+  }, [chain, activeEndpoint, activeTab]);
 
   useEffect(() => {
     const fetchChainData = async () => {
@@ -174,29 +217,30 @@ const ChainDashboard: React.FC = () => {
     fetchChainData();
   }, [chainName]);
 
-  // Initial data fetch when chain and endpoints are ready
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
       fetchBlockchainData(true); // Force refresh on initial load
     }
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
-  // Fetch data on tab change
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
       fetchBlockchainData(true); // Force refresh on tab change
     }
   }, [activeTab, fetchBlockchainData]);
 
-  // Set up regular interval for data updates
   useEffect(() => {
+    if (!chain || !activeEndpoint.api || !activeEndpoint.rpc) return;
+    
+    console.log("Setting up data refresh interval");
     const interval = setInterval(() => {
-      if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-        fetchBlockchainData(); // Regular updates every 2 seconds
-      }
+      fetchBlockchainData(); // Regular updates every 2 seconds
     }, 2000);
     
-    return () => clearInterval(interval);
+    return () => {
+      console.log("Clearing data refresh interval");
+      clearInterval(interval);
+    };
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
   const formatNumber = (num: number | string): string => {

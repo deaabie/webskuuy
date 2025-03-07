@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Database } from 'lucide-react';
+import { Blocks } from 'lucide-react';
 import { Block } from '@/services/cosmosService';
 
 interface RecentBlocksCardProps {
@@ -17,14 +17,17 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
   formatDate,
   onBlockClick
 }) => {
+  // Take only the 10 most recent blocks
+  const recentBlocks = blocks.slice(0, 10);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-purple-500" />
+          <Blocks className="h-5 w-5 text-purple-500" />
           Recent Blocks
         </CardTitle>
-        <CardDescription>Last 5 blocks</CardDescription>
+        <CardDescription>Last 10 blocks</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
@@ -32,14 +35,13 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
             <TableRow>
               <TableHead>Height</TableHead>
               <TableHead>Hash</TableHead>
-              <TableHead>Proposer</TableHead>
               <TableHead>Txs</TableHead>
               <TableHead>Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {blocks.length > 0 ? (
-              blocks.slice(0, 5).map((block) => (
+            {recentBlocks.length > 0 ? (
+              recentBlocks.map((block) => (
                 <TableRow key={block.height}>
                   <TableCell className="font-medium">
                     <Button 
@@ -51,14 +53,13 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
                     </Button>
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
-                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.proposer}</TableCell>
                   <TableCell>{block.txs}</TableCell>
                   <TableCell>{formatDate(block.timestamp)}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-4">
+                <TableCell colSpan={4} className="text-center py-4">
                   Loading blocks...
                 </TableCell>
               </TableRow>
