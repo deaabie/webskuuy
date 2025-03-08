@@ -20,7 +20,7 @@ import {
 import StatsCards from '@/components/chain/StatsCards';
 import OverviewTab from '@/components/chain/OverviewTab';
 import ValidatorsTab from '@/components/chain/ValidatorsTab';
-import UptimeTab from '@/components/chain/UptimeTab';
+import BlocksTab from '@/components/chain/BlocksTab';
 import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
 import { toast } from '@/components/ui/use-toast';
@@ -114,7 +114,7 @@ const ChainDashboard: React.FC = () => {
         }
       }
       
-      if ((activeTab === 'validators' || activeTab === 'overview' || activeTab === 'uptime') && 
+      if ((activeTab === 'validators' || activeTab === 'overview') && 
           (forceRefresh || now - lastFetchRef.current.validators > refreshInterval) && 
           !fetchInProgressRef.current.validators) {
         fetchInProgressRef.current.validators = true;
@@ -146,7 +146,7 @@ const ChainDashboard: React.FC = () => {
         }
       }
       
-      if ((activeTab === 'overview') && 
+      if ((activeTab === 'blocks' || activeTab === 'overview') && 
           (forceRefresh || now - lastFetchRef.current.transactions > refreshInterval) && 
           !fetchInProgressRef.current.transactions) {
         fetchInProgressRef.current.transactions = true;
@@ -299,7 +299,7 @@ const ChainDashboard: React.FC = () => {
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="validators">Validators</TabsTrigger>
-            <TabsTrigger value="uptime">Uptime</TabsTrigger>
+            <TabsTrigger value="blocks">Blocks</TabsTrigger>
             <TabsTrigger value="government">Governance</TabsTrigger>
           </TabsList>
           
@@ -322,11 +322,12 @@ const ChainDashboard: React.FC = () => {
             />
           </TabsContent>
           
-          <TabsContent value="uptime" className="space-y-6 mt-6">
-            <UptimeTab 
-              chain={chain}
-              validators={validators}
-              formatNumber={formatNumber}
+          <TabsContent value="blocks" className="space-y-6 mt-6">
+            <BlocksTab 
+              chain={chain} 
+              blocks={blocks} 
+              formatDate={formatDate}
+              apiUrl={activeEndpoint.api}
             />
           </TabsContent>
           

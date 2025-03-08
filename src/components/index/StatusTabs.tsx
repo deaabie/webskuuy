@@ -27,25 +27,17 @@ const StatusTabs = ({
       {statuses.map(status => (
         <button 
           key={status.name}
-          className={`flex items-center transition-colors ${
+          className={`flex items-center ${
             selectedStatus === status.name 
-              ? 'text-purple-600 font-medium' 
+              ? 'text-purple-500' 
               : theme === "dark" 
-                ? 'text-gray-400 hover:text-gray-200' 
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-gray-500' 
+                : 'text-gray-600'
           }`} 
           onClick={() => setSelectedStatus(status.name)}
         >
           <span>{status.label}</span>
-          <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
-            selectedStatus === status.name
-              ? theme === "dark"
-                ? 'bg-purple-900 text-purple-100'
-                : 'bg-purple-100 text-purple-800'
-              : theme === "dark" 
-                ? 'bg-gray-800 text-gray-400' 
-                : 'bg-gray-200 text-gray-600'
-          }`}>
+          <span className={`ml-2 text-xs px-2 py-1 rounded-full ${theme === "dark" ? 'bg-gray-800' : 'bg-gray-200'}`}>
             {status.count}
           </span>
         </button>
