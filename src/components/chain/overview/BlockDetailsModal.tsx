@@ -20,12 +20,14 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   apiUrl
 }) => {
   const [proposerName, setProposerName] = useState<string>("");
+  const [isLoadingProposer, setIsLoadingProposer] = useState<boolean>(false);
   
   useEffect(() => {
     // Fetch validator info to get the moniker name
     const fetchProposerInfo = async () => {
       if (!block || !apiUrl) return;
       
+      setIsLoadingProposer(true);
       try {
         const validators = await getValidators(apiUrl);
         // Find the validator with the matching address
@@ -43,11 +45,16 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
         console.error("Error fetching proposer info:", error);
         // Fallback to shortened address format
         setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+      } finally {
+        setIsLoadingProposer(false);
       }
     };
     
     if (isOpen && block) {
       fetchProposerInfo();
+    } else {
+      // Reset state when modal closes
+      setProposerName("");
     }
   }, [block, isOpen, apiUrl]);
   
@@ -55,7 +62,7 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] bg-background dark:bg-background border-border">
         <DialogHeader>
           <DialogTitle className="text-xl">Block #{block.height}</DialogTitle>
         </DialogHeader>
@@ -79,8 +86,19 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <span className="font-semibold">Proposer:</span>
             </div>
             <div>
-              {proposerName || (
-                <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
+              {isLoadingProposer ? (
+                <div className="h-4 w-40 bg-muted animate-pulse rounded"></div>
+              ) : proposerName ? (
+                <span className="font-medium text-primary">{proposerName}</span>
+              ) : (
+                <span className="font-mono text-xs opacity-70">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
+              )}
+              
+              {/* Show the address as tooltip or secondary text */}
+              {proposerName && proposerName !== `${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}` && (
+                <span className="block text-xs text-muted-foreground font-mono mt-1">
+                  {block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}
+                </span>
               )}
             </div>
             
