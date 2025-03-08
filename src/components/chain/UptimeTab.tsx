@@ -1,11 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from '@/components/ui/badge';
 import { Separator } from "@/components/ui/separator";
-import { Activity, Search, User, Shield, ShieldCheck, ShieldAlert, BarChart, Clock, Hash, AlertTriangle } from 'lucide-react';
+import { Activity, Search, User, Shield, ShieldCheck, ShieldAlert, BarChart, Clock, Hash, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Validator, ChainConfig } from '@/services/cosmosService';
 
 interface UptimeTabProps {
@@ -18,6 +18,9 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedValidator, setSelectedValidator] = useState<Validator | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [isUpdating, setIsUpdating] = useState(false);
+  const prevValidatorsRef = useRef<Validator[]>([]);
 
   // Filter active validators only
   const activeValidators = validators.filter(v => v.status === 'Active');
@@ -26,6 +29,25 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
   const filteredValidators = activeValidators.filter(validator => 
     validator.moniker.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Check for updates in validators data
+  useEffect(() => {
+    if (validators.length && prevValidatorsRef.current.length) {
+      // Check if validators data has changed
+      const hasChanged = JSON.stringify(validators) !== JSON.stringify(prevValidatorsRef.current);
+      
+      if (hasChanged) {
+        setLastUpdated(new Date());
+        // Show visual update indicator
+        setIsUpdating(true);
+        setTimeout(() => {
+          setIsUpdating(false);
+        }, 1000);
+      }
+    }
+    
+    prevValidatorsRef.current = [...validators];
+  }, [validators]);
 
   const handleValidatorClick = (validator: Validator) => {
     setSelectedValidator(validator);
@@ -50,7 +72,7 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
       <div className="flex items-center w-full">
         <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
           <div 
-            className="bg-green-500 h-full" 
+            className="bg-green-500 h-full transition-all duration-500" 
             style={{ width: `${uptimePercentage}%` }}
           ></div>
         </div>
@@ -61,11 +83,15 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className={`transition-all duration-300 ${isUpdating ? 'shadow-[0_0_15px_rgba(168,85,247,0.5)]' : ''}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Activity className="h-5 w-5 text-purple-500" />
             Validator Uptime
+            <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
+              <RefreshCw className={`h-3 w-3 ${isUpdating ? 'animate-spin text-purple-500' : ''}`} />
+              Last updated: {lastUpdated.toLocaleTimeString()}
+            </span>
           </CardTitle>
           <CardDescription>
             Real-time uptime statistics for all active validators on {chain.display_name}
@@ -101,7 +127,9 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
             {filteredValidators.map((validator, index) => (
               <div 
                 key={index} 
-                className="border rounded-lg p-4 hover:bg-accent cursor-pointer transition-colors"
+                className={`border rounded-lg p-4 hover:bg-accent cursor-pointer transition-all duration-300 ${
+                  isUpdating ? 'animate-pulse' : ''
+                }`}
                 onClick={() => handleValidatorClick(validator)}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -225,7 +253,7 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
                       <Clock className="h-4 w-4 text-gray-500" />
                       <span className="font-medium">Last Update</span>
                     </div>
-                    <span>{new Date().toLocaleString()}</span>
+                    <span>{lastUpdated.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
