@@ -6,7 +6,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Badge } from '@/components/ui/badge';
 import { Separator } from "@/components/ui/separator";
 import { Activity, Search, User, Shield, ShieldCheck, ShieldAlert, BarChart, Clock, Hash, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Progress } from "@/components/ui/progress";
 import { Validator, ChainConfig } from '@/services/cosmosService';
+import { Button } from "@/components/ui/button";
 
 interface UptimeTabProps {
   validators: Validator[];
@@ -21,6 +23,7 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [isUpdating, setIsUpdating] = useState(false);
   const prevValidatorsRef = useRef<Validator[]>([]);
+  const [blockHeight, setBlockHeight] = useState<number>(0);
 
   // Filter active validators only
   const activeValidators = validators.filter(v => v.status === 'Active');
@@ -38,6 +41,8 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
       
       if (hasChanged) {
         setLastUpdated(new Date());
+        // Update mock block height
+        setBlockHeight(prev => prev + 1);
         // Show visual update indicator
         setIsUpdating(true);
         setTimeout(() => {
@@ -59,6 +64,65 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
     const uptimePercentage = parseFloat(uptime.replace('%', ''));
     // Assuming 100 blocks window, calculate missed blocks
     return Math.round((100 - uptimePercentage) / 100 * 100);
+  };
+
+  // Generate block visualization based on validator uptime
+  const renderBlockVisualization = (validator: Validator) => {
+    const missedBlocks = getMissedBlocks(validator.uptime);
+    const committedBlocks = 100 - missedBlocks;
+    
+    // Generate an array representing the last 100 blocks
+    // For visualization purposes, we'll randomly distribute the missed blocks
+    const blocks = Array(100).fill('committed');
+    
+    // Randomly assign 'missed' status to blocks based on the missed block count
+    const missedIndices = new Set();
+    while (missedIndices.size < missedBlocks) {
+      const randomIndex = Math.floor(Math.random() * 100);
+      missedIndices.add(randomIndex);
+    }
+    
+    // Set the missed blocks in the array
+    missedIndices.forEach(index => {
+      blocks[index as number] = 'missed';
+    });
+    
+    // Add a few precommitted blocks for visualization variety (optional)
+    const precommittedCount = Math.min(5, committedBlocks / 10); // Using 5% of committed blocks or max 5
+    const precommittedIndices = new Set();
+    while (precommittedIndices.size < precommittedCount) {
+      const randomIndex = Math.floor(Math.random() * 100);
+      if (!missedIndices.has(randomIndex)) {
+        precommittedIndices.add(randomIndex);
+      }
+    }
+    
+    // Set the precommitted blocks in the array
+    precommittedIndices.forEach(index => {
+      blocks[index as number] = 'precommitted';
+    });
+    
+    return (
+      <div className="flex items-center">
+        <div className="w-10 text-xs font-mono text-right mr-2">
+          {blockHeight > 0 ? blockHeight.toLocaleString() : '...'}
+        </div>
+        <div className="flex-1 flex h-6 bg-gray-800 rounded overflow-hidden">
+          {blocks.map((status, i) => (
+            <div
+              key={i}
+              className={`h-full w-[2px] mx-[0.5px] ${
+                status === 'committed' 
+                  ? 'bg-green-500' 
+                  : status === 'precommitted' 
+                    ? 'bg-yellow-500' 
+                    : 'bg-red-500'
+              } ${isUpdating && i === blocks.length - 1 ? 'animate-pulse' : ''}`}
+            />
+          ))}
+        </div>
+      </div>
+    );
   };
 
   // Helper function to generate the uptime visualization
@@ -123,7 +187,7 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {filteredValidators.map((validator, index) => (
               <div 
                 key={index} 
@@ -139,7 +203,11 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
                   </Badge>
                 </div>
                 
-                {renderUptimeVisualization(validator.uptime)}
+                {renderBlockVisualization(validator)}
+                
+                <div className="mt-2">
+                  {renderUptimeVisualization(validator.uptime)}
+                </div>
                 
                 <div className="mt-2 text-xs text-muted-foreground flex justify-between">
                   <span>Committed: {100 - getMissedBlocks(validator.uptime)}</span>
@@ -254,6 +322,11 @@ const UptimeTab: React.FC<UptimeTabProps> = ({ validators, formatNumber, chain }
                       <span className="font-medium">Last Update</span>
                     </div>
                     <span>{lastUpdated.toLocaleString()}</span>
+                  </div>
+
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium mb-2">Block Height Visualization</h4>
+                    {renderBlockVisualization(selectedValidator)}
                   </div>
                 </div>
               </div>
