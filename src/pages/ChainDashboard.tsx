@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -23,6 +24,7 @@ import ValidatorsTab from '@/components/chain/ValidatorsTab';
 import BlocksTab from '@/components/chain/BlocksTab';
 import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
+import PublicRpcTab from '@/components/chain/PublicRpcTab';
 import { toast } from '@/components/ui/use-toast';
 
 const ChainDashboard: React.FC = () => {
@@ -296,11 +298,12 @@ const ChainDashboard: React.FC = () => {
         <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
         
         <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4">
+          <TabsList className="grid grid-cols-5">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="validators">Validators</TabsTrigger>
             <TabsTrigger value="blocks">Blocks</TabsTrigger>
             <TabsTrigger value="government">Governance</TabsTrigger>
+            <TabsTrigger value="public-rpc">Public RPC</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6 mt-6">
@@ -337,6 +340,14 @@ const ChainDashboard: React.FC = () => {
               proposals={proposals} 
               formatNumber={formatNumber} 
               formatDate={formatDate} 
+            />
+          </TabsContent>
+          
+          <TabsContent value="public-rpc" className="space-y-6 mt-6">
+            <PublicRpcTab 
+              chain={chain}
+              apiUrl={activeEndpoint.api}
+              currentHeight={stats?.height || 0}
             />
           </TabsContent>
         </Tabs>
