@@ -100,34 +100,63 @@ const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeigh
     }
   };
 
-  // Function to discover and scan peer endpoints
-  const discoverPeers = async (seedRPC: string): Promise<string[]> => {
+  // New improved method to get peers directly from RPC net_info
+  const discoverNetworkPeers = async (rpcUrl: string): Promise<string[]> => {
     try {
-      // Get net_info to discover connected peers
-      const netInfoResponse = await axios.get(`${seedRPC}/net_info`, { timeout: 5000 });
-      const peers = netInfoResponse.data.result.peers || [];
+      console.log(`Fetching network peers from ${rpcUrl}`);
+      const response = await axios.get(`${rpcUrl}/net_info`, { timeout: 8000 });
       
-      // Extract unique RPC endpoints from peers
+      if (!response.data || !response.data.result || !response.data.result.peers) {
+        console.log(`No peer information available from ${rpcUrl}`);
+        return [];
+      }
+      
+      const peers = response.data.result.peers;
       const peerEndpoints: string[] = [];
       
+      // Process each peer to construct RPC endpoints
       for (const peer of peers) {
         try {
-          const peerIP = peer.remote_ip;
-          if (!peerIP) continue;
+          if (!peer.remote_ip || !peer.node_info || !peer.node_info.listen_addr) continue;
           
-          // Create RPC endpoint URL (assuming standard port 26657)
-          const peerRPC = `http://${peerIP}:26657`;
-          if (!peerEndpoints.includes(peerRPC)) {
-            peerEndpoints.push(peerRPC);
+          // Get the port from listen_addr which is in format "tcp://0.0.0.0:26656"
+          let port = "26657"; // Default RPC port
+          const listenAddr = peer.node_info.listen_addr;
+          const portMatch = listenAddr.match(/:(\d+)$/);
+          
+          if (portMatch && portMatch[1]) {
+            // If peer is using non-standard P2P port, assume RPC is also non-standard
+            // Most nodes use P2P on 26656 and RPC on 26657
+            const p2pPort = parseInt(portMatch[1]);
+            if (p2pPort !== 26656) {
+              // For non-standard setups, usually RPC is P2P port + 1
+              port = (p2pPort + 1).toString();
+            }
+          }
+          
+          // Construct potential RPC endpoint
+          // Use http by default since we can't know if they support https
+          const peerRpc = `http://${peer.remote_ip}:${port}`;
+          
+          // Skip internal/local IPs
+          if (peer.remote_ip.startsWith('10.') || 
+              peer.remote_ip.startsWith('192.168.') || 
+              peer.remote_ip === '127.0.0.1') {
+            continue;
+          }
+          
+          if (!peerEndpoints.includes(peerRpc)) {
+            peerEndpoints.push(peerRpc);
           }
         } catch (err) {
           console.log("Error processing peer:", err);
         }
       }
       
+      console.log(`Discovered ${peerEndpoints.length} potential RPC endpoints`);
       return peerEndpoints;
     } catch (error) {
-      console.log(`Error discovering peers from ${seedRPC}:`, error);
+      console.log(`Error discovering peers from ${rpcUrl}:`, error);
       return [];
     }
   };
@@ -149,29 +178,48 @@ const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeigh
         if (processedUrls.has(normalizedUrl)) continue;
         
         processedUrls.add(normalizedUrl);
+        console.log(`Scanning known endpoint: ${normalizedUrl}`);
         
         // Get endpoint data
         const endpointData = await fetchEndpointData(normalizedUrl, rpc.provider);
         if (endpointData) {
           discoveredEndpoints.push(endpointData);
           
-          // Try to discover more peers from this endpoint
-          try {
-            const peerUrls = await discoverPeers(normalizedUrl);
+          // Get network peers from this endpoint
+          const peerUrls = await discoverNetworkPeers(normalizedUrl);
+          console.log(`Discovered ${peerUrls.length} potential peer RPC endpoints`);
+          
+          // Process up to 15 peer endpoints
+          let processedPeers = 0;
+          for (const peerUrl of peerUrls) {
+            if (processedUrls.has(peerUrl) || processedPeers >= 15) continue;
             
-            // Process up to 10 peers from each known endpoint (to limit requests)
-            for (let i = 0; i < Math.min(peerUrls.length, 10); i++) {
-              const peerUrl = peerUrls[i];
-              if (processedUrls.has(peerUrl)) continue;
+            processedUrls.add(peerUrl);
+            console.log(`Testing peer RPC endpoint: ${peerUrl}`);
+            
+            const peerData = await fetchEndpointData(peerUrl, "Discovered peer");
+            if (peerData) {
+              discoveredEndpoints.push(peerData);
               
-              processedUrls.add(peerUrl);
-              const peerData = await fetchEndpointData(peerUrl, "Discovered peer");
-              if (peerData) {
-                discoveredEndpoints.push(peerData);
+              // Try to discover more peers from this peer (one level of recursion)
+              if (discoveredEndpoints.length < 30) {
+                const subPeerUrls = await discoverNetworkPeers(peerUrl);
+                
+                // Process up to 5 subpeers from each working peer
+                let processedSubPeers = 0;
+                for (const subPeerUrl of subPeerUrls) {
+                  if (processedUrls.has(subPeerUrl) || processedSubPeers >= 5) continue;
+                  
+                  processedUrls.add(subPeerUrl);
+                  const subPeerData = await fetchEndpointData(subPeerUrl, "Secondary peer");
+                  if (subPeerData) {
+                    discoveredEndpoints.push(subPeerData);
+                  }
+                  processedSubPeers++;
+                }
               }
             }
-          } catch (err) {
-            console.log(`Error discovering peers from ${normalizedUrl}:`, err);
+            processedPeers++;
           }
         }
       }
