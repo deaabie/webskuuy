@@ -19,6 +19,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ChainConfig } from '@/services/cosmosService';
 import { AlertTriangle, Check, X } from 'lucide-react';
 import axios from 'axios';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PublicRpcTabProps {
   chain: ChainConfig;
@@ -36,125 +38,176 @@ interface PublicEndpoint {
     isValidator: boolean;
   };
   provider: string;
+  isActive: boolean;
 }
 
 const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeight }) => {
   const [endpoints, setEndpoints] = useState<PublicEndpoint[]>([]);
   const [lastScanTime, setLastScanTime] = useState<string>(new Date().toUTCString());
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isScanningAll, setIsScanningAll] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchPublicEndpoints = async () => {
-      setIsLoading(true);
+  // Function to fetch data from a single RPC endpoint
+  const fetchEndpointData = async (rpcAddress: string, provider: string): Promise<PublicEndpoint | null> => {
+    try {
+      // Timeout after 5 seconds
+      const statusResponse = await axios.get(`${rpcAddress}/status`, { timeout: 5000 });
+      
+      // Check if the RPC belongs to the current chain
+      const chainId = statusResponse.data?.result?.node_info?.network;
+      if (chainId !== chain.chain_id) {
+        console.log(`Endpoint ${rpcAddress} belongs to a different chain: ${chainId}`);
+        return null;
+      }
+      
+      const nodeInfo = statusResponse.data.result.node_info;
+      const blockHeight = statusResponse.data.result.sync_info.latest_block_height;
+      const catching_up = statusResponse.data.result.sync_info.catching_up;
+      const txIndexEnabled = statusResponse.data.result.sync_info.tx_index === "on";
+      
+      // Try to determine if this is a validator
+      const validatorMoniker = nodeInfo.moniker;
+      let isValidator = false;
+      
       try {
-        // In a real app, you would fetch this data from an API that scans public RPC endpoints
-        // For demonstration, we'll generate mock data based on the chain's RPC endpoints
-        const publicEndpoints: PublicEndpoint[] = [];
-        
-        // Use actual RPC endpoints from the chain config
-        for (let i = 0; i < chain.rpc.length; i++) {
-          const rpc = chain.rpc[i];
+        // Fetch validators from the current API
+        const validatorsResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED&pagination.limit=100`, { timeout: 5000 });
+        const validators = validatorsResponse.data.validators;
+        isValidator = validators.some((v: any) => 
+          v.description.moniker.toLowerCase() === validatorMoniker.toLowerCase()
+        );
+      } catch (error) {
+        console.log("Error checking validator status:", error);
+      }
+      
+      return {
+        endpoint: rpcAddress.replace('https://', '').replace('http://', ''),
+        blockHeight: catching_up ? 
+          `${parseInt(blockHeight) - Math.floor(Math.random() * 10)} - ${currentHeight}` : 
+          `${parseInt(blockHeight)}`,
+        txIndex: txIndexEnabled ? "on" : "off",
+        moniker: validatorMoniker,
+        validator: {
+          status: isValidator ? "yes" : "no",
+          isValidator: isValidator
+        },
+        provider: provider,
+        isActive: true
+      };
+    } catch (error) {
+      console.log(`Error fetching data from ${rpcAddress}:`, error);
+      return null;
+    }
+  };
+
+  // Function to discover and scan peer endpoints
+  const discoverPeers = async (seedRPC: string): Promise<string[]> => {
+    try {
+      // Get net_info to discover connected peers
+      const netInfoResponse = await axios.get(`${seedRPC}/net_info`, { timeout: 5000 });
+      const peers = netInfoResponse.data.result.peers || [];
+      
+      // Extract unique RPC endpoints from peers
+      const peerEndpoints: string[] = [];
+      
+      for (const peer of peers) {
+        try {
+          const peerIP = peer.remote_ip;
+          if (!peerIP) continue;
           
+          // Create RPC endpoint URL (assuming standard port 26657)
+          const peerRPC = `http://${peerIP}:26657`;
+          if (!peerEndpoints.includes(peerRPC)) {
+            peerEndpoints.push(peerRPC);
+          }
+        } catch (err) {
+          console.log("Error processing peer:", err);
+        }
+      }
+      
+      return peerEndpoints;
+    } catch (error) {
+      console.log(`Error discovering peers from ${seedRPC}:`, error);
+      return [];
+    }
+  };
+
+  // Function to scan all known endpoints and their peers
+  const scanAllEndpoints = async () => {
+    setIsScanningAll(true);
+    setIsLoading(true);
+    
+    try {
+      // Start with known RPC endpoints from chain config
+      const knownEndpoints = [...chain.rpc];
+      const discoveredEndpoints: PublicEndpoint[] = [];
+      const processedUrls = new Set<string>();
+      
+      // Process known endpoints from chain config
+      for (const rpc of knownEndpoints) {
+        const normalizedUrl = rpc.address.replace(/\/$/, '');
+        if (processedUrls.has(normalizedUrl)) continue;
+        
+        processedUrls.add(normalizedUrl);
+        
+        // Get endpoint data
+        const endpointData = await fetchEndpointData(normalizedUrl, rpc.provider);
+        if (endpointData) {
+          discoveredEndpoints.push(endpointData);
+          
+          // Try to discover more peers from this endpoint
           try {
-            // Try to fetch actual data from the RPC endpoint
-            const statusResponse = await axios.get(`${rpc.address}/status`, { timeout: 3000 });
-            const validatorsResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED&pagination.limit=100`);
+            const peerUrls = await discoverPeers(normalizedUrl);
             
-            const nodeInfo = statusResponse.data.result.node_info;
-            const blockHeight = statusResponse.data.result.sync_info.latest_block_height;
-            const catching_up = statusResponse.data.result.sync_info.catching_up;
-            const txIndexEnabled = statusResponse.data.result.sync_info.tx_index === "on";
-            
-            // Check if this node is a validator
-            const validatorMoniker = nodeInfo.moniker;
-            const validators = validatorsResponse.data.validators;
-            const isValidator = validators.some((v: any) => 
-              v.description.moniker.toLowerCase() === validatorMoniker.toLowerCase()
-            );
-            
-            publicEndpoints.push({
-              endpoint: rpc.address.replace('https://', '').replace('http://', ''),
-              blockHeight: catching_up ? 
-                `${parseInt(blockHeight) - Math.floor(Math.random() * 10)} - ${currentHeight}` : 
-                `${currentHeight}`,
-              txIndex: txIndexEnabled ? "on" : "off",
-              moniker: validatorMoniker,
-              validator: {
-                status: isValidator ? "yes" : "no",
-                isValidator: isValidator
-              },
-              provider: rpc.provider
-            });
-          } catch (error) {
-            // If we can't fetch actual data, generate mock data
-            console.error(`Error fetching data from ${rpc.address}:`, error);
-            
-            // Generate mock data for this endpoint
-            const isMockValidator = Math.random() > 0.5;
-            const mockTxIndex = Math.random() > 0.3 ? "on" : "off";
-            const mockBlockHeight = Math.random() > 0.7 ? 
-              `${currentHeight}` : 
-              `${currentHeight - Math.floor(Math.random() * 1000)} - ${currentHeight}`;
-            
-            publicEndpoints.push({
-              endpoint: rpc.address.replace('https://', '').replace('http://', ''),
-              blockHeight: mockBlockHeight,
-              txIndex: mockTxIndex,
-              moniker: rpc.provider,
-              validator: {
-                status: isMockValidator ? "yes" : "no",
-                isValidator: isMockValidator
-              },
-              provider: rpc.provider
-            });
+            // Process up to 10 peers from each known endpoint (to limit requests)
+            for (let i = 0; i < Math.min(peerUrls.length, 10); i++) {
+              const peerUrl = peerUrls[i];
+              if (processedUrls.has(peerUrl)) continue;
+              
+              processedUrls.add(peerUrl);
+              const peerData = await fetchEndpointData(peerUrl, "Discovered peer");
+              if (peerData) {
+                discoveredEndpoints.push(peerData);
+              }
+            }
+          } catch (err) {
+            console.log(`Error discovering peers from ${normalizedUrl}:`, err);
           }
         }
-        
-        // Add some additional mock public endpoints to have at least 10
-        const additionalEndpointsNeeded = Math.max(0, 10 - publicEndpoints.length);
-        const mockDomains = ['rpc-cosmos.example.com', 'cosmos-node.network', 'validator-rpc.test', 
-                           'public-cosmos.cloud', 'rpc.cosmos-services.net'];
-        const mockProviders = ['StakingService', 'NodersValidators', 'CosmosNodes', 
-                             'ValidatorInc', 'StakeTab', 'TechHubs', 'EastwoodNode'];
-        
-        for (let i = 0; i < additionalEndpointsNeeded; i++) {
-          const isMockValidator = Math.random() > 0.5;
-          const mockTxIndex = Math.random() > 0.3 ? "on" : "off";
-          const ipParts = Array(4).fill(0).map(() => Math.floor(Math.random() * 255));
-          const mockEndpoint = Math.random() > 0.5 ? 
-            `${ipParts.join('.')}:26657` : 
-            `${mockDomains[Math.floor(Math.random() * mockDomains.length)]}:26657`;
-          const mockProvider = mockProviders[Math.floor(Math.random() * mockProviders.length)];
-          const mockBlockHeight = Math.random() > 0.7 ? 
-            `${currentHeight}` : 
-            `${currentHeight - Math.floor(Math.random() * 1000)} - ${currentHeight}`;
-          
-          publicEndpoints.push({
-            endpoint: mockEndpoint,
-            blockHeight: mockBlockHeight,
-            txIndex: mockTxIndex,
-            moniker: mockProvider,
-            validator: {
-              status: isMockValidator ? "yes" : "no",
-              isValidator: isMockValidator
-            },
-            provider: mockProvider
-          });
-        }
-        
-        setEndpoints(publicEndpoints);
-        setLastScanTime(new Date().toUTCString());
-      } catch (error) {
-        console.error('Error fetching public endpoints:', error);
-      } finally {
-        setIsLoading(false);
       }
-    };
+      
+      // Sort endpoints: validators first, then by block height (higher first)
+      discoveredEndpoints.sort((a, b) => {
+        // Validators first
+        if (a.validator.isValidator && !b.validator.isValidator) return -1;
+        if (!a.validator.isValidator && b.validator.isValidator) return 1;
+        
+        // Then by block height (higher first)
+        const heightA = parseInt(a.blockHeight.split(' - ')[0]);
+        const heightB = parseInt(b.blockHeight.split(' - ')[0]);
+        return heightB - heightA;
+      });
+      
+      setEndpoints(discoveredEndpoints);
+      setLastScanTime(new Date().toUTCString());
+    } catch (error) {
+      console.error('Error scanning all endpoints:', error);
+    } finally {
+      setIsLoading(false);
+      setIsScanningAll(false);
+    }
+  };
 
-    fetchPublicEndpoints();
+  useEffect(() => {
+    // Initial scan when component loads
+    scanAllEndpoints();
     
-    // Refresh the data whenever the current height changes
-    const intervalId = setInterval(fetchPublicEndpoints, 60000); // refresh every minute
+    // Setup interval to refresh data periodically
+    const intervalId = setInterval(() => {
+      if (!isScanningAll) {
+        scanAllEndpoints();
+      }
+    }, 180000); // Scan every 3 minutes
     
     return () => clearInterval(intervalId);
   }, [chain, apiUrl, currentHeight]);
@@ -164,9 +217,27 @@ const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeigh
       <div className="flex flex-col space-y-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-xl flex items-center gap-2">
-              Public RPC endpoints ({endpoints.length})
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl flex items-center gap-2">
+                Public RPC endpoints ({endpoints.length})
+              </CardTitle>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={scanAllEndpoints} 
+                disabled={isScanningAll}
+                className="flex items-center gap-1"
+              >
+                {isScanningAll ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                    <span>Scanning...</span>
+                  </>
+                ) : (
+                  <span>Scan now</span>
+                )}
+              </Button>
+            </div>
             <CardDescription>
               The last scan happened {lastScanTime}
             </CardDescription>
@@ -185,25 +256,39 @@ const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeigh
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8">
-                        Loading endpoint data...
-                      </TableCell>
-                    </TableRow>
+                    Array(5).fill(0).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell><Skeleton className="h-5 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-10" /></TableCell>
+                      </TableRow>
+                    ))
                   ) : endpoints.length > 0 ? (
                     endpoints.map((endpoint, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={index} className={endpoint.isActive ? "" : "opacity-60"}>
                         <TableCell className="font-mono text-xs sm:text-sm text-cyan-400">
                           {endpoint.endpoint}
                         </TableCell>
                         <TableCell>
-                          {endpoint.blockHeight}
+                          {parseInt(endpoint.blockHeight) === currentHeight ? (
+                            <span className="text-green-500 font-medium">{endpoint.blockHeight}</span>
+                          ) : (
+                            endpoint.blockHeight
+                          )}
                         </TableCell>
                         <TableCell>
                           {endpoint.txIndex === "on" ? (
-                            <span className="text-green-500">on</span>
+                            <span className="text-green-500 flex items-center gap-1">
+                              <Check className="h-4 w-4" />
+                              <span>on</span>
+                            </span>
                           ) : (
-                            <span className="text-red-500">off</span>
+                            <span className="text-red-500 flex items-center gap-1">
+                              <X className="h-4 w-4" />
+                              <span>off</span>
+                            </span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -213,7 +298,7 @@ const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeigh
                           {endpoint.validator.isValidator ? (
                             <span className="flex items-center gap-1">
                               <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                              <span>yes</span>
+                              <span className="text-yellow-500 font-medium">yes</span>
                             </span>
                           ) : (
                             <span>no</span>
@@ -233,7 +318,7 @@ const PublicRpcTab: React.FC<PublicRpcTabProps> = ({ chain, apiUrl, currentHeigh
             </div>
             
             <div className="mt-6 text-xs text-muted-foreground">
-              raw scan results
+              real-time scan results
             </div>
             
             <Alert variant="warning" className="mt-2 border-yellow-600 bg-yellow-950/20">
