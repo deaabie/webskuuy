@@ -30,7 +30,6 @@ export interface BlockchainStats {
   supply: {
     total: string;
     circulating: string;
-    denom?: string;
   };
   blockTime: number;
   communityPool: string;
@@ -125,38 +124,11 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     
     // Fetch supply
     const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
-    let totalSupply = "0";
-    let denom = "";
-    
-    if (supplyResponse.data.supply && supplyResponse.data.supply.length > 0) {
-      totalSupply = supplyResponse.data.supply[0]?.amount || "0";
-      denom = supplyResponse.data.supply[0]?.denom || "";
-      if (denom.startsWith('u')) {
-        denom = denom.substring(1);
-      }
-    }
+    const totalSupply = supplyResponse.data.supply[0]?.amount || "0";
     
     // Fetch inflation
     const inflationResponse = await axios.get(`${apiUrl}/cosmos/mint/v1beta1/inflation`).catch(() => ({ data: { inflation: "0" } }));
     const inflation = parseFloat(inflationResponse.data.inflation || "0") * 100;
-    
-    // Fetch community pool
-    const communityPoolResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/community_pool`).catch(() => ({ 
-      data: { pool: [] } 
-    }));
-    
-    let communityPool = "0";
-    if (communityPoolResponse.data.pool && communityPoolResponse.data.pool.length > 0) {
-      const poolEntry = communityPoolResponse.data.pool.find((entry: any) => 
-        entry.denom === `u${denom}` || entry.denom === denom
-      );
-      
-      if (poolEntry) {
-        communityPool = poolEntry.amount;
-      } else if (communityPoolResponse.data.pool[0]) {
-        communityPool = communityPoolResponse.data.pool[0].amount;
-      }
-    }
     
     // Estimate block time (use 6s as default for Cosmos chains)
     const blockTime = 6;
@@ -173,10 +145,9 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
       supply: {
         total: totalSupply,
         circulating: totalSupply,
-        denom: denom
       },
       blockTime,
-      communityPool: communityPool,
+      communityPool: "0",
       inflation: inflation.toFixed(2) + "%",
       stakingAPR: stakingAPR.toFixed(2) + "%",
     };
@@ -466,16 +437,7 @@ export const getExtendedChainInfo = async (rpcUrl: string, apiUrl: string, chain
     
     // Fetch supply
     const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
-    let totalSupply = "0";
-    let denom = "";
-    
-    if (supplyResponse.data.supply && supplyResponse.data.supply.length > 0) {
-      totalSupply = supplyResponse.data.supply[0]?.amount || "0";
-      denom = supplyResponse.data.supply[0]?.denom || "";
-      if (denom.startsWith('u')) {
-        denom = denom.substring(1);
-      }
-    }
+    const totalSupply = supplyResponse.data.supply[0]?.amount || "0";
     
     // Calculate staking ratio
     const stakingRatio = (parseInt(bondedTokens) / parseInt(totalSupply) * 100).toFixed(2) + "%";

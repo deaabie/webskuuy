@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Coins, Landmark } from 'lucide-react';
+import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -14,33 +14,8 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
   // This will prevent the UI from jumping around while data is loading
   const height = stats?.height ? formatNumber(stats.height) : "0";
   const validatorsCount = stats?.validators ? `${stats.validators.active}/${stats.validators.total}` : "0/0";
-  
-  // Format supply to display in M (millions) or B (billions) if the number is large enough
-  const formatLargeNumber = (numStr: string): string => {
-    const num = parseFloat(numStr);
-    if (isNaN(num)) return "0";
-    
-    // 1,000,000 (6 digits) = 1M
-    if (num >= 1_000_000_000) {
-      return (num / 1_000_000_000).toFixed(2) + 'B';
-    } else if (num >= 1_000_000) {
-      return (num / 1_000_000).toFixed(2) + 'M';
-    } else if (num > 0) {
-      return formatNumber(num);
-    } else {
-      return "0";
-    }
-  };
-  
-  // Process supply values
-  const supplyValue = stats?.supply?.total || "0";
-  const supplyDisplay = formatLargeNumber(supplyValue);
-  const supplyWithDenom = stats?.supply?.denom ? `${supplyDisplay} ${stats.supply.denom.toUpperCase()}` : supplyDisplay;
-  
-  // Process community pool values
-  const communityPoolValue = stats?.communityPool || "0";
-  const communityPoolDisplay = formatLargeNumber(communityPoolValue);
-  const communityPoolWithDenom = stats?.supply?.denom ? `${communityPoolDisplay} ${stats.supply.denom.toUpperCase()}` : communityPoolDisplay;
+  const blockTime = stats?.blockTime ? `${stats.blockTime} s` : "0 s";
+  const stakingAPR = stats?.stakingAPR || "0%";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -55,14 +30,14 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         icon={<Users size={20} className="text-purple-500" />} 
       />
       <StatCard 
-        title="Supply" 
-        value={supplyWithDenom} 
-        icon={<Coins size={20} className="text-purple-500" />} 
+        title="Block Time" 
+        value={blockTime} 
+        icon={<Clock size={20} className="text-purple-500" />} 
       />
       <StatCard 
-        title="Community Pool" 
-        value={communityPoolWithDenom} 
-        icon={<Landmark size={20} className="text-purple-500" />} 
+        title="Staking APR" 
+        value={stakingAPR} 
+        icon={<TrendingUp size={20} className="text-purple-500" />} 
       />
     </div>
   );
