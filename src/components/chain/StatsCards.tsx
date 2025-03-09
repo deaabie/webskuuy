@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
+import { Hash, Users, Coins, Landmark } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -14,8 +14,23 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
   // This will prevent the UI from jumping around while data is loading
   const height = stats?.height ? formatNumber(stats.height) : "0";
   const validatorsCount = stats?.validators ? `${stats.validators.active}/${stats.validators.total}` : "0/0";
-  const blockTime = stats?.blockTime ? `${stats.blockTime} s` : "0 s";
-  const stakingAPR = stats?.stakingAPR || "0%";
+  
+  // Format supply to display in M (millions) or B (billions) if the number is large enough
+  const formatLargeNumber = (numStr: string): string => {
+    const num = parseFloat(numStr);
+    if (isNaN(num)) return "0";
+    
+    if (num >= 1_000_000_000) {
+      return (num / 1_000_000_000).toFixed(2) + 'B';
+    } else if (num >= 1_000_000) {
+      return (num / 1_000_000).toFixed(2) + 'M';
+    } else {
+      return formatNumber(num);
+    }
+  };
+  
+  const supply = stats?.supply?.total ? formatLargeNumber(stats.supply.total) : "0";
+  const communityPool = stats?.communityPool ? formatLargeNumber(stats.communityPool) : "0";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -30,14 +45,14 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         icon={<Users size={20} className="text-purple-500" />} 
       />
       <StatCard 
-        title="Block Time" 
-        value={blockTime} 
-        icon={<Clock size={20} className="text-purple-500" />} 
+        title="Supply" 
+        value={supply} 
+        icon={<Coins size={20} className="text-purple-500" />} 
       />
       <StatCard 
-        title="Staking APR" 
-        value={stakingAPR} 
-        icon={<TrendingUp size={20} className="text-purple-500" />} 
+        title="Community Pool" 
+        value={communityPool} 
+        icon={<Landmark size={20} className="text-purple-500" />} 
       />
     </div>
   );

@@ -130,6 +130,12 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     const inflationResponse = await axios.get(`${apiUrl}/cosmos/mint/v1beta1/inflation`).catch(() => ({ data: { inflation: "0" } }));
     const inflation = parseFloat(inflationResponse.data.inflation || "0") * 100;
     
+    // Fetch community pool
+    const communityPoolResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/community_pool`).catch(() => ({ 
+      data: { pool: [] } 
+    }));
+    const communityPool = communityPoolResponse.data.pool?.[0]?.amount || "0";
+    
     // Estimate block time (use 6s as default for Cosmos chains)
     const blockTime = 6;
     
@@ -147,7 +153,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
         circulating: totalSupply,
       },
       blockTime,
-      communityPool: "0",
+      communityPool: communityPool,
       inflation: inflation.toFixed(2) + "%",
       stakingAPR: stakingAPR.toFixed(2) + "%",
     };
