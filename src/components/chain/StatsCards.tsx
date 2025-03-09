@@ -20,17 +20,27 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
     const num = parseFloat(numStr);
     if (isNaN(num)) return "0";
     
+    // 1,000,000 (6 digits) = 1M
     if (num >= 1_000_000_000) {
       return (num / 1_000_000_000).toFixed(2) + 'B';
     } else if (num >= 1_000_000) {
       return (num / 1_000_000).toFixed(2) + 'M';
-    } else {
+    } else if (num > 0) {
       return formatNumber(num);
+    } else {
+      return "0";
     }
   };
   
-  const supply = stats?.supply?.total ? formatLargeNumber(stats.supply.total) : "0";
-  const communityPool = stats?.communityPool ? formatLargeNumber(stats.communityPool) : "0";
+  // Process supply values
+  const supplyValue = stats?.supply?.total || "0";
+  const supplyDisplay = formatLargeNumber(supplyValue);
+  const supplyWithDenom = stats?.supply?.denom ? `${supplyDisplay} ${stats.supply.denom.toUpperCase()}` : supplyDisplay;
+  
+  // Process community pool values
+  const communityPoolValue = stats?.communityPool || "0";
+  const communityPoolDisplay = formatLargeNumber(communityPoolValue);
+  const communityPoolWithDenom = stats?.supply?.denom ? `${communityPoolDisplay} ${stats.supply.denom.toUpperCase()}` : communityPoolDisplay;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -46,12 +56,12 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
       />
       <StatCard 
         title="Supply" 
-        value={supply} 
+        value={supplyWithDenom} 
         icon={<Coins size={20} className="text-purple-500" />} 
       />
       <StatCard 
         title="Community Pool" 
-        value={communityPool} 
+        value={communityPoolWithDenom} 
         icon={<Landmark size={20} className="text-purple-500" />} 
       />
     </div>
