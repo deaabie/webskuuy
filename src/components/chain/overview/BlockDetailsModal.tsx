@@ -20,7 +20,6 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   apiUrl
 }) => {
   const [proposerName, setProposerName] = useState<string>("");
-  const [proposerAddress, setProposerAddress] = useState<string>("");
   
   useEffect(() => {
     // Fetch validator info to get the moniker name
@@ -36,17 +35,14 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
         
         if (proposerValidator) {
           setProposerName(proposerValidator.moniker);
-          setProposerAddress(proposerValidator.address);
         } else {
           // If no matching validator is found, show a shortened address
-          setProposerName("Unknown Validator");
-          setProposerAddress(block.proposer);
+          setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
         }
       } catch (error) {
         console.error("Error fetching proposer info:", error);
         // Fallback to shortened address format
-        setProposerName("Unknown Validator");
-        setProposerAddress(block.proposer);
+        setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
       }
     };
     
@@ -56,12 +52,6 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   }, [block, isOpen, apiUrl]);
   
   if (!block) return null;
-  
-  // Format the proposer address for display
-  const formatAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.substring(0, 12)}...${address.substring(address.length - 8)}`;
-  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -88,12 +78,9 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <User className="h-5 w-5 text-green-500" />
               <span className="font-semibold">Proposer:</span>
             </div>
-            <div className="flex flex-col">
-              <span className="font-medium">{proposerName || "Loading..."}</span>
-              {proposerAddress && (
-                <span className="font-mono text-xs text-muted-foreground">
-                  {formatAddress(proposerAddress)}
-                </span>
+            <div>
+              {proposerName || (
+                <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
               )}
             </div>
             
