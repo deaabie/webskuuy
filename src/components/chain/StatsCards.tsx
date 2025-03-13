@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
+import { Hash, Users, Clock, Database } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -17,9 +17,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
     if (isNaN(num)) return "0";
     
     if (num >= 1_000_000_000) {
-      return (num / 1_000_000_000).toFixed(2) + 'B';
+      return (num / 1_000_000_000).toFixed(3) + 'B';
     } else if (num >= 1_000_000) {
-      return (num / 1_000_000).toFixed(2) + 'M';
+      return (num / 1_000_000).toFixed(3) + 'M';
     }
     
     return formatNumber(num);
@@ -35,9 +35,9 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
     ? `${stats.blockTime.toFixed(2)}s` 
     : "Loading...";
   
-  // Format staking APR with proper handling for missing data
-  const stakingAPR = stats?.stakingAPR && stats.stakingAPR !== "0%" 
-    ? stats.stakingAPR 
+  // Format supply with proper suffix and 3 decimal places
+  const totalSupply = stats?.supply?.total 
+    ? formatWithSuffix(stats.supply.total)
     : "Calculating...";
 
   return (
@@ -59,10 +59,10 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         tooltip="Average time between blocks"
       />
       <StatCard 
-        title="Staking APR" 
-        value={stakingAPR} 
-        icon={<TrendingUp size={20} className="text-purple-500" />} 
-        tooltip="Annual percentage rate for stakers"
+        title="Total Supply" 
+        value={totalSupply} 
+        icon={<Database size={20} className="text-purple-500" />} 
+        tooltip="Total token supply"
       />
     </div>
   );
