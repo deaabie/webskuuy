@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 export interface ChainConfig {
@@ -126,6 +127,27 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
     const totalSupply = supplyResponse.data.supply[0]?.amount || "0";
     
+    // Fetch community pool - try new v1 endpoint first
+    let communityPool = "0";
+    try {
+      const communityPoolResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/community_pool`);
+      if (communityPoolResponse.data?.pool?.length > 0) {
+        communityPool = communityPoolResponse.data.pool[0]?.amount || "0";
+      }
+    } catch (e) {
+      // Try alternative endpoint
+      try {
+        const altCommunityPoolResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/params`);
+        if (altCommunityPoolResponse.data?.params?.community_tax) {
+          // If we have a tax rate but no amount, estimate based on supply and tax rate
+          const taxRate = parseFloat(altCommunityPoolResponse.data.params.community_tax);
+          communityPool = String(Math.floor(parseInt(totalSupply) * taxRate));
+        }
+      } catch (innerError) {
+        console.error('Error fetching community pool data:', innerError);
+      }
+    }
+    
     // Fetch inflation
     const inflationResponse = await axios.get(`${apiUrl}/cosmos/mint/v1beta1/inflation`).catch(() => ({ data: { inflation: "0" } }));
     const inflation = parseFloat(inflationResponse.data.inflation || "0") * 100;
@@ -147,7 +169,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
         circulating: totalSupply,
       },
       blockTime,
-      communityPool: "0",
+      communityPool,
       inflation: inflation.toFixed(2) + "%",
       stakingAPR: stakingAPR.toFixed(2) + "%",
     };
@@ -222,31 +244,35 @@ export const getBlocks = async (rpcUrl: string, count: number = 10): Promise<Blo
 
 export const getTransactions = async (apiUrl: string, count: number = 10): Promise<Transaction[]> => {
   try {
-    // Try using a different endpoint that works better with Cosmos SDK v0.47+
-    const response = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs?events=message.action%3D%27%2A%27&pagination.limit=${count}&order_by=ORDER_BY_DESC`);
+    // Try using the new format endpoint
+    const response = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs?events=tx.height>0&pagination.limit=${count}&order_by=ORDER_BY_DESC`);
     
     return response.data.tx_responses.map((tx: any) => ({
       hash: tx.txhash,
       block: parseInt(tx.height),
-      type: tx.tx.body.messages[0]['@type'].split('.').pop(),
-      fee: tx.tx.auth_info.fee.amount[0]?.amount || "0",
+      type: tx.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 'unknown',
+      fee: tx.tx?.auth_info?.fee?.amount?.[0]?.amount || "0",
       status: tx.code === 0 ? 'Success' : 'Failed',
       timestamp: tx.timestamp || new Date().toISOString(),
+      gas: tx.gas_used || 'Unknown',
+      memo: tx.tx?.body?.memo || ''
     }));
   } catch (error) {
-    console.error('Error fetching transactions:', error);
+    console.error('Error fetching transactions, trying fallback:', error);
     
-    // First fallback: try with a different query format
+    // First fallback: try with different query parameters
     try {
       const fallbackResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs?pagination.limit=${count}`);
       
       return fallbackResponse.data.tx_responses.map((tx: any) => ({
         hash: tx.txhash,
         block: parseInt(tx.height),
-        type: tx.tx.body.messages[0]['@type'].split('.').pop(),
-        fee: tx.tx.auth_info.fee.amount[0]?.amount || "0",
+        type: tx.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 'unknown',
+        fee: tx.tx?.auth_info?.fee?.amount?.[0]?.amount || "0",
         status: tx.code === 0 ? 'Success' : 'Failed',
         timestamp: tx.timestamp || new Date().toISOString(),
+        gas: tx.gas_used || 'Unknown',
+        memo: tx.tx?.body?.memo || ''
       }));
     } catch (fallbackError) {
       console.error('Error with first fallback for transactions:', fallbackError);
@@ -273,18 +299,22 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
             // If block has transactions
             if (block.data.txs && block.data.txs.length > 0) {
               // For each tx in the block, try to get tx details
-              for (const encodedTx of block.data.txs.slice(0, 2)) { // Limit to 2 txs per block to avoid too many requests
+              for (const encodedTx of block.data.txs.slice(0, 2)) { // Limit to 2 txs per block
                 try {
-                  const txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${encodedTx}`);
+                  // Try to get tx by hash
+                  const txHash = Buffer.from(encodedTx, 'base64').toString('hex').toUpperCase();
+                  const txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${txHash}`);
                   const tx = txResponse.data.tx_response;
                   
                   txs.push({
                     hash: tx.txhash,
                     block: height,
-                    type: tx.tx.body.messages[0]['@type'].split('.').pop(),
-                    fee: tx.tx.auth_info.fee.amount[0]?.amount || "0",
+                    type: tx.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 'unknown',
+                    fee: tx.tx?.auth_info?.fee?.amount?.[0]?.amount || "0",
                     status: tx.code === 0 ? 'Success' : 'Failed',
                     timestamp: tx.timestamp || blockTime,
+                    gas: tx.gas_used || 'Unknown',
+                    memo: tx.tx?.body?.memo || ''
                   });
                 } catch (txError) {
                   // If we can't get tx details, use a placeholder
@@ -295,6 +325,8 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
                     fee: "0",
                     status: "Unknown",
                     timestamp: blockTime,
+                    gas: 'Unknown',
+                    memo: ''
                   });
                 }
                 
@@ -313,8 +345,7 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
       } catch (secondFallbackError) {
         console.error('Error with second fallback for transactions:', secondFallbackError);
         
-        // Final fallback: if all else fails, generate placeholder transactions
-        // from recent blocks
+        // Final fallback: generate placeholder transactions from recent blocks
         try {
           const blocksResponse = await axios.get(`${apiUrl}/cosmos/base/tendermint/v1beta1/blocks/latest`);
           const latestHeight = parseInt(blocksResponse.data.block.header.height);
@@ -325,7 +356,9 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
             type: "transaction",
             fee: "0",
             status: "Unknown",
-            timestamp: new Date(Date.now() - i * 6000).toISOString(), // Estimate block times
+            timestamp: new Date(Date.now() - i * 6000).toISOString(),
+            gas: 'Unknown',
+            memo: ''
           }));
         } catch (finalFallbackError) {
           console.error('Final fallback for transactions failed:', finalFallbackError);
