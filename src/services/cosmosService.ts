@@ -152,11 +152,37 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     const inflationResponse = await axios.get(`${apiUrl}/cosmos/mint/v1beta1/inflation`).catch(() => ({ data: { inflation: "0" } }));
     const inflation = parseFloat(inflationResponse.data.inflation || "0") * 100;
     
-    // Estimate block time (use 6s as default for Cosmos chains)
-    const blockTime = 6;
+    // Calculate block time by fetching multiple recent blocks and averaging
+    let blockTime = 6; // Default if we can't calculate
+    try {
+      const currentBlock = latestBlockResponse.data.result.block;
+      const currentHeight = parseInt(height);
+      const previousHeight = currentHeight - 10; // Get block from 10 blocks ago
+      
+      if (previousHeight > 0) {
+        const previousBlockResponse = await axios.get(`${rpcUrl}/block?height=${previousHeight}`);
+        const previousBlock = previousBlockResponse.data.result.block;
+        
+        const currentTime = new Date(currentBlock.header.time).getTime();
+        const previousTime = new Date(previousBlock.header.time).getTime();
+        
+        const timeDiff = currentTime - previousTime; // Time difference in milliseconds
+        blockTime = Math.round(timeDiff / 10000) / 100; // Average time per block in seconds, rounded to 2 decimal places
+      }
+    } catch (error) {
+      console.error('Error calculating block time:', error);
+    }
     
     // Calculate staking APR
-    const stakingAPR = (inflation / (parseInt(bondedTokens) / parseInt(totalSupply))) * 100 || 0;
+    let stakingAPR = 0;
+    try {
+      if (parseInt(bondedTokens) > 0 && parseInt(totalSupply) > 0) {
+        const bondedRatio = parseInt(bondedTokens) / parseInt(totalSupply);
+        stakingAPR = inflation / bondedRatio;
+      }
+    } catch (error) {
+      console.error('Error calculating staking APR:', error);
+    }
     
     return {
       height: parseInt(height),
@@ -168,7 +194,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
         total: totalSupply,
         circulating: totalSupply,
       },
-      blockTime,
+      blockTime: blockTime,
       communityPool,
       inflation: inflation.toFixed(2) + "%",
       stakingAPR: stakingAPR.toFixed(2) + "%",

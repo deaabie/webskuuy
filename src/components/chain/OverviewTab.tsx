@@ -60,7 +60,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           setIsBlockModalOpen(true);
         } else {
           try {
-            const blockResponse = await axios.get(`${apiUrl.replace('/cosmos', '')}/block?height=${height}`);
+            const blockResponse = await axios.get(`${apiUrl.replace(/\/cosmos.*$/, '')}/block?height=${height}`);
             if (blockResponse.data?.result?.block) {
               const block = blockResponse.data.result.block;
               setSelectedBlock({
@@ -73,6 +73,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
               setIsBlockModalOpen(true);
             }
           } catch (error) {
+            console.error("Block fetch error:", error);
             toast({
               title: "Block not found",
               description: `Could not find block at height ${height}`,
@@ -82,30 +83,49 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         }
       }
       // Check if it's a transaction hash (hex string)
-      else if (/^[0-9a-fA-F]{64}$/i.test(searchQuery)) {
+      else if (/^[0-9a-fA-F]{64}$/i.test(searchQuery) || /^[0-9A-F]{40}$/i.test(searchQuery)) {
         try {
           // First try to find the transaction in our cached list
-          const existingTx = transactions.find(t => t.hash.toLowerCase() === searchQuery.toLowerCase());
+          const existingTx = transactions.find(t => 
+            t.hash.toLowerCase() === searchQuery.toLowerCase() || 
+            t.hash.includes(searchQuery)
+          );
           
           if (existingTx) {
+            console.log("Found existing transaction:", existingTx);
             setSelectedTransaction(existingTx);
             setIsHashModalOpen(true);
           } else {
             // If not found in cache, fetch it from the API
-            const txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${searchQuery}`);
-            if (txResponse.data?.tx_response) {
-              const tx = txResponse.data.tx_response;
+            console.log("Fetching transaction from API:", searchQuery);
+            let txResponse;
+            try {
+              txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${searchQuery}`);
+            } catch (error) {
+              console.log("First TX lookup failed, trying alternative format");
+              // Try alternative format
+              txResponse = await axios.get(`${apiUrl}/txs/${searchQuery}`);
+            }
+            
+            console.log("TX Response:", txResponse.data);
+            
+            if (txResponse.data?.tx_response || txResponse.data?.tx) {
+              const txData = txResponse.data?.tx_response || txResponse.data?.tx;
               setSelectedTransaction({
-                hash: tx.txhash,
-                block: parseInt(tx.height),
-                type: tx.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 'unknown',
-                fee: tx.tx?.auth_info?.fee?.amount?.[0]?.amount || "0",
-                status: tx.code === 0 ? 'Success' : 'Failed',
-                timestamp: tx.timestamp || new Date().toISOString(),
-                gas: tx.gas_used || 'Unknown',
-                memo: tx.tx?.body?.memo || ''
+                hash: txData.txhash || searchQuery,
+                block: parseInt(txData.height) || 0,
+                type: txData.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 
+                      txData.tx?.type || 'unknown',
+                fee: txData.tx?.auth_info?.fee?.amount?.[0]?.amount || 
+                     txData.tx?.fee?.amount?.[0]?.amount || "0",
+                status: (txData.code === 0 || txData.code === undefined) ? 'Success' : 'Failed',
+                timestamp: txData.timestamp || new Date().toISOString(),
+                gas: txData.gas_used || txData.gas_wanted || 'Unknown',
+                memo: txData.tx?.body?.memo || txData.tx?.memo || ''
               });
               setIsHashModalOpen(true);
+            } else {
+              throw new Error("Transaction data format not recognized");
             }
           }
         } catch (error) {

@@ -30,11 +30,15 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
   const height = stats?.height ? formatNumber(stats.height) : "0";
   const validatorsCount = stats?.validators ? `${stats.validators.active}/${stats.validators.total}` : "0/0";
   
-  // Block time in seconds
-  const blockTime = stats?.blockTime ? `${stats.blockTime}s` : "0s";
+  // Format block time to be more user-friendly
+  const blockTime = stats?.blockTime 
+    ? `${stats.blockTime.toFixed(2)}s` 
+    : "Loading...";
   
-  // Staking APR
-  const stakingAPR = stats?.stakingAPR || "0%";
+  // Format staking APR with proper handling for missing data
+  const stakingAPR = stats?.stakingAPR && stats.stakingAPR !== "0%" 
+    ? stats.stakingAPR 
+    : "Calculating...";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -52,11 +56,13 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         title="Block Time" 
         value={blockTime} 
         icon={<Clock size={20} className="text-purple-500" />} 
+        tooltip="Average time between blocks"
       />
       <StatCard 
         title="Staking APR" 
         value={stakingAPR} 
         icon={<TrendingUp size={20} className="text-purple-500" />} 
+        tooltip="Annual percentage rate for stakers"
       />
     </div>
   );
@@ -66,13 +72,14 @@ interface StatCardProps {
   title: string;
   value: string;
   icon: React.ReactNode;
+  tooltip?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, tooltip }) => {
   return (
     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2" title={tooltip}>
           {icon}
           {title}
         </CardTitle>
