@@ -117,18 +117,14 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     const validatorsResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED&pagination.limit=100`);
     const validatorsCount = validatorsResponse.data.validators.length;
     
-    // Fetch supply
-    const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
-    const totalSupply = supplyResponse.data.supply[0]?.amount || "0";
-    
-    // Fetch community pool
-    const communityPoolResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/community_pool`);
-    const communityPool = communityPoolResponse.data.pool[0]?.amount || "0";
-    
     // Fetch staking params
     const stakingParamsResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/params`);
     const bondedTokensResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/pool`);
     const bondedTokens = bondedTokensResponse.data.pool.bonded_tokens;
+    
+    // Fetch supply
+    const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
+    const totalSupply = supplyResponse.data.supply[0]?.amount || "0";
     
     // Fetch inflation
     const inflationResponse = await axios.get(`${apiUrl}/cosmos/mint/v1beta1/inflation`).catch(() => ({ data: { inflation: "0" } }));
@@ -151,7 +147,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
         circulating: totalSupply,
       },
       blockTime,
-      communityPool,
+      communityPool: "0",
       inflation: inflation.toFixed(2) + "%",
       stakingAPR: stakingAPR.toFixed(2) + "%",
     };
@@ -442,10 +438,6 @@ export const getExtendedChainInfo = async (rpcUrl: string, apiUrl: string, chain
     // Fetch supply
     const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
     const totalSupply = supplyResponse.data.supply[0]?.amount || "0";
-    
-    // Fetch community pool
-    const communityPoolResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/community_pool`);
-    const communityPool = communityPoolResponse.data.pool[0]?.amount || "0";
     
     // Calculate staking ratio
     const stakingRatio = (parseInt(bondedTokens) / parseInt(totalSupply) * 100).toFixed(2) + "%";
