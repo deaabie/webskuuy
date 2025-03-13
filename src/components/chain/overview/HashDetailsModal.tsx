@@ -62,7 +62,15 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
               <FileText className="h-5 w-5 text-rose-500" />
               <span className="font-semibold">Status:</span>
             </div>
-            <div>{transaction.status}</div>
+            <div>
+              <span className={`px-2 py-1 rounded-full text-xs ${
+                transaction.status === 'Success' 
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                  : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+              }`}>
+                {transaction.status}
+              </span>
+            </div>
             
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-teal-500" />

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Database, Coins } from 'lucide-react';
+import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -30,15 +30,11 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
   const height = stats?.height ? formatNumber(stats.height) : "0";
   const validatorsCount = stats?.validators ? `${stats.validators.active}/${stats.validators.total}` : "0/0";
   
-  // Format supply with denomination if available
-  const totalSupply = stats?.supply?.total 
-    ? formatWithSuffix(stats.supply.total)
-    : "0";
-    
-  // Format community pool
-  const communityPool = stats?.communityPool 
-    ? formatWithSuffix(stats.communityPool) 
-    : "0";
+  // Block time in seconds
+  const blockTime = stats?.blockTime ? `${stats.blockTime}s` : "0s";
+  
+  // Staking APR
+  const stakingAPR = stats?.stakingAPR || "0%";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -53,14 +49,14 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         icon={<Users size={20} className="text-purple-500" />} 
       />
       <StatCard 
-        title="Total Supply" 
-        value={totalSupply} 
-        icon={<Database size={20} className="text-purple-500" />} 
+        title="Block Time" 
+        value={blockTime} 
+        icon={<Clock size={20} className="text-purple-500" />} 
       />
       <StatCard 
-        title="Community Pool" 
-        value={communityPool} 
-        icon={<Coins size={20} className="text-purple-500" />} 
+        title="Staking APR" 
+        value={stakingAPR} 
+        icon={<TrendingUp size={20} className="text-purple-500" />} 
       />
     </div>
   );

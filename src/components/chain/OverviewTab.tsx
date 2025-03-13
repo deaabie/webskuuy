@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Block, Transaction, BlockchainStats, ChainConfig } from '@/services/cosmosService';
 import { Search } from 'lucide-react';
@@ -83,22 +84,32 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       // Check if it's a transaction hash (hex string)
       else if (/^[0-9a-fA-F]{64}$/i.test(searchQuery)) {
         try {
-          const txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${searchQuery}`);
-          if (txResponse.data?.tx_response) {
-            const tx = txResponse.data.tx_response;
-            setSelectedTransaction({
-              hash: tx.txhash,
-              block: parseInt(tx.height),
-              type: tx.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 'unknown',
-              fee: tx.tx?.auth_info?.fee?.amount?.[0]?.amount || "0",
-              status: tx.code === 0 ? 'Success' : 'Failed',
-              timestamp: tx.timestamp || new Date().toISOString(),
-              gas: tx.gas_used || 'Unknown',
-              memo: tx.tx?.body?.memo || ''
-            });
+          // First try to find the transaction in our cached list
+          const existingTx = transactions.find(t => t.hash.toLowerCase() === searchQuery.toLowerCase());
+          
+          if (existingTx) {
+            setSelectedTransaction(existingTx);
             setIsHashModalOpen(true);
+          } else {
+            // If not found in cache, fetch it from the API
+            const txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${searchQuery}`);
+            if (txResponse.data?.tx_response) {
+              const tx = txResponse.data.tx_response;
+              setSelectedTransaction({
+                hash: tx.txhash,
+                block: parseInt(tx.height),
+                type: tx.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 'unknown',
+                fee: tx.tx?.auth_info?.fee?.amount?.[0]?.amount || "0",
+                status: tx.code === 0 ? 'Success' : 'Failed',
+                timestamp: tx.timestamp || new Date().toISOString(),
+                gas: tx.gas_used || 'Unknown',
+                memo: tx.tx?.body?.memo || ''
+              });
+              setIsHashModalOpen(true);
+            }
           }
         } catch (error) {
+          console.error("Transaction fetch error:", error);
           toast({
             title: "Transaction not found",
             description: "Could not find transaction with the provided hash",
