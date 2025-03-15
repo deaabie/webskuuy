@@ -199,16 +199,16 @@ const ProjectDetail = () => {
           </div>
           
           <div>
-            <Card className="mb-6">
-              <CardHeader>
+            <Card className="mb-6 border-0 shadow-md overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
                 <CardTitle>Project Info</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="bg-white dark:bg-gray-800">
                 <p className="text-gray-600 dark:text-gray-300 mb-6">{project.description}</p>
                 
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-medium mb-2">Resources</h3>
+                    <h3 className="font-medium mb-2 text-purple-700 dark:text-purple-400">Resources</h3>
                     <ProjectDetailsList
                       details={resources}
                       detailType="resource"
@@ -219,7 +219,7 @@ const ProjectDetail = () => {
                   </div>
                   
                   <div>
-                    <h3 className="font-medium mb-2">Community</h3>
+                    <h3 className="font-medium mb-2 text-purple-700 dark:text-purple-400">Community</h3>
                     <ProjectDetailsList
                       details={communityLinks}
                       detailType="community"
@@ -232,11 +232,11 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
             
-            <Card>
-              <CardHeader>
+            <Card className="border-0 shadow-md overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
                 <CardTitle>Requirements</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="bg-white dark:bg-gray-800">
                 <ProjectDetailsList
                   details={requirements}
                   detailType="requirement"
