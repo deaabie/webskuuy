@@ -134,22 +134,25 @@ const ProjectDetail = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
+            <Card className="border-0 shadow-md overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
                 <CardTitle>Installation Guide</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0">
                 {project.installation_guide ? (
-                  <div className="prose dark:prose-invert max-w-none prose-headings:mt-6 prose-headings:mb-4">
+                  <div className="prose dark:prose-invert max-w-none prose-headings:mt-6 prose-headings:mb-4 p-6 bg-white dark:bg-gray-800 rounded-b-lg">
                     <Markdown
                       components={{
-                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-0 mb-4" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-6 mb-3" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold mt-5 mb-2" {...props} />,
+                        h1: ({ node, ...props }) => <h1 className="text-2xl font-bold mt-0 mb-4 text-purple-700 dark:text-purple-400" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-xl font-bold mt-6 mb-3 text-indigo-600 dark:text-indigo-400" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold mt-5 mb-2 text-blue-600 dark:text-blue-400" {...props} />,
                         ul: ({ node, ...props }) => <ul className="list-disc pl-6 my-4" {...props} />,
                         ol: ({ node, ...props }) => <ol className="list-decimal pl-6 my-4" {...props} />,
                         li: ({ node, ...props }) => <li className="my-1" {...props} />,
                         p: ({ node, ...props }) => <p className="my-3" {...props} />,
+                        blockquote: ({ node, ...props }) => (
+                          <blockquote className="border-l-4 border-purple-500 pl-4 italic my-4 text-gray-600 dark:text-gray-300" {...props} />
+                        ),
                         code(props) {
                           const {children, className, node, ...rest} = props
                           const match = /language-(\w+)/.exec(className || '')
@@ -158,7 +161,7 @@ const ProjectDetail = () => {
                           if (match) {
                             return (
                               <div className="relative my-4">
-                                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm">
+                                <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto font-mono text-sm border-l-4 border-purple-500">
                                   <code className={className} {...rest}>
                                     {children}
                                   </code>
@@ -176,7 +179,7 @@ const ProjectDetail = () => {
                           
                           // Inline code
                           return (
-                            <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-sm">
+                            <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-sm text-purple-600 dark:text-purple-400">
                               {children}
                             </code>
                           )
@@ -187,7 +190,7 @@ const ProjectDetail = () => {
                     </Markdown>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
+                  <div className="text-center py-8 bg-white dark:bg-gray-800">
                     <p className="text-gray-500">No installation guide available for this project.</p>
                   </div>
                 )}
