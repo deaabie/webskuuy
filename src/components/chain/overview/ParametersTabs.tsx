@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Loader2 } from 'lucide-react';
@@ -27,15 +27,17 @@ const ParametersTabs: React.FC<ParametersTabsProps> = ({
   const [distParams, setDistParams] = useState<ParameterItem[]>([]);
   const [slashingParams, setSlashingParams] = useState<ParameterItem[]>([]);
   const [appInfo, setAppInfo] = useState<ParameterItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const dataFetchedRef = useRef(false);
 
   useEffect(() => {
     const fetchAllParameters = async () => {
-      if (!apiUrl) {
-        setLoading(false);
+      if (!apiUrl || dataFetchedRef.current) {
         return;
       }
       
       setLoading(true);
+      setError(null);
       
       try {
         // Fetch staking parameters
@@ -203,14 +205,23 @@ const ParametersTabs: React.FC<ParametersTabsProps> = ({
             { label: "Go Version", value: "go1.21" }
           ]);
         }
+
+        // Mark data as fetched
+        dataFetchedRef.current = true;
       } catch (error) {
         console.error("Error fetching parameters:", error);
+        setError("Could not fetch chain parameters");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchAllParameters();
+    if (apiUrl && !dataFetchedRef.current) {
+      fetchAllParameters();
+    } else if (!apiUrl) {
+      setLoading(false);
+      setError("API URL not available");
+    }
   }, [apiUrl, rpcUrl, formatNumber]);
 
   // Helper to format time durations
@@ -240,6 +251,19 @@ const ParametersTabs: React.FC<ParametersTabsProps> = ({
     );
   };
 
+  const renderSkeletonSection = () => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array(6).fill(0).map((_, index) => (
+          <div key={index} className="p-4 bg-card border rounded-lg">
+            <div className="h-4 w-24 bg-muted rounded animate-pulse mb-2"></div>
+            <div className="h-6 w-32 bg-muted rounded animate-pulse"></div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <Card className="mt-6">
       <CardHeader>
@@ -249,6 +273,10 @@ const ParametersTabs: React.FC<ParametersTabsProps> = ({
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 text-muted-foreground">
+            {error}
           </div>
         ) : (
           <Tabs defaultValue="staking">

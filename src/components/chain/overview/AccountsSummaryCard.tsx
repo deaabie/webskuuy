@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -35,11 +35,16 @@ const AccountsSummaryCard: React.FC<AccountsSummaryCardProps> = ({
   const [accounts, setAccounts] = useState<AccountBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const dataFetchedRef = useRef(false);
   
-  const fetchRichList = async () => {
+  const fetchRichList = async (forceRefresh = false) => {
     if (!apiUrl) {
       setLoading(false);
       setError("API URL not available");
+      return;
+    }
+    
+    if (dataFetchedRef.current && !forceRefresh) {
       return;
     }
     
@@ -150,6 +155,7 @@ const AccountsSummaryCard: React.FC<AccountsSummaryCardProps> = ({
       // Sort by balance in descending order and take top 10
       accountBalances.sort((a, b) => Number(b.balance) - Number(a.balance));
       setAccounts(accountBalances.slice(0, 10));
+      dataFetchedRef.current = true;
       setLoading(false);
     } catch (err) {
       console.error('Error fetching account balances:', err);
@@ -164,14 +170,15 @@ const AccountsSummaryCard: React.FC<AccountsSummaryCardProps> = ({
         });
       }
       setAccounts(mockAccounts);
+      dataFetchedRef.current = true;
       setLoading(false);
     }
   };
   
   useEffect(() => {
-    if (apiUrl) {
+    if (apiUrl && !dataFetchedRef.current) {
       fetchRichList();
-    } else {
+    } else if (!apiUrl) {
       setLoading(false);
     }
   }, [apiUrl]);
@@ -232,7 +239,7 @@ const AccountsSummaryCard: React.FC<AccountsSummaryCardProps> = ({
         <Button 
           variant="ghost" 
           size="icon"
-          onClick={fetchRichList}
+          onClick={() => fetchRichList(true)}
           disabled={loading}
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
