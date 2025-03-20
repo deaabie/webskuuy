@@ -8,8 +8,6 @@ import RecentBlocksCard from './overview/RecentBlocksCard';
 import BlockDetailsModal from './overview/BlockDetailsModal';
 import HashDetailsModal from './overview/HashDetailsModal';
 import AccountDetailsModal from './overview/AccountDetailsModal';
-import Tokenomics from './overview/Tokenomics';
-import ParametersTabs from './overview/ParametersTabs';
 import axios from 'axios';
 
 interface OverviewTabProps {
@@ -27,8 +25,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   blocks, 
   transactions, 
   formatDate,
-  apiUrl,
-  formatNumber
+  apiUrl
 }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -39,23 +36,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  
-  // Find the active RPC URL that corresponds to the active API URL
-  const findMatchingRpcUrl = (): string | undefined => {
-    if (!apiUrl || !chain?.api || !chain?.rpc) return undefined;
-    
-    // Find the matching provider
-    const activeApiProvider = chain.api.find(api => api.address === apiUrl)?.provider;
-    
-    // If we found the provider, find the matching RPC with the same provider
-    if (activeApiProvider) {
-      const matchingRpc = chain.rpc.find(rpc => rpc.provider === activeApiProvider);
-      return matchingRpc?.address;
-    }
-    
-    // Fallback to first RPC if no match
-    return chain.rpc[0]?.address;
-  };
   
   const handleSearch = async () => {
     if (!searchQuery.trim() || !apiUrl) {
@@ -211,24 +191,10 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <RecentBlocksCard 
-          blocks={blocks} 
-          onBlockClick={handleBlockClick}
-          formatDate={formatDate}
-        />
-        
-        <Tokenomics 
-          apiUrl={apiUrl}
-          formatNumber={formatNumber}
-          addrPrefix={chain.addr_prefix}
-        />
-      </div>
-      
-      <ParametersTabs 
-        apiUrl={apiUrl}
-        rpcUrl={findMatchingRpcUrl()}
-        formatNumber={formatNumber}
+      <RecentBlocksCard 
+        blocks={blocks} 
+        onBlockClick={handleBlockClick}
+        formatDate={formatDate}
       />
 
       <BlockDetailsModal
