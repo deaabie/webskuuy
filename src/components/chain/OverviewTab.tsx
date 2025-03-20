@@ -8,7 +8,7 @@ import RecentBlocksCard from './overview/RecentBlocksCard';
 import BlockDetailsModal from './overview/BlockDetailsModal';
 import HashDetailsModal from './overview/HashDetailsModal';
 import AccountDetailsModal from './overview/AccountDetailsModal';
-import AccountsSummaryCard from './overview/AccountsSummaryCard';
+import Tokenomics from './overview/Tokenomics';
 import ParametersTabs from './overview/ParametersTabs';
 import axios from 'axios';
 
@@ -218,7 +218,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           formatDate={formatDate}
         />
         
-        <AccountsSummaryCard 
+        <Tokenomics 
           apiUrl={apiUrl}
           formatNumber={formatNumber}
           addrPrefix={chain.addr_prefix}
