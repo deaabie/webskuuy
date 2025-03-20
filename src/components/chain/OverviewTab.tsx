@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Block, Transaction, BlockchainStats, ChainConfig } from '@/services/cosmosService';
 import { Search } from 'lucide-react';
@@ -8,6 +7,7 @@ import RecentBlocksCard from './overview/RecentBlocksCard';
 import BlockDetailsModal from './overview/BlockDetailsModal';
 import HashDetailsModal from './overview/HashDetailsModal';
 import AccountDetailsModal from './overview/AccountDetailsModal';
+import AccountsSummaryCard from './overview/AccountsSummaryCard';
 import axios from 'axios';
 
 interface OverviewTabProps {
@@ -25,7 +25,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   blocks, 
   transactions, 
   formatDate,
-  apiUrl
+  apiUrl,
+  formatNumber
 }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -191,11 +192,19 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
-      <RecentBlocksCard 
-        blocks={blocks} 
-        onBlockClick={handleBlockClick}
-        formatDate={formatDate}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RecentBlocksCard 
+          blocks={blocks} 
+          onBlockClick={handleBlockClick}
+          formatDate={formatDate}
+        />
+        
+        <AccountsSummaryCard 
+          apiUrl={apiUrl}
+          formatNumber={formatNumber}
+          addrPrefix={chain.addr_prefix}
+        />
+      </div>
 
       <BlockDetailsModal
         isOpen={isBlockModalOpen}
