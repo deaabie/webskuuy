@@ -15,6 +15,7 @@ import About from "./pages/About";
 import Faq from "./pages/Faq";
 import Tools from "./pages/Tools";
 import Faucet from "./pages/Faucet";
+import Deploy from "./pages/Deploy"; // Add import for the new Deploy page
 import CosmosExplorer from "./pages/CosmosExplorer";
 import ChainDashboard from "./pages/ChainDashboard";
 import Footer from "./components/Footer";
@@ -55,6 +56,7 @@ const AppContent = () => {
           <Route path="/faq" element={<Faq />} />
           <Route path="/tools" element={<Tools />} />
           <Route path="/faucet" element={<Faucet />} />
+          <Route path="/deploy" element={<Deploy />} /> {/* Add new route for the Deploy page */}
           <Route path="/explorer" element={<CosmosExplorer />} />
           <Route path="/explorer/:chainName" element={<ChainDashboard />} />
           <Route path="*" element={<NotFound />} />
