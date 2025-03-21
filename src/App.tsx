@@ -19,7 +19,6 @@ import CosmosExplorer from "./pages/CosmosExplorer";
 import ChainDashboard from "./pages/ChainDashboard";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
-import Deploy from "./pages/Deploy";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +57,6 @@ const AppContent = () => {
           <Route path="/faucet" element={<Faucet />} />
           <Route path="/explorer" element={<CosmosExplorer />} />
           <Route path="/explorer/:chainName" element={<ChainDashboard />} />
-          <Route path="/deploy" element={<Deploy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {location.pathname !== "/" && <Footer />}
