@@ -1,7 +1,18 @@
 
 import React from 'react';
 import { useNetwork, useNetworkMismatch, useSwitchChain } from '@thirdweb-dev/react';
-import { Ethereum, Polygon, Optimism, Arbitrum, Base } from '@thirdweb-dev/chains';
+import { 
+  Ethereum,
+  Goerli,
+  Polygon,
+  Mumbai,
+  Optimism,
+  OptimismGoerli,
+  Arbitrum,
+  ArbitrumGoerli,
+  Base,
+  BaseGoerli
+} from '@thirdweb-dev/chains';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
@@ -11,31 +22,31 @@ const networks = [
   { 
     ...Ethereum, 
     mainnet: Ethereum, 
-    testnet: { ...Ethereum.testnet.goerli },
+    testnet: Goerli,
     icon: "ethereum"
   },
   { 
     ...Polygon, 
     mainnet: Polygon, 
-    testnet: { ...Polygon.testnet.mumbai },
+    testnet: Mumbai,
     icon: "polygon"
   },
   { 
     ...Optimism, 
     mainnet: Optimism, 
-    testnet: { ...Optimism.testnet.goerli },
+    testnet: OptimismGoerli,
     icon: "optimism"
   },
   { 
     ...Arbitrum, 
     mainnet: Arbitrum, 
-    testnet: { ...Arbitrum.testnet.goerli },
+    testnet: ArbitrumGoerli,
     icon: "arbitrum"
   },
   { 
     ...Base, 
     mainnet: Base, 
-    testnet: { ...Base.testnet.goerli },
+    testnet: BaseGoerli,
     icon: "base"
   },
 ];
