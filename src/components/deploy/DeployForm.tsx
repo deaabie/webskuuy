@@ -73,6 +73,10 @@ const DeployForm: React.FC<DeployFormProps> = ({ networks }) => {
         message: 'Deploying your smart contract to the blockchain...'
       });
 
+      console.log("SDK instance:", sdk);
+      console.log("Selected network:", network);
+      console.log("Connected wallet:", address);
+
       // In a real implementation, you would use the ThirdWeb SDK to deploy the contract
       // For demo purposes, we'll simulate a successful deployment
       await new Promise(resolve => setTimeout(resolve, 3000));
