@@ -15,7 +15,7 @@ const Deploy = () => {
   
   return (
     <ThirdwebProvider
-      clientId="your-client-id" // Replace with your ThirdWeb client ID in production
+      clientId="14b121e3f60af4f5f33938007bb8c6f8"
       activeChain="ethereum"
     >
       <Helmet>

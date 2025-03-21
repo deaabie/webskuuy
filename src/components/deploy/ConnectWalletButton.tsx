@@ -41,7 +41,7 @@ const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = ({ className }) 
   }
 
   return (
-    <Button variant="outline" className={className} onClick={() => connect({ chainId: 1 })}>
+    <Button variant="outline" className={className} onClick={() => connect()}>
       <Wallet className="h-4 w-4 mr-2" />
       Connect Wallet
     </Button>
