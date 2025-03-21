@@ -5,8 +5,7 @@ import {
   useConnect, 
   metamaskWallet,
   coinbaseWallet,
-  walletConnect,
-  ConnectWallet,
+  walletConnect
 } from "@thirdweb-dev/react";
 import {
   DropdownMenu,
@@ -72,3 +71,4 @@ const ConnectWalletButton = () => {
 };
 
 export default ConnectWalletButton;
+
