@@ -10,7 +10,7 @@ import {
   Pentagon,
   Octagon,
   Triangle,
-  CircleSquare,
+  Square,
 } from 'lucide-react';
 
 interface NetworkIconProps {
@@ -36,7 +36,7 @@ const NetworkIcon: React.FC<NetworkIconProps> = ({
       case 'arbitrum':
         return <CircleDot size={size * 0.6} className="text-blue-700" />;
       case 'optimism':
-        return <CircleSquare size={size * 0.6} className="text-red-500" />;
+        return <Square size={size * 0.6} className="text-red-500" />;
       case 'binance':
         return <Octagon size={size * 0.6} className="text-yellow-400" />;
       case 'base':
