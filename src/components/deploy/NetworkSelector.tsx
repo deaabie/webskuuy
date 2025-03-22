@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface NetworkSelectorProps {
@@ -17,19 +16,18 @@ interface NetworkConfig {
 
 const networks: NetworkConfig[] = [
   { id: 'ethereum', name: 'Ethereum', logo: '🌐', type: 'mainnet' },
-  { id: 'goerli', name: 'Goerli', logo: '⚙️', type: 'testnet' },
   { id: 'polygon', name: 'Polygon', logo: '🟣', type: 'mainnet' },
-  { id: 'mumbai', name: 'Mumbai', logo: '🟪', type: 'testnet' },
   { id: 'bsc', name: 'BNB Chain', logo: '🟡', type: 'mainnet' },
-  { id: 'bsc-testnet', name: 'BNB Testnet', logo: '🟨', type: 'testnet' },
   { id: 'optimism', name: 'Optimism', logo: '🔴', type: 'mainnet' },
-  { id: 'optimism-goerli', name: 'Optimism Goerli', logo: '🔺', type: 'testnet' },
   { id: 'arbitrum', name: 'Arbitrum', logo: '🔵', type: 'mainnet' },
-  { id: 'arbitrum-goerli', name: 'Arbitrum Goerli', logo: '🔹', type: 'testnet' },
   { id: 'avalanche', name: 'Avalanche', logo: '❄️', type: 'mainnet' },
-  { id: 'fuji', name: 'Fuji', logo: '❄', type: 'testnet' },
   { id: 'base', name: 'Base', logo: '🔷', type: 'mainnet' },
-  { id: 'base-goerli', name: 'Base Goerli', logo: '🟦', type: 'testnet' },
+  // Testnets
+  { id: 'sepolia', name: 'ETH Sepolia', logo: '⚙️', type: 'testnet' },
+  { id: 'arbitrum-sepolia', name: 'Arbitrum Sepolia', logo: '🔹', type: 'testnet' },
+  { id: 'optimism-sepolia', name: 'Optimism Sepolia', logo: '🔺', type: 'testnet' },
+  { id: 'base-sepolia', name: 'Base Sepolia', logo: '🟦', type: 'testnet' },
+  { id: 'blast-sepolia', name: 'Blast Sepolia', logo: '💥', type: 'testnet' },
 ];
 
 const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
@@ -58,7 +56,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
             key={network.id}
             className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all ${
               selectedNetwork === network.id
-                ? 'border-2 border-yellow-400 bg-yellow-400/10'
+                ? 'border-2 border-primary bg-primary/10'
                 : 'border border-gray-700 hover:border-gray-500'
             }`}
             onClick={() => handleNetworkChange(network.id)}

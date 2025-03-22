@@ -73,9 +73,9 @@ const DeployContainer = () => {
   };
 
   return (
-    <Card className="w-full bg-[#111] border-gray-800">
+    <Card className="w-full bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-4xl font-bold text-yellow-400">Deploy Your Smart Contract</CardTitle>
+        <CardTitle className="text-3xl font-bold text-primary">Deploy Your Smart Contract</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {!deploySuccess ? (
@@ -111,16 +111,17 @@ const DeployContainer = () => {
                   </div>
                   
                   <Button 
-                    className="w-full py-6 text-xl bg-yellow-400 hover:bg-yellow-500 text-black font-bold"
+                    className="w-full py-6 text-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                     onClick={handleDeploy}
                     disabled={isDeploying || !network}
+                    variant="default"
                   >
                     {isDeploying ? "DEPLOYING..." : "DEPLOY"}
                   </Button>
                   
-                  <div className="mt-4 text-sm text-gray-400 flex items-center justify-center">
+                  <div className="mt-4 text-sm text-muted-foreground flex items-center justify-center">
                     <span>Need help?</span>
-                    <a href="https://docs.skuuy.com/deploy" target="_blank" rel="noopener noreferrer" className="ml-2 flex items-center text-yellow-400 hover:underline">
+                    <a href="https://docs.skuuy.com/deploy" target="_blank" rel="noopener noreferrer" className="ml-2 flex items-center text-primary hover:underline">
                       View documentation <ExternalLink className="h-3 w-3 ml-1" />
                     </a>
                   </div>

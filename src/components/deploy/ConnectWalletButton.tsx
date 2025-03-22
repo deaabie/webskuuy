@@ -84,10 +84,10 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
           {isConnecting ? "Connecting..." : "Connect Wallet"}
         </Button>
       ) : (
-        <div className="flex items-center justify-between p-3 border border-gray-700 rounded-lg bg-gray-900">
+        <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
           <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-purple-400 to-blue-500 flex items-center justify-center mr-3">
-              <Wallet className="h-4 w-4 text-white" />
+            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary/80 to-primary/40 flex items-center justify-center mr-3">
+              <Wallet className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="text-lg font-medium">{address}</span>
           </div>
@@ -95,7 +95,7 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
             variant="ghost" 
             size="sm" 
             onClick={disconnectWallet}
-            className="text-gray-400 hover:text-white"
+            className="text-muted-foreground hover:text-foreground"
           >
             <LogOut className="h-4 w-4 mr-2" />
             Disconnect
