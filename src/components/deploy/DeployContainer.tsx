@@ -102,6 +102,10 @@ const DeployContainer = () => {
     }
 
     setIsDeploying(true);
+    toast({
+      title: "Deployment started",
+      description: "Please confirm the transaction in your wallet.",
+    });
 
     try {
       // Get contract bytecode and ABI based on deployment mode
@@ -110,26 +114,31 @@ const DeployContainer = () => {
         deployMode === 'basic' ? messageToDeploy : { name: tokenName, symbol: tokenSymbol }
       );
       
+      console.log("Deploying contract with args:", contractArgs);
+      
       // Create contract factory
       const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
       
       // Deploy the contract with arguments
       const contract = await contractFactory.deploy(...contractArgs);
       
-      // Wait for the contract to be deployed
-      await contract.waitForDeployment();
+      console.log("Contract deployment transaction hash:", contract.deploymentTransaction()?.hash);
       
-      // Get the transaction details
+      // Set transaction hash immediately
       const deploymentTransaction = contract.deploymentTransaction();
-      if (!deploymentTransaction) {
+      if (deploymentTransaction) {
+        setTxHash(deploymentTransaction.hash);
+      } else {
         throw new Error("No deployment transaction found");
       }
       
-      const deployTxHash = deploymentTransaction.hash;
-      const contractAddress = await contract.getAddress();
+      // Wait for the contract to be deployed
+      await contract.waitForDeployment();
       
-      // Set transaction hash and success state
-      setTxHash(deployTxHash);
+      const contractAddress = await contract.getAddress();
+      console.log("Contract deployed at address:", contractAddress);
+      
+      // Set contract address and success state
       setContractAddress(contractAddress);
       setDeploySuccess(true);
       
@@ -144,6 +153,11 @@ const DeployContainer = () => {
         title: "Deployment failed",
         description: error.message || "There was an error deploying your smart contract.",
       });
+      
+      // Reset deployment state on error
+      setTxHash("");
+      setContractAddress("");
+      setDeploySuccess(false);
     } finally {
       setIsDeploying(false);
     }
