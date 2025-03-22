@@ -7,51 +7,73 @@ import { toast } from "@/hooks/use-toast";
 interface DeploySuccessProps {
   txHash: string;
   network: string;
+  contractAddress: string;
 }
 
-const DeploySuccess = ({ txHash, network }: DeploySuccessProps) => {
-  const [copied, setCopied] = useState(false);
+const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps) => {
+  const [copiedTx, setCopiedTx] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(txHash);
-    setCopied(true);
+  const copyToClipboard = (text: string, type: 'tx' | 'address') => {
+    navigator.clipboard.writeText(text);
+    
+    if (type === 'tx') {
+      setCopiedTx(true);
+      setTimeout(() => setCopiedTx(false), 2000);
+    } else {
+      setCopiedAddress(true);
+      setTimeout(() => setCopiedAddress(false), 2000);
+    }
     
     toast({
       title: "Copied to clipboard",
-      description: "Transaction hash has been copied to clipboard",
+      description: `${type === 'tx' ? 'Transaction hash' : 'Contract address'} has been copied to clipboard`,
     });
-    
-    setTimeout(() => setCopied(false), 2000);
   };
 
-  const getExplorerUrl = () => {
+  const getExplorerUrl = (type: 'tx' | 'address') => {
+    const path = type === 'tx' ? `tx/${txHash}` : `address/${contractAddress}`;
+    
     switch (network) {
       case 'ethereum':
-        return `https://etherscan.io/tx/${txHash}`;
+        return `https://etherscan.io/${path}`;
       case 'polygon':
-        return `https://polygonscan.com/tx/${txHash}`;
+        return `https://polygonscan.com/${path}`;
       case 'bsc':
-        return `https://bscscan.com/tx/${txHash}`;
+        return `https://bscscan.com/${path}`;
       case 'optimism':
-        return `https://optimistic.etherscan.io/tx/${txHash}`;
+        return `https://optimistic.etherscan.io/${path}`;
       case 'arbitrum':
-        return `https://arbiscan.io/tx/${txHash}`;
+        return `https://arbiscan.io/${path}`;
       case 'avalanche':
-        return `https://snowtrace.io/tx/${txHash}`;
+        return `https://snowtrace.io/${path}`;
       case 'base':
-        return `https://basescan.org/tx/${txHash}`;
+        return `https://basescan.org/${path}`;
       case 'sepolia':
-        return `https://sepolia.etherscan.io/tx/${txHash}`;
+        return `https://sepolia.etherscan.io/${path}`;
       case 'arbitrum-sepolia':
-        return `https://sepolia.arbiscan.io/tx/${txHash}`;
+        return `https://sepolia.arbiscan.io/${path}`;
       case 'optimism-sepolia':
-        return `https://sepolia-optimistic.etherscan.io/tx/${txHash}`;
+        return `https://sepolia-optimistic.etherscan.io/${path}`;
       case 'base-sepolia':
-        return `https://sepolia.basescan.org/tx/${txHash}`;
+        return `https://sepolia.basescan.org/${path}`;
       case 'blast-sepolia':
-        return `https://sepolia.blastscan.io/tx/${txHash}`;
+        return `https://sepolia.blastscan.io/${path}`;
       default:
-        return `https://etherscan.io/tx/${txHash}`;
+        // Try to use a custom explorer if available for custom networks
+        const customNetworksStr = localStorage.getItem('customNetworks');
+        if (customNetworksStr) {
+          try {
+            const customNetworks = JSON.parse(customNetworksStr);
+            const customNetwork = customNetworks.find((n: any) => n.id === network);
+            if (customNetwork && customNetwork.blockExplorer) {
+              return `${customNetwork.blockExplorer}/${path}`;
+            }
+          } catch (e) {
+            console.error('Failed to parse custom networks', e);
+          }
+        }
+        return `https://etherscan.io/${path}`;
     }
   };
 
@@ -63,37 +85,62 @@ const DeploySuccess = ({ txHash, network }: DeploySuccessProps) => {
       
       <h2 className="text-2xl font-bold text-center">Contract Deployed Successfully!</h2>
       
-      <div className="w-full bg-muted p-4 rounded-lg">
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Transaction Hash:</span>
+      <div className="w-full space-y-4">
+        <div className="w-full bg-muted p-4 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Transaction Hash:</span>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => copyToClipboard(txHash, 'tx')}
+              className="h-6 px-2"
+            >
+              {copiedTx ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <div className="mt-1 break-all font-mono text-sm">{txHash}</div>
+        </div>
+        
+        <div className="w-full bg-muted p-4 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Contract Address:</span>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => copyToClipboard(contractAddress, 'address')}
+              className="h-6 px-2"
+            >
+              {copiedAddress ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <div className="mt-1 break-all font-mono text-sm">{contractAddress}</div>
+        </div>
+        
+        <div className="w-full space-y-3">
           <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={copyToClipboard}
-            className="h-6 px-2"
+            variant="outline" 
+            className="w-full"
+            onClick={() => window.open(getExplorerUrl('tx'), '_blank')}
           >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            View Transaction <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={() => window.open(getExplorerUrl('address'), '_blank')}
+          >
+            View Contract <ExternalLink className="ml-2 h-4 w-4" />
+          </Button>
+          
+          <Button 
+            variant="secondary" 
+            className="w-full"
+            onClick={() => window.location.reload()}
+          >
+            Deploy Another Contract
           </Button>
         </div>
-        <div className="mt-1 break-all font-mono text-sm">{txHash}</div>
-      </div>
-      
-      <div className="w-full space-y-4">
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={() => window.open(getExplorerUrl(), '_blank')}
-        >
-          View on Explorer <ExternalLink className="ml-2 h-4 w-4" />
-        </Button>
-        
-        <Button 
-          variant="secondary" 
-          className="w-full"
-          onClick={() => window.location.reload()}
-        >
-          Deploy Another Contract
-        </Button>
       </div>
     </div>
   );

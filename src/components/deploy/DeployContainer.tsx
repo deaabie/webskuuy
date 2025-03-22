@@ -1,14 +1,19 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, AlertCircle } from 'lucide-react';
+import { getContractByMode, getDefaultMessage } from '../../utils/contractUtils';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const DeployContainer = () => {
   const [connected, setConnected] = useState(false);
@@ -17,13 +22,56 @@ const DeployContainer = () => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
   const [txHash, setTxHash] = useState("");
+  const [contractAddress, setContractAddress] = useState("");
+  const [walletAddress, setWalletAddress] = useState("");
+  const [walletBalance, setWalletBalance] = useState<string | null>(null);
+  const [provider, setProvider] = useState<ethers.Provider | null>(null);
+  const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  const [messageToDeploy, setMessageToDeploy] = useState("Hello, Blockchain!");
 
-  const handleWalletConnection = (status: boolean) => {
+  // Additional fields for ERC20 token
+  const [tokenName, setTokenName] = useState("My Token");
+  const [tokenSymbol, setTokenSymbol] = useState("MTK");
+  
+  // Get wallet balance
+  useEffect(() => {
+    const getBalance = async () => {
+      if (provider && walletAddress) {
+        try {
+          const balance = await provider.getBalance(walletAddress);
+          setWalletBalance(ethers.formatEther(balance));
+        } catch (error) {
+          console.error("Error fetching balance:", error);
+          setWalletBalance(null);
+        }
+      } else {
+        setWalletBalance(null);
+      }
+    };
+
+    getBalance();
+  }, [provider, walletAddress, network]);
+
+  const handleWalletConnection = (status: boolean, address: string, providerInstance: ethers.Provider | null, signerInstance: ethers.Signer | null) => {
     setConnected(status);
+    setWalletAddress(address);
+    setProvider(providerInstance);
+    setSigner(signerInstance);
+    
+    // Reset deployment state when wallet changes
+    if (!status) {
+      setDeploySuccess(false);
+      setTxHash("");
+      setContractAddress("");
+    }
   };
 
   const handleNetworkChange = (networkId: string) => {
     setNetwork(networkId);
+    // Reset deployment state when network changes
+    setDeploySuccess(false);
+    setTxHash("");
+    setContractAddress("");
   };
 
   const handleDeploy = async () => {
@@ -45,27 +93,67 @@ const DeployContainer = () => {
       return;
     }
 
+    if (!signer) {
+      toast({
+        variant: "destructive",
+        title: "Signer not available",
+        description: "Unable to get the signer from your wallet",
+      });
+      return;
+    }
+
+    // Check if wallet has enough balance
+    if (walletBalance !== null && parseFloat(walletBalance) < 0.01) {
+      toast({
+        variant: "destructive",
+        title: "Insufficient balance",
+        description: "Your wallet doesn't have enough funds to deploy a contract. Please add funds first.",
+      });
+      return;
+    }
+
     setIsDeploying(true);
 
     try {
-      // Simulate contract deployment
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Get contract bytecode and ABI based on deployment mode
+      const { abi, bytecode, contractArgs } = getContractByMode(
+        deployMode, 
+        deployMode === 'basic' ? messageToDeploy : { name: tokenName, symbol: tokenSymbol }
+      );
       
-      // Mock successful deployment
-      const mockTxHash = "0xE5b4D4573C0f5CF6a2667fc7c21fa5D638031638";
-      setTxHash(mockTxHash);
+      // Create contract factory
+      const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
+      
+      // Deploy the contract with arguments
+      const contract = await contractFactory.deploy(...contractArgs);
+      
+      // Wait for the contract to be deployed
+      await contract.waitForDeployment();
+      
+      // Get the transaction details
+      const deploymentTransaction = contract.deploymentTransaction();
+      if (!deploymentTransaction) {
+        throw new Error("No deployment transaction found");
+      }
+      
+      const deployTxHash = deploymentTransaction.hash;
+      const contractAddress = await contract.getAddress();
+      
+      // Set transaction hash and success state
+      setTxHash(deployTxHash);
+      setContractAddress(contractAddress);
       setDeploySuccess(true);
       
       toast({
         title: "Smart contract deployed!",
-        description: "Your smart contract has been successfully deployed.",
+        description: "Your smart contract has been successfully deployed to the blockchain.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Deployment error:", error);
       toast({
         variant: "destructive",
         title: "Deployment failed",
-        description: "There was an error deploying your smart contract.",
+        description: error.message || "There was an error deploying your smart contract.",
       });
     } finally {
       setIsDeploying(false);
@@ -73,7 +161,7 @@ const DeployContainer = () => {
   };
 
   return (
-    <Card className="w-full bg-card border-border">
+    <Card className="w-full bg-primary/5 border-border">
       <CardHeader>
         <CardTitle className="text-3xl font-bold text-primary">Deploy Your Smart Contract</CardTitle>
       </CardHeader>
@@ -83,6 +171,23 @@ const DeployContainer = () => {
             <div className="space-y-4">
               <div className="mb-6">
                 <ConnectWalletButton onConnectionChange={handleWalletConnection} />
+                
+                {walletBalance !== null && connected && (
+                  <div className="mt-2 text-sm">
+                    <span className="text-muted-foreground">Balance: </span>
+                    <span className={`font-medium ${parseFloat(walletBalance) < 0.01 ? 'text-destructive' : 'text-green-500'}`}>
+                      {parseFloat(walletBalance).toFixed(4)} ETH
+                    </span>
+                    {parseFloat(walletBalance) < 0.01 && (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Your balance is low. You need at least 0.01 ETH to deploy a contract.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                )}
               </div>
               
               {connected && (
@@ -110,10 +215,43 @@ const DeployContainer = () => {
                     </RadioGroup>
                   </div>
                   
+                  {deployMode === 'basic' ? (
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-medium">Contract Message</h3>
+                      <Textarea 
+                        placeholder={getDefaultMessage()}
+                        className="min-h-24"
+                        value={messageToDeploy}
+                        onChange={(e) => setMessageToDeploy(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="tokenName">Token Name</Label>
+                        <Input 
+                          id="tokenName"
+                          placeholder="My Token" 
+                          value={tokenName}
+                          onChange={(e) => setTokenName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="tokenSymbol">Token Symbol</Label>
+                        <Input 
+                          id="tokenSymbol" 
+                          placeholder="MTK" 
+                          value={tokenSymbol}
+                          onChange={(e) => setTokenSymbol(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
                   <Button 
                     className="w-full py-6 text-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                     onClick={handleDeploy}
-                    disabled={isDeploying || !network}
+                    disabled={isDeploying || !network || (walletBalance !== null && parseFloat(walletBalance) < 0.01)}
                     variant="default"
                   >
                     {isDeploying ? "DEPLOYING..." : "DEPLOY"}
@@ -130,7 +268,11 @@ const DeployContainer = () => {
             </div>
           </>
         ) : (
-          <DeploySuccess txHash={txHash} network={network} />
+          <DeploySuccess 
+            txHash={txHash} 
+            network={network} 
+            contractAddress={contractAddress}
+          />
         )}
       </CardContent>
     </Card>
