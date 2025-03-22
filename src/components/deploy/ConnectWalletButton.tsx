@@ -1,100 +1,140 @@
 
-import { useState } from 'react';
-import { ethers } from 'ethers';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
+import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
-import { Wallet, LogOut } from 'lucide-react';
+import { Wallet } from 'lucide-react';
 
 interface ConnectWalletButtonProps {
-  onConnectionChange: (status: boolean, address: string, provider: ethers.Provider | null, signer: ethers.Signer | null) => void;
+  onConnectionChange: (connected: boolean, address: string, provider: ethers.Provider | null, signer: ethers.Signer | null) => void;
+}
+
+// Define the window ethereum type
+declare global {
+  interface Window {
+    ethereum?: {
+      isMetaMask?: boolean;
+      request: (args: { method: string; params?: any[] }) => Promise<any>;
+      on: (event: string, callback: (...args: any[]) => void) => void;
+      removeListener: (event: string, callback: (...args: any[]) => void) => void;
+      selectedAddress?: string;
+      networkVersion?: string;
+    };
+  }
 }
 
 const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) => {
-  const [connected, setConnected] = useState(false);
-  const [address, setAddress] = useState('');
-  const [displayAddress, setDisplayAddress] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState("");
   const [isConnecting, setIsConnecting] = useState(false);
-  const [provider, setProvider] = useState<ethers.Provider | null>(null);
-  const [signer, setSigner] = useState<ethers.Signer | null>(null);
+
+  const checkIfWalletIsConnected = useCallback(async () => {
+    if (!window.ethereum) {
+      console.log("Make sure you have MetaMask installed!");
+      return false;
+    }
+
+    try {
+      // Check if we're authorized to access the user's wallet
+      const accounts = await window.ethereum.request({ method: "eth_accounts" });
+      
+      if (accounts.length > 0) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        setWalletAddress(accounts[0]);
+        setIsConnected(true);
+        onConnectionChange(true, accounts[0], provider, signer);
+        return true;
+      } else {
+        setIsConnected(false);
+        setWalletAddress("");
+        onConnectionChange(false, "", null, null);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking if wallet is connected:", error);
+      setIsConnected(false);
+      setWalletAddress("");
+      onConnectionChange(false, "", null, null);
+      return false;
+    }
+  }, [onConnectionChange]);
+
+  useEffect(() => {
+    // Check if wallet is connected when component mounts
+    checkIfWalletIsConnected();
+    
+    // Set up listeners
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length === 0) {
+        // User disconnected their wallet
+        setIsConnected(false);
+        setWalletAddress("");
+        onConnectionChange(false, "", null, null);
+        toast({
+          title: "Wallet disconnected",
+          description: "Your wallet has been disconnected.",
+        });
+      } else {
+        // Account changed
+        setWalletAddress(accounts[0]);
+        checkIfWalletIsConnected();
+      }
+    };
+    
+    const handleChainChanged = () => {
+      // When chain changes, refresh the page
+      window.location.reload();
+    };
+    
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", handleAccountsChanged);
+      window.ethereum.on("chainChanged", handleChainChanged);
+    }
+    
+    // Clean up listeners when component unmounts
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
+      }
+    };
+  }, [checkIfWalletIsConnected, onConnectionChange]);
 
   const connectWallet = async () => {
+    if (!window.ethereum) {
+      toast({
+        variant: "destructive",
+        title: "MetaMask not found",
+        description: "Please install MetaMask browser extension and reload the page.",
+      });
+      return;
+    }
+    
     setIsConnecting(true);
     
     try {
-      // Check if MetaMask is installed
-      if (window.ethereum) {
-        try {
-          // Request account access
-          const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-          const userAddress = accounts[0];
-          const truncatedAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-          
-          // Create ethers provider and signer
-          const ethersProvider = new ethers.BrowserProvider(window.ethereum);
-          const ethersSigner = await ethersProvider.getSigner();
-          
-          setAddress(userAddress);
-          setDisplayAddress(truncatedAddress);
-          setConnected(true);
-          setProvider(ethersProvider);
-          setSigner(ethersSigner);
-          
-          onConnectionChange(true, userAddress, ethersProvider, ethersSigner);
-          
-          toast({
-            title: "Wallet connected",
-            description: `Connected to ${truncatedAddress}`,
-          });
-          
-          // Listen for account changes
-          window.ethereum.on('accountsChanged', (newAccounts: string[]) => {
-            if (newAccounts.length === 0) {
-              disconnectWallet();
-            } else {
-              const newAddress = newAccounts[0];
-              const newTruncatedAddress = `${newAddress.substring(0, 6)}...${newAddress.substring(newAddress.length - 4)}`;
-              setAddress(newAddress);
-              setDisplayAddress(newTruncatedAddress);
-              
-              // Update the signer when account changes
-              const updateSigner = async () => {
-                if (provider) {
-                  const newSigner = await (provider as ethers.BrowserProvider).getSigner();
-                  setSigner(newSigner);
-                  onConnectionChange(true, newAddress, provider, newSigner);
-                }
-              };
-              
-              updateSigner();
-            }
-          });
-          
-          // Listen for chain changes
-          window.ethereum.on('chainChanged', () => {
-            window.location.reload();
-          });
-          
-        } catch (error) {
-          console.error("User denied account access", error);
-          toast({
-            variant: "destructive",
-            title: "Connection failed",
-            description: "You denied access to your wallet",
-          });
-        }
-      } else {
+      // Request account access
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      
+      if (accounts.length > 0) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        setWalletAddress(accounts[0]);
+        setIsConnected(true);
+        onConnectionChange(true, accounts[0], provider, signer);
+        
         toast({
-          variant: "destructive",
-          title: "MetaMask not found",
-          description: "Please install MetaMask extension to connect your wallet",
+          title: "Wallet connected",
+          description: "Your wallet has been successfully connected.",
         });
       }
-    } catch (error) {
-      console.error("Connect wallet error:", error);
+    } catch (error: any) {
+      console.error("Error connecting wallet:", error);
       toast({
         variant: "destructive",
-        title: "Connection error",
-        description: "Failed to connect to wallet",
+        title: "Connection failed",
+        description: error.message || "Failed to connect to your wallet.",
       });
     } finally {
       setIsConnecting(false);
@@ -102,32 +142,21 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
   };
 
   const disconnectWallet = () => {
-    setConnected(false);
-    setAddress('');
-    setDisplayAddress('');
-    setProvider(null);
-    setSigner(null);
-    onConnectionChange(false, '', null, null);
-    
-    // Remove event listeners
-    if (window.ethereum) {
-      window.ethereum.removeAllListeners('accountsChanged');
-      window.ethereum.removeAllListeners('chainChanged');
-    }
+    setIsConnected(false);
+    setWalletAddress("");
+    onConnectionChange(false, "", null, null);
     
     toast({
       title: "Wallet disconnected",
-      description: "Your wallet has been disconnected",
+      description: "Your wallet has been disconnected.",
     });
   };
 
   return (
-    <div>
-      <h3 className="text-xl font-medium mb-2">Wallet Connection</h3>
-      {!connected ? (
+    <div className="space-y-2">
+      {!isConnected ? (
         <Button 
-          className="w-full py-6 text-lg"
-          variant="outline"
+          className="w-full py-6 text-lg font-semibold flex items-center justify-center"
           onClick={connectWallet}
           disabled={isConnecting}
         >
@@ -135,22 +164,22 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
           {isConnecting ? "Connecting..." : "Connect Wallet"}
         </Button>
       ) : (
-        <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-card">
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-r from-primary/80 to-primary/40 flex items-center justify-center mr-3">
-              <Wallet className="h-4 w-4 text-primary-foreground" />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between bg-muted rounded-md px-4 py-3">
+            <div className="flex items-center">
+              <Wallet className="mr-2 h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">
+                {`${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`}
+              </span>
             </div>
-            <span className="text-lg font-medium">{displayAddress}</span>
+            <Button 
+              variant="secondary" 
+              size="sm"
+              onClick={disconnectWallet}
+            >
+              Disconnect
+            </Button>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={disconnectWallet}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Disconnect
-          </Button>
         </div>
       )}
     </div>

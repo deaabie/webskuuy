@@ -11,9 +11,8 @@ import { Input } from "@/components/ui/input";
 import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
-import { ExternalLink, AlertCircle } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { getContractByMode, getDefaultMessage } from '../../utils/contractUtils';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const DeployContainer = () => {
   const [connected, setConnected] = useState(false);
@@ -102,16 +101,6 @@ const DeployContainer = () => {
       return;
     }
 
-    // Check if wallet has enough balance
-    if (walletBalance !== null && parseFloat(walletBalance) < 0.01) {
-      toast({
-        variant: "destructive",
-        title: "Insufficient balance",
-        description: "Your wallet doesn't have enough funds to deploy a contract. Please add funds first.",
-      });
-      return;
-    }
-
     setIsDeploying(true);
 
     try {
@@ -175,17 +164,9 @@ const DeployContainer = () => {
                 {walletBalance !== null && connected && (
                   <div className="mt-2 text-sm">
                     <span className="text-muted-foreground">Balance: </span>
-                    <span className={`font-medium ${parseFloat(walletBalance) < 0.01 ? 'text-destructive' : 'text-green-500'}`}>
+                    <span className="font-medium text-green-500">
                       {parseFloat(walletBalance).toFixed(4)} ETH
                     </span>
-                    {parseFloat(walletBalance) < 0.01 && (
-                      <Alert variant="destructive" className="mt-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Your balance is low. You need at least 0.01 ETH to deploy a contract.
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
                 )}
               </div>
@@ -251,7 +232,7 @@ const DeployContainer = () => {
                   <Button 
                     className="w-full py-6 text-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                     onClick={handleDeploy}
-                    disabled={isDeploying || !network || (walletBalance !== null && parseFloat(walletBalance) < 0.01)}
+                    disabled={isDeploying || !network}
                     variant="default"
                   >
                     {isDeploying ? "DEPLOYING..." : "DEPLOY"}
