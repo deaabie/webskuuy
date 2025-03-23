@@ -12,7 +12,7 @@ import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
 import { ExternalLink } from 'lucide-react';
-import { getContractByMode, getDefaultMessage } from '../../utils/contractUtils';
+import { getContractByMode, getInitialStorageValue } from '../../utils/contractUtils';
 
 const DeployContainer = () => {
   const [connected, setConnected] = useState(false);
@@ -26,7 +26,7 @@ const DeployContainer = () => {
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  const [messageToDeploy, setMessageToDeploy] = useState("Hello, Blockchain!");
+  const [initialStorageValue, setInitialStorageValue] = useState("0");
 
   const [tokenName, setTokenName] = useState("My Token");
   const [tokenSymbol, setTokenSymbol] = useState("MTK");
@@ -107,7 +107,7 @@ const DeployContainer = () => {
       // Get contract data based on mode
       const { abi, bytecode, contractArgs } = getContractByMode(
         deployMode, 
-        deployMode === 'basic' ? messageToDeploy : { name: tokenName, symbol: tokenSymbol }
+        deployMode === 'erc20' ? { name: tokenName, symbol: tokenSymbol } : null
       );
       
       console.log("Deploying contract with args:", contractArgs);
@@ -118,13 +118,18 @@ const DeployContainer = () => {
       
       console.log("Contract factory created, attempting deployment...");
       
-      // Use higher gas limit and price to ensure deployment works
+      // Use higher gas limit to ensure deployment works
       const deploymentOptions = {
         gasLimit: 6000000, // Higher gas limit for more complex contracts
       };
       
       // Deploy the contract with args and options separately
-      const contract = await contractFactory.deploy(...contractArgs, deploymentOptions);
+      let contract;
+      if (contractArgs.length > 0) {
+        contract = await contractFactory.deploy(...contractArgs, deploymentOptions);
+      } else {
+        contract = await contractFactory.deploy(deploymentOptions);
+      }
       
       console.log("Deployment transaction created");
       
@@ -167,7 +172,7 @@ const DeployContainer = () => {
         } else if (error.message.includes("missing revert data")) {
           errorMessage = "Network error during deployment. Please try again or select a different network.";
         } else if (error.message.includes("transaction execution reverted")) {
-          errorMessage = "Contract deployment reverted. Please check your parameters and try again.";
+          errorMessage = "Contract deployment reverted. Please try again with a different network.";
         } else if (error.message.includes("invalid bytecode")) {
           errorMessage = "Invalid bytecode format. Please try again or contact support.";
         } else if (error.code === 4001) {
@@ -233,24 +238,22 @@ const DeployContainer = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="basic" id="basic" />
-                        <Label htmlFor="basic" className="text-lg">Basic Mode</Label>
+                        <Label htmlFor="basic" className="text-lg">Simple Storage</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="erc20" id="erc20" />
-                        <Label htmlFor="erc20" className="text-lg">ERC20 Mode</Label>
+                        <Label htmlFor="erc20" className="text-lg">ERC20 Token</Label>
                       </div>
                     </RadioGroup>
                   </div>
                   
                   {deployMode === 'basic' ? (
                     <div className="space-y-2">
-                      <h3 className="text-xl font-medium">Contract Message</h3>
-                      <Textarea 
-                        placeholder={getDefaultMessage()}
-                        className="min-h-24"
-                        value={messageToDeploy}
-                        onChange={(e) => setMessageToDeploy(e.target.value)}
-                      />
+                      <h3 className="text-xl font-medium">Simple Storage Contract</h3>
+                      <p className="text-muted-foreground mb-4">
+                        This contract allows you to store and retrieve a uint256 value. 
+                        After deployment, you can call the 'set' function to update the value.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-4">
