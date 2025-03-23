@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -103,6 +104,7 @@ const DeployContainer = () => {
     });
 
     try {
+      // Get contract data based on mode
       const { abi, bytecode, contractArgs } = getContractByMode(
         deployMode, 
         deployMode === 'basic' ? messageToDeploy : { name: tokenName, symbol: tokenSymbol }
@@ -111,28 +113,38 @@ const DeployContainer = () => {
       console.log("Deploying contract with args:", contractArgs);
       console.log("Bytecode length:", bytecode.length);
       
-      if (!bytecode.startsWith('0x') || bytecode.length < 4) {
-        throw new Error("Invalid bytecode format");
-      }
-      
+      // Create factory with manual gas settings to avoid estimation errors
       const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
       
-      console.log("Attempting to deploy contract...");
-      const contract = await contractFactory.deploy(...contractArgs);
+      console.log("Contract factory created, attempting deployment...");
       
-      console.log("Contract deployment transaction hash:", contract.deploymentTransaction()?.hash);
+      // Use a manual gas limit to avoid estimation errors
+      const deploymentOptions = {
+        gasLimit: 3000000, // Higher gas limit to ensure deployment works
+      };
       
+      // Deploy with manual gas limit to bypass estimateGas errors
+      const contract = await contractFactory.deploy(...contractArgs, deploymentOptions);
+      
+      console.log("Deployment transaction created");
+      
+      // Get transaction hash
       const deploymentTransaction = contract.deploymentTransaction();
       if (deploymentTransaction) {
-        setTxHash(deploymentTransaction.hash);
+        const txHash = deploymentTransaction.hash;
+        console.log("Contract deployment transaction hash:", txHash);
+        setTxHash(txHash);
       } else {
         throw new Error("No deployment transaction found");
       }
       
+      // Wait for deployment confirmation
+      console.log("Waiting for contract deployment to complete...");
       await contract.waitForDeployment();
       
+      // Get deployed contract address
       const contractAddress = await contract.getAddress();
-      console.log("Contract deployed at address:", contractAddress);
+      console.log("Contract successfully deployed at address:", contractAddress);
       
       setContractAddress(contractAddress);
       setDeploySuccess(true);
@@ -150,6 +162,10 @@ const DeployContainer = () => {
           errorMessage = "Transaction was rejected by the user.";
         } else if (error.message.includes("insufficient funds")) {
           errorMessage = "Insufficient funds to deploy the contract. Please add more ETH to your wallet.";
+        } else if (error.message.includes("gas required exceeds allowance")) {
+          errorMessage = "Gas limit too low. Contract deployment needs more gas.";
+        } else if (error.message.includes("missing revert data")) {
+          errorMessage = "Network error during deployment. Please try again or select a different network.";
         } else if (error.message.includes("invalid bytecode")) {
           errorMessage = "Invalid bytecode format. Please try again or contact support.";
         } else if (error.message.length > 100) {
@@ -165,6 +181,7 @@ const DeployContainer = () => {
         description: errorMessage,
       });
       
+      console.log("Resetting deployment state after error");
       setTxHash("");
       setContractAddress("");
       setDeploySuccess(false);
@@ -256,7 +273,7 @@ const DeployContainer = () => {
                   <Button 
                     className="w-full py-6 text-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
                     onClick={handleDeploy}
-                    disabled={isDeploying || !network}
+                    disabled={isDeploying}
                     variant="default"
                   >
                     {isDeploying ? "DEPLOYING..." : "DEPLOY"}
