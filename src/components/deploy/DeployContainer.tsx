@@ -120,10 +120,10 @@ const DeployContainer = () => {
       
       // Use higher gas limit and price to ensure deployment works
       const deploymentOptions = {
-        gasLimit: 5000000, // Higher gas limit
+        gasLimit: 6000000, // Higher gas limit for more complex contracts
       };
       
-      // Deploy the contract with options
+      // Deploy the contract with args and options separately
       const contract = await contractFactory.deploy(...contractArgs, deploymentOptions);
       
       console.log("Deployment transaction created");
@@ -158,7 +158,7 @@ const DeployContainer = () => {
       let errorMessage = "There was an error deploying your smart contract.";
       
       if (error.message) {
-        if (error.message.includes("user rejected") || error.message.includes("User denied")) {
+        if (error.message.includes("user rejected") || error.message.includes("User denied") || error.message.includes("User rejected")) {
           errorMessage = "Transaction was rejected by the user.";
         } else if (error.message.includes("insufficient funds")) {
           errorMessage = "Insufficient funds to deploy the contract. Please add more ETH to your wallet.";
@@ -170,6 +170,8 @@ const DeployContainer = () => {
           errorMessage = "Contract deployment reverted. Please check your parameters and try again.";
         } else if (error.message.includes("invalid bytecode")) {
           errorMessage = "Invalid bytecode format. Please try again or contact support.";
+        } else if (error.code === 4001) {
+          errorMessage = "Transaction was rejected in your wallet. Please try again.";
         } else if (error.message.length > 100) {
           errorMessage = error.message.substring(0, 100) + "...";
         } else {
@@ -227,6 +229,7 @@ const DeployContainer = () => {
                       defaultValue="basic" 
                       className="flex space-x-4"
                       onValueChange={setDeployMode}
+                      value={deployMode}
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="basic" id="basic" />
