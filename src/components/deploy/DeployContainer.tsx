@@ -113,17 +113,17 @@ const DeployContainer = () => {
       console.log("Deploying contract with args:", contractArgs);
       console.log("Bytecode length:", bytecode.length);
       
-      // Create factory with manual gas settings to avoid estimation errors
+      // Create factory with manual gas settings
       const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
       
       console.log("Contract factory created, attempting deployment...");
       
-      // Use a manual gas limit to avoid estimation errors
+      // Use higher gas limit and price to ensure deployment works
       const deploymentOptions = {
-        gasLimit: 3000000, // Higher gas limit to ensure deployment works
+        gasLimit: 5000000, // Higher gas limit
       };
       
-      // Deploy with manual gas limit to bypass estimateGas errors
+      // Deploy the contract with options
       const contract = await contractFactory.deploy(...contractArgs, deploymentOptions);
       
       console.log("Deployment transaction created");
@@ -134,25 +134,25 @@ const DeployContainer = () => {
         const txHash = deploymentTransaction.hash;
         console.log("Contract deployment transaction hash:", txHash);
         setTxHash(txHash);
+        
+        // Wait for deployment confirmation
+        console.log("Waiting for contract deployment to complete...");
+        await contract.waitForDeployment();
+        
+        // Get deployed contract address
+        const contractAddress = await contract.getAddress();
+        console.log("Contract successfully deployed at address:", contractAddress);
+        
+        setContractAddress(contractAddress);
+        setDeploySuccess(true);
+        
+        toast({
+          title: "Smart contract deployed!",
+          description: "Your smart contract has been successfully deployed to the blockchain.",
+        });
       } else {
         throw new Error("No deployment transaction found");
       }
-      
-      // Wait for deployment confirmation
-      console.log("Waiting for contract deployment to complete...");
-      await contract.waitForDeployment();
-      
-      // Get deployed contract address
-      const contractAddress = await contract.getAddress();
-      console.log("Contract successfully deployed at address:", contractAddress);
-      
-      setContractAddress(contractAddress);
-      setDeploySuccess(true);
-      
-      toast({
-        title: "Smart contract deployed!",
-        description: "Your smart contract has been successfully deployed to the blockchain.",
-      });
     } catch (error: any) {
       console.error("Deployment error:", error);
       let errorMessage = "There was an error deploying your smart contract.";
@@ -166,6 +166,8 @@ const DeployContainer = () => {
           errorMessage = "Gas limit too low. Contract deployment needs more gas.";
         } else if (error.message.includes("missing revert data")) {
           errorMessage = "Network error during deployment. Please try again or select a different network.";
+        } else if (error.message.includes("transaction execution reverted")) {
+          errorMessage = "Contract deployment reverted. Please check your parameters and try again.";
         } else if (error.message.includes("invalid bytecode")) {
           errorMessage = "Invalid bytecode format. Please try again or contact support.";
         } else if (error.message.length > 100) {
