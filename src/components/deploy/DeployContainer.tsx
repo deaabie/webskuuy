@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -28,11 +27,9 @@ const DeployContainer = () => {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [messageToDeploy, setMessageToDeploy] = useState("Hello, Blockchain!");
 
-  // Additional fields for ERC20 token
   const [tokenName, setTokenName] = useState("My Token");
   const [tokenSymbol, setTokenSymbol] = useState("MTK");
-  
-  // Get wallet balance
+
   useEffect(() => {
     const getBalance = async () => {
       if (provider && walletAddress) {
@@ -57,7 +54,6 @@ const DeployContainer = () => {
     setProvider(providerInstance);
     setSigner(signerInstance);
     
-    // Reset deployment state when wallet changes
     if (!status) {
       setDeploySuccess(false);
       setTxHash("");
@@ -67,7 +63,6 @@ const DeployContainer = () => {
 
   const handleNetworkChange = (networkId: string) => {
     setNetwork(networkId);
-    // Reset deployment state when network changes
     setDeploySuccess(false);
     setTxHash("");
     setContractAddress("");
@@ -108,23 +103,25 @@ const DeployContainer = () => {
     });
 
     try {
-      // Get contract bytecode and ABI based on deployment mode
       const { abi, bytecode, contractArgs } = getContractByMode(
         deployMode, 
         deployMode === 'basic' ? messageToDeploy : { name: tokenName, symbol: tokenSymbol }
       );
       
       console.log("Deploying contract with args:", contractArgs);
+      console.log("Bytecode length:", bytecode.length);
       
-      // Create contract factory
+      if (!bytecode.startsWith('0x') || bytecode.length < 4) {
+        throw new Error("Invalid bytecode format");
+      }
+      
       const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
       
-      // Deploy the contract with arguments
+      console.log("Attempting to deploy contract...");
       const contract = await contractFactory.deploy(...contractArgs);
       
       console.log("Contract deployment transaction hash:", contract.deploymentTransaction()?.hash);
       
-      // Set transaction hash immediately
       const deploymentTransaction = contract.deploymentTransaction();
       if (deploymentTransaction) {
         setTxHash(deploymentTransaction.hash);
@@ -132,13 +129,11 @@ const DeployContainer = () => {
         throw new Error("No deployment transaction found");
       }
       
-      // Wait for the contract to be deployed
       await contract.waitForDeployment();
       
       const contractAddress = await contract.getAddress();
       console.log("Contract deployed at address:", contractAddress);
       
-      // Set contract address and success state
       setContractAddress(contractAddress);
       setDeploySuccess(true);
       
@@ -148,13 +143,28 @@ const DeployContainer = () => {
       });
     } catch (error: any) {
       console.error("Deployment error:", error);
+      let errorMessage = "There was an error deploying your smart contract.";
+      
+      if (error.message) {
+        if (error.message.includes("user rejected") || error.message.includes("User denied")) {
+          errorMessage = "Transaction was rejected by the user.";
+        } else if (error.message.includes("insufficient funds")) {
+          errorMessage = "Insufficient funds to deploy the contract. Please add more ETH to your wallet.";
+        } else if (error.message.includes("invalid bytecode")) {
+          errorMessage = "Invalid bytecode format. Please try again or contact support.";
+        } else if (error.message.length > 100) {
+          errorMessage = error.message.substring(0, 100) + "...";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         variant: "destructive",
         title: "Deployment failed",
-        description: error.message || "There was an error deploying your smart contract.",
+        description: errorMessage,
       });
       
-      // Reset deployment state on error
       setTxHash("");
       setContractAddress("");
       setDeploySuccess(false);
