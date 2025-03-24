@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Image as ImageIcon, Github, ExternalLink } from 'lucide-react';
+import { Plus, Github, ExternalLink } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 

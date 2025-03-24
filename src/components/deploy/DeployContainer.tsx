@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -122,7 +123,7 @@ const DeployContainer = () => {
       console.log("Contract factory created, attempting deployment...");
       
       const deploymentOptions = {
-        gasLimit: 10000000, // Increased gas limit for more complex contracts
+        gasLimit: 3000000, // Adjusted gas limit for ERC20 contracts
       };
       
       let contract;
