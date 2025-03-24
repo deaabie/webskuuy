@@ -132,6 +132,7 @@ const DeployContainer = () => {
       console.log("Contract args:", contractData.contractArgs);
       console.log("Bytecode length:", contractData.bytecode.length);
       
+      // Create contract factory
       const contractFactory = new ethers.ContractFactory(
         contractData.abi, 
         contractData.bytecode, 
@@ -140,10 +141,14 @@ const DeployContainer = () => {
       
       console.log("Contract factory created, attempting deployment...");
       
+      // Deploy with higher gas limit to ensure it can complete
       const deploymentOptions = {
-        gasLimit: 5000000, // Increased gas limit for more complex contracts
+        gasLimit: 8000000, // Increased gas limit for more complex contracts
+        maxFeePerGas: ethers.parseUnits("50", "gwei"),
+        maxPriorityFeePerGas: ethers.parseUnits("5", "gwei"),
       };
       
+      // Deploy with or without constructor arguments
       let contract;
       if (contractData.contractArgs && contractData.contractArgs.length > 0) {
         console.log("Deploying with args:", contractData.contractArgs);
@@ -192,7 +197,7 @@ const DeployContainer = () => {
         } else if (error.message.includes("missing revert data")) {
           errorMessage = "Network error during deployment. Please try again or select a different network.";
         } else if (error.message.includes("transaction execution reverted")) {
-          errorMessage = "Contract deployment reverted. Please try again with a different network.";
+          errorMessage = "Contract deployment reverted. Please try a different network or check your token parameters.";
         } else if (error.message.includes("invalid bytecode")) {
           errorMessage = "Invalid bytecode format. Please try again or contact support.";
         } else if (error.code === 4001) {
@@ -331,6 +336,9 @@ const DeployContainer = () => {
                               onChange={(e) => setInitialSupply(e.target.value)}
                               type="number"
                             />
+                            <p className="text-xs text-muted-foreground mt-1">
+                              This is the number of tokens before decimals (each token has 18 decimals)
+                            </p>
                           </div>
                           <p className="text-sm text-muted-foreground">
                             Your token will be deployed with full ERC20 functionality.

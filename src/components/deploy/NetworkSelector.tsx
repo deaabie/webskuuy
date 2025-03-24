@@ -177,6 +177,8 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [currentNetworkId, setCurrentNetworkId] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [customNetworkDialog, setCustomNetworkDialog] = useState(false);
 
   // Apply network images to networks
   const testnetsWithImages = TESTNETS.map(network => ({
@@ -205,19 +207,51 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
     setSelectedNetwork(networkId);
   };
 
-  const handleNetworkImageChange = (networkId: string) => {
+  const handleNetworkImageChange = (networkId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
     setCurrentNetworkId(networkId);
     setImageUrl(networkImages[networkId] || "");
+    setImageError(null);
     setShowImageDialog(true);
   };
 
+  const validateImageUrl = (url: string): boolean => {
+    // Check if URL is empty
+    if (!url) {
+      setImageError("Image URL cannot be empty");
+      return false;
+    }
+
+    // Check if URL is valid
+    try {
+      new URL(url);
+    } catch (e) {
+      setImageError("Invalid URL format");
+      return false;
+    }
+
+    // Clear any previous errors
+    setImageError(null);
+    return true;
+  };
+
   const saveNetworkImage = () => {
-    if (currentNetworkId && imageUrl) {
+    if (validateImageUrl(imageUrl)) {
       setNetworkImages({
         ...networkImages,
         [currentNetworkId]: imageUrl
       });
+      setShowImageDialog(false);
     }
+  };
+
+  const resetNetworkImage = () => {
+    // Reset to default image for this network
+    const updatedImages = { ...networkImages };
+    delete updatedImages[currentNetworkId];
+    setNetworkImages(updatedImages);
     setShowImageDialog(false);
   };
 
@@ -243,10 +277,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               >
                 <div 
                   className="absolute top-1 right-1 p-1 rounded-full hover:bg-muted"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNetworkImageChange(network.id);
-                  }}
+                  onClick={(e) => handleNetworkImageChange(network.id, e)}
                 >
                   <Settings className="h-3 w-3 text-muted-foreground" />
                 </div>
@@ -280,10 +311,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               >
                 <div 
                   className="absolute top-1 right-1 p-1 rounded-full hover:bg-muted"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNetworkImageChange(network.id);
-                  }}
+                  onClick={(e) => handleNetworkImageChange(network.id, e)}
                 >
                   <Settings className="h-3 w-3 text-muted-foreground" />
                 </div>
@@ -310,18 +338,22 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
           <DialogHeader>
             <DialogTitle>Change Network Icon</DialogTitle>
             <DialogDescription>
-              Enter a GitHub URL to the network icon image. The URL should point directly to the raw image file.
+              Enter a URL to the network icon image. GitHub raw URLs work best for consistent access.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="imageUrl">Image URL (GitHub raw file)</Label>
+              <Label htmlFor="imageUrl">Image URL</Label>
               <Input
                 id="imageUrl"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://raw.githubusercontent.com/..."
+                className={imageError ? "border-red-500" : ""}
               />
+              {imageError && (
+                <p className="text-xs text-red-500">{imageError}</p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Example: https://raw.githubusercontent.com/user/repo/main/image.png
               </p>
@@ -341,11 +373,20 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               </div>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowImageDialog(false)}>
-              Cancel
+          <DialogFooter className="flex justify-between sm:justify-between">
+            <Button 
+              variant="outline" 
+              onClick={resetNetworkImage}
+              className="mr-auto"
+            >
+              Reset to Default
             </Button>
-            <Button onClick={saveNetworkImage}>Save</Button>
+            <div>
+              <Button variant="outline" onClick={() => setShowImageDialog(false)} className="mr-2">
+                Cancel
+              </Button>
+              <Button onClick={saveNetworkImage}>Save</Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
