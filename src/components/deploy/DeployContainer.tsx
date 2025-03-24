@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -6,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
@@ -105,33 +103,40 @@ const DeployContainer = () => {
 
     try {
       // Get contract data based on mode
-      const { abi, bytecode, contractArgs } = getContractByMode(
+      const contractData = getContractByMode(
         deployMode, 
         deployMode === 'erc20' ? { name: tokenName, symbol: tokenSymbol } : null
       );
       
-      console.log("Deploying contract with args:", contractArgs);
-      console.log("Bytecode length:", bytecode.length);
+      console.log("Deploying contract with mode:", deployMode);
+      console.log("Contract args:", contractData.contractArgs);
+      console.log("Bytecode length:", contractData.bytecode.length);
       
-      // Create factory with manual gas settings
-      const contractFactory = new ethers.ContractFactory(abi, bytecode, signer);
+      // Create factory
+      const contractFactory = new ethers.ContractFactory(
+        contractData.abi, 
+        contractData.bytecode, 
+        signer
+      );
       
       console.log("Contract factory created, attempting deployment...");
       
-      // Use higher gas limit to ensure deployment works
+      // Deploy with higher gas limit to ensure it works
       const deploymentOptions = {
-        gasLimit: 6000000, // Higher gas limit for more complex contracts
+        gasLimit: 8000000, // Increased gas limit for more complex contracts
       };
       
-      // Deploy the contract with args and options separately
+      // Deploy contract with args
       let contract;
-      if (contractArgs.length > 0) {
-        contract = await contractFactory.deploy(...contractArgs, deploymentOptions);
+      if (contractData.contractArgs && contractData.contractArgs.length > 0) {
+        console.log("Deploying with args:", contractData.contractArgs);
+        contract = await contractFactory.deploy(...contractData.contractArgs, deploymentOptions);
       } else {
+        console.log("Deploying without args");
         contract = await contractFactory.deploy(deploymentOptions);
       }
       
-      console.log("Deployment transaction created");
+      console.log("Contract deployment transaction created");
       
       // Get transaction hash
       const deploymentTransaction = contract.deploymentTransaction();
@@ -153,13 +158,14 @@ const DeployContainer = () => {
         
         toast({
           title: "Smart contract deployed!",
-          description: "Your smart contract has been successfully deployed to the blockchain.",
+          description: `Your ${deployMode === 'basic' ? 'Simple Storage' : 'ERC20 Token'} contract has been successfully deployed to the blockchain.`,
         });
       } else {
         throw new Error("No deployment transaction found");
       }
     } catch (error: any) {
       console.error("Deployment error:", error);
+      
       let errorMessage = "There was an error deploying your smart contract.";
       
       if (error.message) {
@@ -275,6 +281,10 @@ const DeployContainer = () => {
                           onChange={(e) => setTokenSymbol(e.target.value)}
                         />
                       </div>
+                      <p className="text-sm text-muted-foreground">
+                        Your token will be deployed with a total supply of 1,000,000 tokens with 18 decimals.
+                        The entire supply will be sent to your connected wallet address.
+                      </p>
                     </div>
                   )}
                   
