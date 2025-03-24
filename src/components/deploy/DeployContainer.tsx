@@ -7,11 +7,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Check } from 'lucide-react';
 import { getContractByMode, getInitialStorageValue } from '../../utils/contractUtils';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const DeployContainer = () => {
   const [connected, setConnected] = useState(false);
@@ -27,9 +37,11 @@ const DeployContainer = () => {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [initialStorageValue, setInitialStorageValue] = useState("0");
 
+  // ERC20 Token specific fields
   const [tokenName, setTokenName] = useState("Simple Token"); 
   const [tokenSymbol, setTokenSymbol] = useState("SMP");
   const [initialSupply, setInitialSupply] = useState("1000000");
+  const [useSkuuyToken, setUseSkuuyToken] = useState(false);
 
   useEffect(() => {
     const getBalance = async () => {
@@ -104,8 +116,14 @@ const DeployContainer = () => {
     });
 
     try {
+      // Prepare deployment arguments based on mode
       const deployArgs = deployMode === 'erc20' 
-        ? { initialSupply: parseInt(initialSupply) } 
+        ? { 
+            initialSupply: parseInt(initialSupply), 
+            tokenName, 
+            tokenSymbol,
+            useSkuuyToken
+          } 
         : null;
       
       const contractData = getContractByMode(deployMode, deployArgs);
@@ -123,7 +141,7 @@ const DeployContainer = () => {
       console.log("Contract factory created, attempting deployment...");
       
       const deploymentOptions = {
-        gasLimit: 3000000, // Adjusted gas limit for ERC20 contracts
+        gasLimit: 5000000, // Increased gas limit for more complex contracts
       };
       
       let contract;
@@ -259,20 +277,67 @@ const DeployContainer = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="initialSupply">Initial Supply (tokens)</Label>
-                        <Input 
-                          id="initialSupply"
-                          placeholder="1000000" 
-                          value={initialSupply}
-                          onChange={(e) => setInitialSupply(e.target.value)}
-                          type="number"
+                      <div className="flex items-center space-x-2">
+                        <Switch 
+                          id="useSkuuyToken" 
+                          checked={useSkuuyToken}
+                          onCheckedChange={setUseSkuuyToken}
                         />
+                        <Label htmlFor="useSkuuyToken">Use Skuuy Token Standard</Label>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Your token will be deployed with the name "Simple Token" and symbol "SMP".
-                        The entire supply will be sent to your connected wallet address.
-                      </p>
+                      
+                      {useSkuuyToken ? (
+                        <div className="p-4 bg-muted rounded-md">
+                          <div className="flex items-start space-x-2">
+                            <Check className="h-5 w-5 text-green-500 mt-0.5" />
+                            <div>
+                              <h4 className="font-medium">Skuuy Token Properties:</h4>
+                              <ul className="text-sm text-muted-foreground mt-1 space-y-1">
+                                <li>• Name: Skuuy Token</li>
+                                <li>• Symbol: SKUUY</li>
+                                <li>• Decimals: 18</li>
+                                <li>• Total Supply: 21,000 tokens</li>
+                                <li>• All tokens will be sent to your wallet</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <Label htmlFor="tokenName">Token Name</Label>
+                            <Input 
+                              id="tokenName"
+                              placeholder="Simple Token" 
+                              value={tokenName}
+                              onChange={(e) => setTokenName(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="tokenSymbol">Token Symbol</Label>
+                            <Input 
+                              id="tokenSymbol"
+                              placeholder="SMP" 
+                              value={tokenSymbol}
+                              onChange={(e) => setTokenSymbol(e.target.value)}
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="initialSupply">Initial Supply (tokens)</Label>
+                            <Input 
+                              id="initialSupply"
+                              placeholder="1000000" 
+                              value={initialSupply}
+                              onChange={(e) => setInitialSupply(e.target.value)}
+                              type="number"
+                            />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Your token will be deployed with full ERC20 functionality.
+                            The entire supply will be sent to your connected wallet address.
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                   

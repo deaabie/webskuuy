@@ -1,332 +1,354 @@
+
 import { useState, useEffect } from 'react';
+import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Github, ExternalLink } from 'lucide-react';
-import { Card } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { RotateCw, Settings, Plus, Chain, Link } from 'lucide-react';
 
-interface NetworkSelectorProps {
+// Define network types and interfaces
+interface NetworkImage {
+  [key: string]: string;
+}
+
+interface NetworkConfig {
+  id: string;
+  chainId: number;
+  name: string;
+  symbol: string;
+  rpcUrl: string;
+  explorer: string;
+  imagePath?: string;
+}
+
+interface NetworkSelectionProps {
   onNetworkChange: (networkId: string) => void;
 }
 
-// Network data structure
-interface NetworkConfig {
-  id: string;
-  name: string;
-  imageUrl?: string;
-  logo?: string;
-  type: 'mainnet' | 'testnet';
-  rpcUrl?: string;
-  blockExplorer?: string;
-}
+// Default network image paths (can be overridden by custom images)
+const DEFAULT_NETWORK_IMAGES: NetworkImage = {
+  ethereum_mainnet: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-black.png",
+  ethereum_sepolia: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
+  ethereum_goerli: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
+  ethereum_holesky: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
+  optimism_mainnet: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
+  optimism_sepolia: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
+  arbitrum_mainnet: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
+  arbitrum_sepolia: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
+  base_mainnet: "https://raw.githubusercontent.com/base-org/brand-kit/main/logo/logo-blue.svg",
+  base_sepolia: "https://raw.githubusercontent.com/base-org/brand-kit/main/logo/logo-blue.svg",
+  blast_mainnet: "https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png",
+  blast_sepolia: "https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png",
+};
 
-// Default networks with GitHub image URLs
-const defaultNetworks: NetworkConfig[] = [
-  { id: 'ethereum', name: 'Ethereum', imageUrl: 'https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/ethereum-logo-wireframe.png', type: 'mainnet' },
-  { id: 'polygon', name: 'Polygon', imageUrl: 'https://raw.githubusercontent.com/maticnetwork/matic-docs/master/static/img/polygon-logo.png', type: 'mainnet' },
-  { id: 'bsc', name: 'BNB Chain', imageUrl: 'https://raw.githubusercontent.com/bnb-chain/bnb-chain-brand-assets/master/BNB%20Chain/SVG/BNB%20Chain%20Full%20Logo.svg', type: 'mainnet' },
-  { id: 'optimism', name: 'Optimism', imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/svg/Profile-Logo.svg', type: 'mainnet' },
-  { id: 'arbitrum', name: 'Arbitrum', imageUrl: 'https://raw.githubusercontent.com/OffchainLabs/arbitrum-brand-kit/main/arbitrum-logo/SVG/Arbitrum_Logo_Full.svg', type: 'mainnet' },
-  { id: 'avalanche', name: 'Avalanche', imageUrl: 'https://raw.githubusercontent.com/ava-labs/avalanche-brand-kit/main/ecosystem/avalanche-horizontal-red.svg', type: 'mainnet' },
-  { id: 'base', name: 'Base', imageUrl: 'https://raw.githubusercontent.com/base-org/brand-kit/main/logo/logo-blue.svg', type: 'mainnet' },
-  // Testnets
-  { id: 'sepolia', name: 'ETH Sepolia', imageUrl: 'https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/ethereum-logo-wireframe.png', type: 'testnet' },
-  { id: 'arbitrum-sepolia', name: 'Arbitrum Sepolia', imageUrl: 'https://raw.githubusercontent.com/OffchainLabs/arbitrum-brand-kit/main/arbitrum-logo/SVG/Arbitrum_Logo_Full.svg', type: 'testnet' },
-  { id: 'optimism-sepolia', name: 'Optimism Sepolia', imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/svg/Profile-Logo.svg', type: 'testnet' },
-  { id: 'base-sepolia', name: 'Base Sepolia', imageUrl: 'https://raw.githubusercontent.com/base-org/brand-kit/main/logo/logo-blue.svg', type: 'testnet' },
-  { id: 'blast-sepolia', name: 'Blast Sepolia', imageUrl: 'https://raw.githubusercontent.com/blast-io/brand-kit/main/logos/blast.svg', type: 'testnet' },
+// Default network configurations
+const TESTNETS: NetworkConfig[] = [
+  {
+    id: "ethereum_sepolia",
+    chainId: 11155111,
+    name: "Ethereum Sepolia",
+    symbol: "ETH",
+    rpcUrl: "https://rpc.sepolia.org",
+    explorer: "https://sepolia.etherscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.ethereum_sepolia
+  },
+  {
+    id: "ethereum_holesky",
+    chainId: 17000,
+    name: "Ethereum Holesky",
+    symbol: "ETH",
+    rpcUrl: "https://ethereum-holesky.publicnode.com",
+    explorer: "https://holesky.etherscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.ethereum_holesky
+  },
+  {
+    id: "base_sepolia",
+    chainId: 84532,
+    name: "Base Sepolia",
+    symbol: "ETH",
+    rpcUrl: "https://sepolia.base.org",
+    explorer: "https://sepolia.basescan.org/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.base_sepolia
+  },
+  {
+    id: "optimism_sepolia",
+    chainId: 11155420,
+    name: "Optimism Sepolia",
+    symbol: "ETH",
+    rpcUrl: "https://sepolia.optimism.io",
+    explorer: "https://sepolia-optimism.etherscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.optimism_sepolia
+  },
+  {
+    id: "arbitrum_sepolia",
+    chainId: 421614,
+    name: "Arbitrum Sepolia",
+    symbol: "ETH",
+    rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
+    explorer: "https://sepolia.arbiscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.arbitrum_sepolia
+  },
+  {
+    id: "blast_sepolia",
+    chainId: 168587773,
+    name: "Blast Sepolia",
+    symbol: "ETH",
+    rpcUrl: "https://sepolia.blast.io",
+    explorer: "https://sepolia.blastscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.blast_sepolia
+  },
 ];
 
-const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
-  const [selectedNetwork, setSelectedNetwork] = useState('');
-  const [networkType, setNetworkType] = useState<'mainnet' | 'testnet'>('testnet');
+const MAINNETS: NetworkConfig[] = [
+  {
+    id: "ethereum_mainnet",
+    chainId: 1,
+    name: "Ethereum",
+    symbol: "ETH",
+    rpcUrl: "https://eth.public-rpc.com",
+    explorer: "https://etherscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.ethereum_mainnet
+  },
+  {
+    id: "optimism_mainnet",
+    chainId: 10,
+    name: "Optimism",
+    symbol: "ETH",
+    rpcUrl: "https://mainnet.optimism.io",
+    explorer: "https://optimistic.etherscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.optimism_mainnet
+  },
+  {
+    id: "arbitrum_mainnet",
+    chainId: 42161,
+    name: "Arbitrum",
+    symbol: "ETH",
+    rpcUrl: "https://arb1.arbitrum.io/rpc",
+    explorer: "https://arbiscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.arbitrum_mainnet
+  },
+  {
+    id: "base_mainnet",
+    chainId: 8453,
+    name: "Base",
+    symbol: "ETH",
+    rpcUrl: "https://mainnet.base.org",
+    explorer: "https://basescan.org/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.base_mainnet
+  },
+  {
+    id: "blast_mainnet",
+    chainId: 81457,
+    name: "Blast",
+    symbol: "ETH",
+    rpcUrl: "https://rpc.blast.io",
+    explorer: "https://blastscan.io/tx/",
+    imagePath: DEFAULT_NETWORK_IMAGES.blast_mainnet
+  },
+];
+
+// Get network images from localStorage or use defaults
+const getNetworkImages = (): NetworkImage => {
+  try {
+    const savedImages = localStorage.getItem('networkImages');
+    return savedImages ? JSON.parse(savedImages) : DEFAULT_NETWORK_IMAGES;
+  } catch (error) {
+    console.error("Error loading network images:", error);
+    return DEFAULT_NETWORK_IMAGES;
+  }
+};
+
+// Save network images to localStorage
+const saveNetworkImages = (images: NetworkImage) => {
+  try {
+    localStorage.setItem('networkImages', JSON.stringify(images));
+  } catch (error) {
+    console.error("Error saving network images:", error);
+  }
+};
+
+const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
+  const [selectedNetwork, setSelectedNetwork] = useState("");
+  const [networkMode, setNetworkMode] = useState("testnet");
   const [customNetworks, setCustomNetworks] = useState<NetworkConfig[]>([]);
-  const [isCustomTab, setIsCustomTab] = useState(false);
-  const [newNetworkId, setNewNetworkId] = useState('');
-  const [newNetworkName, setNewNetworkName] = useState('');
-  const [newNetworkRPC, setNewNetworkRPC] = useState('');
-  const [newNetworkImage, setNewNetworkImage] = useState('');
-  const [addingNetwork, setAddingNetwork] = useState(false);
-  const [editingNetworkId, setEditingNetworkId] = useState<string | null>(null);
+  const [networkImages, setNetworkImages] = useState<NetworkImage>(getNetworkImages());
+  const [showImageDialog, setShowImageDialog] = useState(false);
+  const [currentNetworkId, setCurrentNetworkId] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+
+  // Apply network images to networks
+  const testnetsWithImages = TESTNETS.map(network => ({
+    ...network,
+    imagePath: networkImages[network.id] || network.imagePath
+  }));
   
-  // Load custom networks from localStorage on mount
+  const mainnetsWithImages = MAINNETS.map(network => ({
+    ...network,
+    imagePath: networkImages[network.id] || network.imagePath
+  }));
+
+  // Save custom network images when changed
   useEffect(() => {
-    const savedNetworks = localStorage.getItem('customNetworks');
-    if (savedNetworks) {
-      try {
-        const parsedNetworks = JSON.parse(savedNetworks);
-        setCustomNetworks(parsedNetworks);
-      } catch (e) {
-        console.error('Failed to parse custom networks', e);
-      }
-    }
-  }, []);
+    saveNetworkImages(networkImages);
+  }, [networkImages]);
 
-  const handleNetworkChange = (value: string) => {
-    setSelectedNetwork(value);
-    onNetworkChange(value);
+  // Forward selected network to parent component
+  useEffect(() => {
+    if (selectedNetwork) {
+      onNetworkChange(selectedNetwork);
+    }
+  }, [selectedNetwork, onNetworkChange]);
+
+  const handleNetworkSelect = (networkId: string) => {
+    setSelectedNetwork(networkId);
   };
 
-  const handleAddCustomNetwork = () => {
-    if (!newNetworkId || !newNetworkName || !newNetworkRPC) return;
-    
-    // Validate GitHub URL if provided
-    if (newNetworkImage && !isValidGitHubUrl(newNetworkImage)) {
-      toast({
-        variant: "destructive",
-        title: "Invalid GitHub URL",
-        description: "Please provide a valid GitHub URL starting with https://raw.githubusercontent.com/ or https://github.com/",
+  const handleNetworkImageChange = (networkId: string) => {
+    setCurrentNetworkId(networkId);
+    setImageUrl(networkImages[networkId] || "");
+    setShowImageDialog(true);
+  };
+
+  const saveNetworkImage = () => {
+    if (currentNetworkId && imageUrl) {
+      setNetworkImages({
+        ...networkImages,
+        [currentNetworkId]: imageUrl
       });
-      return;
     }
-    
-    const newNetwork: NetworkConfig = {
-      id: newNetworkId,
-      name: newNetworkName,
-      imageUrl: newNetworkImage || undefined,
-      logo: newNetworkImage ? '' : '🔌',
-      type: networkType,
-      rpcUrl: newNetworkRPC
-    };
-    
-    let updatedNetworks: NetworkConfig[];
-    
-    if (editingNetworkId) {
-      // Update existing network
-      updatedNetworks = customNetworks.map(network => 
-        network.id === editingNetworkId ? newNetwork : network
-      );
-      setEditingNetworkId(null);
-    } else {
-      // Add new network
-      updatedNetworks = [...customNetworks, newNetwork];
-    }
-    
-    setCustomNetworks(updatedNetworks);
-    
-    // Save to localStorage
-    localStorage.setItem('customNetworks', JSON.stringify(updatedNetworks));
-    
-    // Reset form
-    setNewNetworkId('');
-    setNewNetworkName('');
-    setNewNetworkRPC('');
-    setNewNetworkImage('');
-    setAddingNetwork(false);
-    
-    toast({
-      title: editingNetworkId ? "Network updated" : "Network added",
-      description: `${newNetworkName} has been ${editingNetworkId ? 'updated' : 'added'} to your custom networks.`,
-    });
-  };
-
-  const handleEditNetwork = (network: NetworkConfig) => {
-    setNewNetworkId(network.id);
-    setNewNetworkName(network.name);
-    setNewNetworkRPC(network.rpcUrl || '');
-    setNewNetworkImage(network.imageUrl || '');
-    setEditingNetworkId(network.id);
-    setAddingNetwork(true);
-  };
-
-  const handleDeleteNetwork = (networkId: string) => {
-    const updatedNetworks = customNetworks.filter(network => network.id !== networkId);
-    setCustomNetworks(updatedNetworks);
-    localStorage.setItem('customNetworks', JSON.stringify(updatedNetworks));
-    
-    toast({
-      title: "Network deleted",
-      description: "The network has been removed from your custom networks.",
-    });
-  };
-
-  const isValidGitHubUrl = (url: string): boolean => {
-    return url.startsWith('https://raw.githubusercontent.com/') || 
-           url.startsWith('https://github.com/');
-  };
-
-  const filteredDefaultNetworks = defaultNetworks.filter(network => network.type === networkType);
-  const filteredCustomNetworks = customNetworks.filter(network => network.type === networkType);
-
-  // Render network card with image or emoji
-  const renderNetworkCard = (network: NetworkConfig, isCustom: boolean = false) => {
-    return (
-      <div key={network.id} className="relative">
-        <button
-          className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all ${
-            selectedNetwork === network.id
-              ? 'border-2 border-primary bg-primary/10'
-              : 'border border-gray-700 hover:border-gray-500'
-          }`}
-          onClick={() => handleNetworkChange(network.id)}
-        >
-          {network.imageUrl ? (
-            <div className="w-10 h-10 mb-1 flex items-center justify-center overflow-hidden">
-              <img 
-                src={network.imageUrl} 
-                alt={network.name} 
-                className="max-w-full max-h-full object-contain"
-                onError={(e) => {
-                  // If image fails to load, show an icon instead
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    const fallback = document.createElement('span');
-                    fallback.textContent = '🔗';
-                    fallback.className = 'text-2xl';
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
-            </div>
-          ) : (
-            <span className="text-2xl mb-1">{network.logo || '🔗'}</span>
-          )}
-          <span className="text-xs font-medium truncate max-w-full">
-            {network.name}
-          </span>
-        </button>
-        
-        {isCustom && (
-          <div className="absolute -top-2 -right-2 flex space-x-1">
-            <button 
-              className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-blue-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditNetwork(network);
-              }}
-              title="Edit network"
-            >
-              ✏️
-            </button>
-            <button 
-              className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteNetwork(network.id);
-              }}
-              title="Delete network"
-            >
-              ❌
-            </button>
-          </div>
-        )}
-      </div>
-    );
+    setShowImageDialog(false);
   };
 
   return (
-    <div className="space-y-4">
-      <Tabs defaultValue="default" onValueChange={(value) => setIsCustomTab(value === 'custom')}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="default">Default Networks</TabsTrigger>
-          <TabsTrigger value="custom">Custom Networks</TabsTrigger>
+    <div>
+      <Tabs defaultValue="testnet" className="w-full" onValueChange={setNetworkMode}>
+        <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsTrigger value="testnet">Testnet</TabsTrigger>
+          <TabsTrigger value="mainnet">Mainnet</TabsTrigger>
         </TabsList>
         
-        <div className="mt-2">
-          <Tabs defaultValue="testnet" onValueChange={(value) => setNetworkType(value as 'mainnet' | 'testnet')}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="mainnet">Mainnet</TabsTrigger>
-              <TabsTrigger value="testnet">Testnet</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        <TabsContent value="default" className="mt-2">
-          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-            {filteredDefaultNetworks.map(network => renderNetworkCard(network))}
+        <TabsContent value="testnet" className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {testnetsWithImages.map((network) => (
+              <Card
+                key={network.id}
+                className={`relative p-3 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                  selectedNetwork === network.id
+                    ? "border-2 border-primary bg-primary/5"
+                    : "border border-border/50 hover:border-primary/50"
+                }`}
+                onClick={() => handleNetworkSelect(network.id)}
+              >
+                <div 
+                  className="absolute top-1 right-1 p-1 rounded-full hover:bg-muted"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNetworkImageChange(network.id);
+                  }}
+                >
+                  <Settings className="h-3 w-3 text-muted-foreground" />
+                </div>
+                <div className="h-12 w-12 flex items-center justify-center mb-2">
+                  <img
+                    src={network.imagePath}
+                    alt={network.name}
+                    className="max-h-10 max-w-10 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://placehold.co/40x40/svg?text=ETH";
+                    }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-center">{network.name}</span>
+              </Card>
+            ))}
           </div>
         </TabsContent>
         
-        <TabsContent value="custom" className="mt-2 space-y-4">
-          {filteredCustomNetworks.length > 0 ? (
-            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-              {filteredCustomNetworks.map(network => renderNetworkCard(network, true))}
-            </div>
-          ) : (
-            <div className="text-center py-4 text-muted-foreground">
-              No custom {networkType} networks added yet
-            </div>
-          )}
-          
-          {addingNetwork ? (
-            <Card className="space-y-2 border border-border p-3 rounded-md">
-              <h4 className="font-medium">{editingNetworkId ? 'Edit Network' : 'Add New Network'}</h4>
-              <div className="space-y-2">
-                <Input 
-                  placeholder="Network ID (e.g., custom-testnet)"
-                  value={newNetworkId}
-                  onChange={(e) => setNewNetworkId(e.target.value)}
-                  disabled={!!editingNetworkId}
-                />
-                <Input 
-                  placeholder="Network Name (e.g., My Custom Testnet)"
-                  value={newNetworkName}
-                  onChange={(e) => setNewNetworkName(e.target.value)}
-                />
-                <Input 
-                  placeholder="RPC URL (e.g., https://rpc.example.com)"
-                  value={newNetworkRPC}
-                  onChange={(e) => setNewNetworkRPC(e.target.value)}
-                />
-                <div className="space-y-1">
-                  <div className="flex relative">
-                    <Input 
-                      placeholder="GitHub Image URL"
-                      value={newNetworkImage}
-                      onChange={(e) => setNewNetworkImage(e.target.value)}
-                    />
-                    <Github className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
-                  </div>
-                  <div className="text-xs text-muted-foreground flex items-center">
-                    <span>Use raw GitHub URLs</span>
-                    <a 
-                      href="https://raw.githubusercontent.com/" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="ml-1 inline-flex items-center text-primary text-xs hover:underline"
-                    >
-                      How to get raw URL <ExternalLink className="h-3 w-3 ml-0.5" />
-                    </a>
-                  </div>
+        <TabsContent value="mainnet" className="space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {mainnetsWithImages.map((network) => (
+              <Card
+                key={network.id}
+                className={`relative p-3 flex flex-col items-center justify-center cursor-pointer transition-all ${
+                  selectedNetwork === network.id
+                    ? "border-2 border-primary bg-primary/5"
+                    : "border border-border/50 hover:border-primary/50"
+                }`}
+                onClick={() => handleNetworkSelect(network.id)}
+              >
+                <div 
+                  className="absolute top-1 right-1 p-1 rounded-full hover:bg-muted"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNetworkImageChange(network.id);
+                  }}
+                >
+                  <Settings className="h-3 w-3 text-muted-foreground" />
                 </div>
-                <div className="flex space-x-2">
-                  <Button 
-                    variant="default" 
-                    onClick={handleAddCustomNetwork}
-                    disabled={!newNetworkId || !newNetworkName || !newNetworkRPC}
-                  >
-                    {editingNetworkId ? 'Update Network' : 'Add Network'}
-                  </Button>
-                  <Button 
-                    variant="secondary" 
-                    onClick={() => {
-                      setAddingNetwork(false);
-                      setEditingNetworkId(null);
-                      setNewNetworkId('');
-                      setNewNetworkName('');
-                      setNewNetworkRPC('');
-                      setNewNetworkImage('');
+                <div className="h-12 w-12 flex items-center justify-center mb-2">
+                  <img
+                    src={network.imagePath}
+                    alt={network.name}
+                    className="max-h-10 max-w-10 object-contain"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://placehold.co/40x40/svg?text=ETH";
                     }}
-                  >
-                    Cancel
-                  </Button>
+                  />
                 </div>
-              </div>
-            </Card>
-          ) : (
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={() => setAddingNetwork(true)}
-            >
-              <Plus className="h-4 w-4 mr-2" /> Add Custom Network
-            </Button>
-          )}
+                <span className="text-sm font-medium text-center">{network.name}</span>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog for changing network image */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Network Icon</DialogTitle>
+            <DialogDescription>
+              Enter a GitHub URL to the network icon image. The URL should point directly to the raw image file.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="imageUrl">Image URL (GitHub raw file)</Label>
+              <Input
+                id="imageUrl"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://raw.githubusercontent.com/..."
+              />
+              <p className="text-xs text-muted-foreground">
+                Example: https://raw.githubusercontent.com/user/repo/main/image.png
+              </p>
+            </div>
+            {imageUrl && (
+              <div className="flex justify-center">
+                <div className="border border-border rounded-md p-2 bg-muted/50 max-w-[100px]">
+                  <img
+                    src={imageUrl}
+                    alt="Preview"
+                    className="max-h-16 max-w-16 object-contain mx-auto"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "https://placehold.co/40x40/svg?text=Error";
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowImageDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveNetworkImage}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
