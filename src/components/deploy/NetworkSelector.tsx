@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Image as ImageIcon } from 'lucide-react';
+import { Plus, Image as ImageIcon, Github, ExternalLink } from 'lucide-react';
 import { Card } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
 
 interface NetworkSelectorProps {
   onNetworkChange: (networkId: string) => void;
@@ -38,7 +39,6 @@ const defaultNetworks: NetworkConfig[] = [
   { id: 'blast-sepolia', name: 'Blast Sepolia', imageUrl: 'https://raw.githubusercontent.com/blast-io/brand-kit/main/logos/blast.svg', type: 'testnet' },
 ];
 
-// Custom networks tab (can be populated from GitHub)
 const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
   const [selectedNetwork, setSelectedNetwork] = useState('');
   const [networkType, setNetworkType] = useState<'mainnet' | 'testnet'>('testnet');
@@ -49,6 +49,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
   const [newNetworkRPC, setNewNetworkRPC] = useState('');
   const [newNetworkImage, setNewNetworkImage] = useState('');
   const [addingNetwork, setAddingNetwork] = useState(false);
+  const [editingNetworkId, setEditingNetworkId] = useState<string | null>(null);
   
   // Load custom networks from localStorage on mount
   useEffect(() => {
@@ -71,6 +72,16 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
   const handleAddCustomNetwork = () => {
     if (!newNetworkId || !newNetworkName || !newNetworkRPC) return;
     
+    // Validate GitHub URL if provided
+    if (newNetworkImage && !isValidGitHubUrl(newNetworkImage)) {
+      toast({
+        variant: "destructive",
+        title: "Invalid GitHub URL",
+        description: "Please provide a valid GitHub URL starting with https://raw.githubusercontent.com/ or https://github.com/",
+      });
+      return;
+    }
+    
     const newNetwork: NetworkConfig = {
       id: newNetworkId,
       name: newNetworkName,
@@ -80,7 +91,19 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
       rpcUrl: newNetworkRPC
     };
     
-    const updatedNetworks = [...customNetworks, newNetwork];
+    let updatedNetworks: NetworkConfig[];
+    
+    if (editingNetworkId) {
+      // Update existing network
+      updatedNetworks = customNetworks.map(network => 
+        network.id === editingNetworkId ? newNetwork : network
+      );
+      setEditingNetworkId(null);
+    } else {
+      // Add new network
+      updatedNetworks = [...customNetworks, newNetwork];
+    }
+    
     setCustomNetworks(updatedNetworks);
     
     // Save to localStorage
@@ -92,50 +115,106 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
     setNewNetworkRPC('');
     setNewNetworkImage('');
     setAddingNetwork(false);
+    
+    toast({
+      title: editingNetworkId ? "Network updated" : "Network added",
+      description: `${newNetworkName} has been ${editingNetworkId ? 'updated' : 'added'} to your custom networks.`,
+    });
+  };
+
+  const handleEditNetwork = (network: NetworkConfig) => {
+    setNewNetworkId(network.id);
+    setNewNetworkName(network.name);
+    setNewNetworkRPC(network.rpcUrl || '');
+    setNewNetworkImage(network.imageUrl || '');
+    setEditingNetworkId(network.id);
+    setAddingNetwork(true);
+  };
+
+  const handleDeleteNetwork = (networkId: string) => {
+    const updatedNetworks = customNetworks.filter(network => network.id !== networkId);
+    setCustomNetworks(updatedNetworks);
+    localStorage.setItem('customNetworks', JSON.stringify(updatedNetworks));
+    
+    toast({
+      title: "Network deleted",
+      description: "The network has been removed from your custom networks.",
+    });
+  };
+
+  const isValidGitHubUrl = (url: string): boolean => {
+    return url.startsWith('https://raw.githubusercontent.com/') || 
+           url.startsWith('https://github.com/');
   };
 
   const filteredDefaultNetworks = defaultNetworks.filter(network => network.type === networkType);
   const filteredCustomNetworks = customNetworks.filter(network => network.type === networkType);
 
   // Render network card with image or emoji
-  const renderNetworkCard = (network: NetworkConfig) => {
+  const renderNetworkCard = (network: NetworkConfig, isCustom: boolean = false) => {
     return (
-      <button
-        key={network.id}
-        className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all ${
-          selectedNetwork === network.id
-            ? 'border-2 border-primary bg-primary/10'
-            : 'border border-gray-700 hover:border-gray-500'
-        }`}
-        onClick={() => handleNetworkChange(network.id)}
-      >
-        {network.imageUrl ? (
-          <div className="w-10 h-10 mb-1 flex items-center justify-center overflow-hidden">
-            <img 
-              src={network.imageUrl} 
-              alt={network.name} 
-              className="max-w-full max-h-full object-contain"
-              onError={(e) => {
-                // If image fails to load, show an icon instead
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent) {
-                  const fallback = document.createElement('span');
-                  fallback.textContent = '🔗';
-                  fallback.className = 'text-2xl';
-                  parent.appendChild(fallback);
-                }
+      <div key={network.id} className="relative">
+        <button
+          className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all ${
+            selectedNetwork === network.id
+              ? 'border-2 border-primary bg-primary/10'
+              : 'border border-gray-700 hover:border-gray-500'
+          }`}
+          onClick={() => handleNetworkChange(network.id)}
+        >
+          {network.imageUrl ? (
+            <div className="w-10 h-10 mb-1 flex items-center justify-center overflow-hidden">
+              <img 
+                src={network.imageUrl} 
+                alt={network.name} 
+                className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  // If image fails to load, show an icon instead
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    const fallback = document.createElement('span');
+                    fallback.textContent = '🔗';
+                    fallback.className = 'text-2xl';
+                    parent.appendChild(fallback);
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <span className="text-2xl mb-1">{network.logo || '🔗'}</span>
+          )}
+          <span className="text-xs font-medium truncate max-w-full">
+            {network.name}
+          </span>
+        </button>
+        
+        {isCustom && (
+          <div className="absolute -top-2 -right-2 flex space-x-1">
+            <button 
+              className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-blue-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditNetwork(network);
               }}
-            />
+              title="Edit network"
+            >
+              ✏️
+            </button>
+            <button 
+              className="bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteNetwork(network.id);
+              }}
+              title="Delete network"
+            >
+              ❌
+            </button>
           </div>
-        ) : (
-          <span className="text-2xl mb-1">{network.logo || '🔗'}</span>
         )}
-        <span className="text-xs font-medium truncate max-w-full">
-          {network.name}
-        </span>
-      </button>
+      </div>
     );
   };
 
@@ -158,14 +237,14 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
 
         <TabsContent value="default" className="mt-2">
           <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-            {filteredDefaultNetworks.map(renderNetworkCard)}
+            {filteredDefaultNetworks.map(network => renderNetworkCard(network))}
           </div>
         </TabsContent>
         
         <TabsContent value="custom" className="mt-2 space-y-4">
           {filteredCustomNetworks.length > 0 ? (
             <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-              {filteredCustomNetworks.map(renderNetworkCard)}
+              {filteredCustomNetworks.map(network => renderNetworkCard(network, true))}
             </div>
           ) : (
             <div className="text-center py-4 text-muted-foreground">
@@ -175,12 +254,13 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
           
           {addingNetwork ? (
             <Card className="space-y-2 border border-border p-3 rounded-md">
-              <h4 className="font-medium">Add New Network</h4>
+              <h4 className="font-medium">{editingNetworkId ? 'Edit Network' : 'Add New Network'}</h4>
               <div className="space-y-2">
                 <Input 
                   placeholder="Network ID (e.g., custom-testnet)"
                   value={newNetworkId}
                   onChange={(e) => setNewNetworkId(e.target.value)}
+                  disabled={!!editingNetworkId}
                 />
                 <Input 
                   placeholder="Network Name (e.g., My Custom Testnet)"
@@ -192,13 +272,26 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
                   value={newNetworkRPC}
                   onChange={(e) => setNewNetworkRPC(e.target.value)}
                 />
-                <div className="flex relative">
-                  <Input 
-                    placeholder="Image URL (GitHub, optional)"
-                    value={newNetworkImage}
-                    onChange={(e) => setNewNetworkImage(e.target.value)}
-                  />
-                  <ImageIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                <div className="space-y-1">
+                  <div className="flex relative">
+                    <Input 
+                      placeholder="GitHub Image URL"
+                      value={newNetworkImage}
+                      onChange={(e) => setNewNetworkImage(e.target.value)}
+                    />
+                    <Github className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={16} />
+                  </div>
+                  <div className="text-xs text-muted-foreground flex items-center">
+                    <span>Use raw GitHub URLs</span>
+                    <a 
+                      href="https://raw.githubusercontent.com/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="ml-1 inline-flex items-center text-primary text-xs hover:underline"
+                    >
+                      How to get raw URL <ExternalLink className="h-3 w-3 ml-0.5" />
+                    </a>
+                  </div>
                 </div>
                 <div className="flex space-x-2">
                   <Button 
@@ -206,11 +299,18 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
                     onClick={handleAddCustomNetwork}
                     disabled={!newNetworkId || !newNetworkName || !newNetworkRPC}
                   >
-                    Add Network
+                    {editingNetworkId ? 'Update Network' : 'Add Network'}
                   </Button>
                   <Button 
                     variant="secondary" 
-                    onClick={() => setAddingNetwork(false)}
+                    onClick={() => {
+                      setAddingNetwork(false);
+                      setEditingNetworkId(null);
+                      setNewNetworkId('');
+                      setNewNetworkName('');
+                      setNewNetworkRPC('');
+                      setNewNetworkImage('');
+                    }}
                   >
                     Cancel
                   </Button>

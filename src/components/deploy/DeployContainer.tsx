@@ -26,8 +26,9 @@ const DeployContainer = () => {
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [initialStorageValue, setInitialStorageValue] = useState("0");
 
-  const [tokenName, setTokenName] = useState("My Token");
-  const [tokenSymbol, setTokenSymbol] = useState("MTK");
+  const [tokenName, setTokenName] = useState("Simple Token"); 
+  const [tokenSymbol, setTokenSymbol] = useState("SMP");
+  const [initialSupply, setInitialSupply] = useState("1000000");
 
   useEffect(() => {
     const getBalance = async () => {
@@ -102,17 +103,16 @@ const DeployContainer = () => {
     });
 
     try {
-      // Get contract data based on mode
-      const contractData = getContractByMode(
-        deployMode, 
-        deployMode === 'erc20' ? { name: tokenName, symbol: tokenSymbol } : null
-      );
+      const deployArgs = deployMode === 'erc20' 
+        ? { initialSupply: parseInt(initialSupply) } 
+        : null;
       
-      console.log("Deploying contract with mode:", deployMode);
+      const contractData = getContractByMode(deployMode, deployArgs);
+      
+      console.log(`Deploying ${deployMode} contract`);
       console.log("Contract args:", contractData.contractArgs);
       console.log("Bytecode length:", contractData.bytecode.length);
       
-      // Create factory
       const contractFactory = new ethers.ContractFactory(
         contractData.abi, 
         contractData.bytecode, 
@@ -121,12 +121,10 @@ const DeployContainer = () => {
       
       console.log("Contract factory created, attempting deployment...");
       
-      // Deploy with higher gas limit to ensure it works
       const deploymentOptions = {
-        gasLimit: 8000000, // Increased gas limit for more complex contracts
+        gasLimit: 10000000, // Increased gas limit for more complex contracts
       };
       
-      // Deploy contract with args
       let contract;
       if (contractData.contractArgs && contractData.contractArgs.length > 0) {
         console.log("Deploying with args:", contractData.contractArgs);
@@ -138,18 +136,15 @@ const DeployContainer = () => {
       
       console.log("Contract deployment transaction created");
       
-      // Get transaction hash
       const deploymentTransaction = contract.deploymentTransaction();
       if (deploymentTransaction) {
         const txHash = deploymentTransaction.hash;
         console.log("Contract deployment transaction hash:", txHash);
         setTxHash(txHash);
         
-        // Wait for deployment confirmation
         console.log("Waiting for contract deployment to complete...");
         await contract.waitForDeployment();
         
-        // Get deployed contract address
         const contractAddress = await contract.getAddress();
         console.log("Contract successfully deployed at address:", contractAddress);
         
@@ -264,25 +259,17 @@ const DeployContainer = () => {
                   ) : (
                     <div className="space-y-4">
                       <div>
-                        <Label htmlFor="tokenName">Token Name</Label>
+                        <Label htmlFor="initialSupply">Initial Supply (tokens)</Label>
                         <Input 
-                          id="tokenName"
-                          placeholder="My Token" 
-                          value={tokenName}
-                          onChange={(e) => setTokenName(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="tokenSymbol">Token Symbol</Label>
-                        <Input 
-                          id="tokenSymbol" 
-                          placeholder="MTK" 
-                          value={tokenSymbol}
-                          onChange={(e) => setTokenSymbol(e.target.value)}
+                          id="initialSupply"
+                          placeholder="1000000" 
+                          value={initialSupply}
+                          onChange={(e) => setInitialSupply(e.target.value)}
+                          type="number"
                         />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Your token will be deployed with a total supply of 1,000,000 tokens with 18 decimals.
+                        Your token will be deployed with the name "Simple Token" and symbol "SMP".
                         The entire supply will be sent to your connected wallet address.
                       </p>
                     </div>
