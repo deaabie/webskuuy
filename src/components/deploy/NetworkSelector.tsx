@@ -37,8 +37,8 @@ const DEFAULT_NETWORK_IMAGES: NetworkImage = {
   optimism_sepolia: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
   arbitrum_mainnet: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
   arbitrum_sepolia: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
-  base_mainnet: "https://raw.githubusercontent.com/base-org/brand-kit/main/logo/logo-blue.svg",
-  base_sepolia: "https://raw.githubusercontent.com/base-org/brand-kit/main/logo/logo-blue.svg",
+  base_mainnet: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png",
+  base_sepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png",
   blast_mainnet: "https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png",
   blast_sepolia: "https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png",
 };
