@@ -30,8 +30,8 @@ interface NetworkSelectionProps {
 
 // Default network image URLs
 const DEFAULT_NETWORK_IMAGES: NetworkImage = {
-  ethereum_mainnet: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-black.png",
-  ethereum_sepolia: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
+  ethereum_mainnet: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png",
+  ethereum_sepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png",
   ethereum_goerli: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
   ethereum_holesky: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
   optimism_mainnet: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
