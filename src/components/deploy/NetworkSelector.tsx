@@ -33,7 +33,7 @@ const DEFAULT_NETWORK_IMAGES: NetworkImage = {
   ethereum_mainnet: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png",
   ethereum_sepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png",
   ethereum_goerli: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
-  ethereum_holesky: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
+  Citrea: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png",
   optimism_mainnet: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
   optimism_sepolia: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
   arbitrum_mainnet: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
@@ -56,13 +56,13 @@ const TESTNETS: NetworkConfig[] = [
     imageUrl: DEFAULT_NETWORK_IMAGES.ethereum_sepolia
   },
   {
-    id: "ethereum_holesky",
+    id: "Citrea",
     chainId: 17000,
-    name: "Ethereum Holesky",
-    symbol: "ETH",
-    rpcUrl: "https://ethereum-holesky.publicnode.com",
-    explorer: "https://holesky.etherscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.ethereum_holesky
+    name: "Citrea",
+    symbol: "cBTC",
+    rpcUrl: "https://rpc.testnet.citrea.xyz",
+    explorer: "https://explorer.testnet.citrea.xyz/tx/",
+    imageUrl: DEFAULT_NETWORK_IMAGES.Citrea
   },
   {
     id: "base_sepolia",
