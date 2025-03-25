@@ -1,7 +1,9 @@
+
 import { Button } from "../ui/button";
 import { Check, Copy, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { NETWORK_CONFIG } from "@/config/faucet-config";
 
 interface DeploySuccessProps {
   txHash: string;
@@ -12,6 +14,15 @@ interface DeploySuccessProps {
 const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps) => {
   const [copiedTx, setCopiedTx] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState(false);
+  const [explorerUrls, setExplorerUrls] = useState({
+    tx: "",
+    address: ""
+  });
+
+  useEffect(() => {
+    // Set the explorer URLs when component mounts or network/txHash/address changes
+    setExplorerUrls(getExplorerUrls());
+  }, [network, txHash, contractAddress]);
 
   const copyToClipboard = (text: string, type: 'tx' | 'address') => {
     navigator.clipboard.writeText(text);
@@ -30,81 +41,95 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
     });
   };
 
-  const getExplorerUrl = (type: 'tx' | 'address') => {
-    const path = type === 'tx' ? `${txHash}` : `address/${contractAddress}`;
+  const getExplorerUrls = () => {
+    let txUrl = "";
+    let addressUrl = "";
+
+    // Try to find network in predefined networks first
+    if (network && NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG]) {
+      const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG];
+      
+      let explorerBase = networkConfig.explorer;
+      // Make sure explorer URL ends with /
+      if (!explorerBase.endsWith('/')) {
+        explorerBase = `${explorerBase}/`;
+      }
+      
+      txUrl = `${explorerBase}${txHash}`;
+      addressUrl = `${explorerBase.replace(/tx\/$/, '')}address/${contractAddress}`;
+      
+      console.log("Using predefined network explorer:", network, explorerBase);
+      return { tx: txUrl, address: addressUrl };
+    }
     
-    // Try to find network in custom networks first
+    // Try to find network in custom networks from localStorage
     const customNetworksStr = localStorage.getItem('customNetworks');
     if (customNetworksStr) {
       try {
         const customNetworks = JSON.parse(customNetworksStr);
         const customNetwork = customNetworks.find((n: any) => n.id === network);
+        
         if (customNetwork && customNetwork.explorer) {
           // Make sure explorer URL ends with /
-          const explorerBase = customNetwork.explorer.endsWith('/') 
-            ? customNetwork.explorer 
-            : `${customNetwork.explorer}/`;
-          
-          // If explorer already has tx/ or address/ in it, adjust accordingly
-          if (type === 'tx' && explorerBase.endsWith('tx/')) {
-            return `${explorerBase}${path}`;
-          } else if (type === 'address' && explorerBase.endsWith('address/')) {
-            return `${explorerBase}${contractAddress}`;
+          let explorerBase = customNetwork.explorer;
+          if (!explorerBase.endsWith('/')) {
+            explorerBase = `${explorerBase}/`;
           }
           
-          // Otherwise, return appropriate path
-          return type === 'tx' 
-            ? `${explorerBase}${path}`
-            : `${explorerBase}address/${contractAddress}`;
+          // Handle different explorer URL formats
+          if (explorerBase.endsWith('tx/')) {
+            txUrl = `${explorerBase}${txHash}`;
+            addressUrl = `${explorerBase.replace('tx/', 'address/')}${contractAddress}`;
+          } else {
+            txUrl = `${explorerBase}tx/${txHash}`;
+            addressUrl = `${explorerBase}address/${contractAddress}`;
+          }
+          
+          console.log("Using custom network explorer:", network, explorerBase);
+          return { tx: txUrl, address: addressUrl };
         }
       } catch (e) {
         console.error('Failed to parse custom networks', e);
       }
     }
 
-    // Handle mainnet networks
-    if (network.includes('_mainnet') || network === 'ethereum' || network === 'arbitrum' || 
-        network === 'optimism' || network === 'base' || network === 'blast') {
+    // Fallback to common blockchain explorers based on network ID patterns
+    if (network) {
+      // Handle different network types
+      if (network.includes('ethereum') || network === 'ethereum_mainnet' || network === 'ethereum_sepolia' || network === 'ethereum_holesky') {
+        const subdomain = network.includes('sepolia') ? 'sepolia.' : 
+                          network.includes('holesky') ? 'holesky.' : '';
+        txUrl = `https://${subdomain}etherscan.io/tx/${txHash}`;
+        addressUrl = `https://${subdomain}etherscan.io/address/${contractAddress}`;
+      } else if (network.includes('optimism') || network === 'optimism_mainnet' || network === 'optimism_sepolia') {
+        const subdomain = network.includes('sepolia') ? 'sepolia-optimism.' : 'optimistic.';
+        txUrl = `https://${subdomain}etherscan.io/tx/${txHash}`;
+        addressUrl = `https://${subdomain}etherscan.io/address/${contractAddress}`;
+      } else if (network.includes('arbitrum') || network === 'arbitrum_mainnet' || network === 'arbitrum_sepolia') {
+        const subdomain = network.includes('sepolia') ? 'sepolia.' : '';
+        txUrl = `https://${subdomain}arbiscan.io/tx/${txHash}`;
+        addressUrl = `https://${subdomain}arbiscan.io/address/${contractAddress}`;
+      } else if (network.includes('base') || network === 'base_mainnet' || network === 'base_sepolia') {
+        const subdomain = network.includes('sepolia') ? 'sepolia.' : '';
+        txUrl = `https://${subdomain}basescan.org/tx/${txHash}`;
+        addressUrl = `https://${subdomain}basescan.org/address/${contractAddress}`;
+      } else if (network.includes('blast') || network === 'blast_mainnet' || network === 'blast_sepolia') {
+        const subdomain = network.includes('sepolia') ? 'sepolia.' : '';
+        txUrl = `https://${subdomain}blastscan.io/tx/${txHash}`;
+        addressUrl = `https://${subdomain}blastscan.io/address/${contractAddress}`;
+      } else if (network.includes('Citrea')) {
+        txUrl = `https://explorer.testnet.citrea.xyz/tx/${txHash}`;
+        addressUrl = `https://explorer.testnet.citrea.xyz/address/${contractAddress}`;
+      } else {
+        // Default to Ethereum for unknown networks
+        txUrl = `https://etherscan.io/tx/${txHash}`;
+        addressUrl = `https://etherscan.io/address/${contractAddress}`;
+      }
       
-      switch (network.replace('_mainnet', '')) {
-        case "ethereum":
-          return `https://etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "polygon":
-          return `https://polygonscan.com/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "optimism":
-          return `https://optimistic.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "arbitrum":
-          return `https://arbiscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "base":
-          return `https://basescan.org/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "blast":
-          return `https://blastscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        default:
-          return `https://etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-      }
+      console.log("Using fallback explorer for network:", network);
     }
-    // Handle testnet networks
-    else {
-      switch (network.replace('_sepolia', '').replace('_holesky', '')) {
-        case "ethereum":
-          if (network.includes('sepolia')) {
-            return `https://sepolia.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-          } else if (network.includes('holesky')) {
-            return `https://holesky.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-          }
-          return `https://sepolia.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "arbitrum":
-          return `https://sepolia.arbiscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "optimism":
-          return `https://sepolia-optimistic.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "base":
-          return `https://sepolia.basescan.org/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        case "blast":
-          return `https://sepolia.blastscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-        default:
-          return `https://sepolia.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
-      }
-    }
+
+    return { tx: txUrl, address: addressUrl };
   };
 
   return (
@@ -128,7 +153,7 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
               {copiedTx ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
-          <div className="mt-1 break-all font-mono text-sm">{txHash}</div>
+          <div className="mt-1 break-all font-mono text-sm">{txHash || "N/A"}</div>
         </div>
         
         <div className="w-full bg-muted p-4 rounded-lg">
@@ -143,7 +168,7 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
               {copiedAddress ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
-          <div className="mt-1 break-all font-mono text-sm">{contractAddress}</div>
+          <div className="mt-1 break-all font-mono text-sm">{contractAddress || "N/A"}</div>
         </div>
         
         <div className="w-full space-y-3">
@@ -151,10 +176,18 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
             variant="outline" 
             className="w-full"
             onClick={() => {
-              const url = getExplorerUrl('tx');
-              console.log("Opening transaction URL:", url);
-              window.open(url, '_blank');
+              if (explorerUrls.tx) {
+                console.log("Opening transaction URL:", explorerUrls.tx);
+                window.open(explorerUrls.tx, '_blank');
+              } else {
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Could not generate transaction URL",
+                });
+              }
             }}
+            disabled={!txHash || !explorerUrls.tx}
           >
             View Transaction <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
@@ -163,10 +196,18 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
             variant="outline" 
             className="w-full"
             onClick={() => {
-              const url = getExplorerUrl('address');
-              console.log("Opening contract URL:", url);
-              window.open(url, '_blank');
+              if (explorerUrls.address) {
+                console.log("Opening contract URL:", explorerUrls.address);
+                window.open(explorerUrls.address, '_blank');
+              } else {
+                toast({
+                  variant: "destructive",
+                  title: "Error",
+                  description: "Could not generate contract URL",
+                });
+              }
             }}
+            disabled={!contractAddress || !explorerUrls.address}
           >
             View Contract <ExternalLink className="ml-2 h-4 w-4" />
           </Button>

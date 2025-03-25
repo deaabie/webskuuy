@@ -12,6 +12,25 @@ interface TransactionDetailsProps {
 }
 
 const TransactionDetails = ({ details }: TransactionDetailsProps) => {
+  // Format explorer URL correctly
+  const getFormattedExplorerUrl = () => {
+    if (!details.explorerUrl || !details.txHash) return "#";
+    
+    // Check if the URL already contains the transaction hash
+    if (details.explorerUrl.includes(details.txHash)) {
+      return details.explorerUrl;
+    }
+    
+    // Ensure the explorer URL ends with /
+    let formattedUrl = details.explorerUrl;
+    if (!formattedUrl.endsWith('/')) {
+      formattedUrl += '/';
+    }
+    
+    // Add the transaction hash
+    return `${formattedUrl}${details.txHash}`;
+  };
+
   return (
     <div className="mt-4 p-4 bg-muted rounded-md border">
       <h3 className="font-medium mb-2">Transaction Details</h3>
@@ -25,7 +44,7 @@ const TransactionDetails = ({ details }: TransactionDetailsProps) => {
         <p className="flex items-center gap-1">
           <span className="font-medium">Transaction:</span> 
           <a 
-            href={details.explorerUrl} 
+            href={getFormattedExplorerUrl()} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-primary hover:underline flex items-center"
