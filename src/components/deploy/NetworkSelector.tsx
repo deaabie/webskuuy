@@ -2,13 +2,8 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DEPLOY_NETWORK_CONFIG } from '@/config/deploy-config';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent } from '@/components/ui/card';
+import { Check } from 'lucide-react';
 
 interface NetworkSelectorProps {
   onNetworkChange: (network: string) => void;
@@ -53,13 +48,13 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
     setSelectedNetwork(""); // Reset selected network when changing tabs
   };
 
-  const handleNetworkChange = (value: string) => {
-    setSelectedNetwork(value);
-    onNetworkChange(value);
+  const handleNetworkSelect = (networkId: string) => {
+    setSelectedNetwork(networkId);
+    onNetworkChange(networkId);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="text-xl font-semibold mb-2">Select Network</div>
       
       <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -85,24 +80,54 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
         </TabsList>
       </Tabs>
       
-      <Select value={selectedNetwork} onValueChange={handleNetworkChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select Network" />
-        </SelectTrigger>
-        <SelectContent>
-          {getNetworksByTab().map(([key, network]: [string, any]) => (
-            <SelectItem key={key} value={key}>
-              {network.name}
-            </SelectItem>
-          ))}
-          
-          {getNetworksByTab().length === 0 && (
-            <SelectItem value="no_networks" disabled>
-              {activeTab === "mainnet" ? "Mainnet networks coming soon" : "No networks available"}
-            </SelectItem>
-          )}
-        </SelectContent>
-      </Select>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {getNetworksByTab().map(([key, network]: [string, any]) => (
+          <Card 
+            key={key}
+            className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+              selectedNetwork === key ? 'border-2 border-primary ring-2 ring-primary/20' : 'border border-gray-200'
+            }`}
+            onClick={() => handleNetworkSelect(key)}
+          >
+            <CardContent className="p-4 flex flex-col items-center">
+              <div className="relative w-full h-28 mb-2 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center">
+                {network.imageUrl ? (
+                  <img 
+                    src={network.imageUrl} 
+                    alt={network.name} 
+                    className="w-16 h-16 object-contain" 
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
+                    {network.symbol ? network.symbol.substring(0, 3) : 'ETH'}
+                  </div>
+                )}
+                
+                {selectedNetwork === key && (
+                  <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
+                    <Check className="h-4 w-4" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="font-medium text-center">{network.name}</div>
+              <div className="text-sm text-gray-500 text-center">{network.symbol || 'ETH'}</div>
+            </CardContent>
+          </Card>
+        ))}
+        
+        {getNetworksByTab().length === 0 && (
+          <div className="col-span-3 py-8 text-center text-gray-500">
+            {activeTab === "mainnet" ? (
+              <div>Mainnet networks coming soon</div>
+            ) : activeTab === "custom" ? (
+              <div>No custom networks available</div>
+            ) : (
+              <div>No networks available</div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
