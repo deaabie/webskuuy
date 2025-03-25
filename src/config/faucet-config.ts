@@ -9,7 +9,7 @@ export const FAUCET_PRIVATE_KEY = "802c18efdad3bf8eddb070847774db4c841d914ac8e04
 // Amount to send for each claim (in ether)
 export const CLAIM_AMOUNT = "0.001";
 
-// Network configuration with RPC URLs
+// Network configuration with RPC URLs - updated to match the latest testnet networks
 export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
   ethereum_sepolia: {
     id: "ethereum_sepolia",
@@ -27,28 +27,36 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     symbol: 'ETH',
     explorer: 'https://holesky.etherscan.io/tx/'
   },
-  ethereum_base: {
-    id: "ethereum_base",
+  base_sepolia: {
+    id: "base_sepolia",
     rpcUrl: 'https://sepolia.base.org',
-    chainId: 84532, // Base Goerli
-    name: 'Ethereum Base',
+    chainId: 84532, // Base Sepolia
+    name: 'Base Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.basescan.org/tx/'
   },
-  ethereum_optimism: {
-    id: "ethereum_optimism",
+  optimism_sepolia: {
+    id: "optimism_sepolia",
     rpcUrl: 'https://sepolia.optimism.io',
-    chainId: 11155420, // Optimism Goerli
-    name: 'Ethereum Optimism',
+    chainId: 11155420, // Optimism Sepolia
+    name: 'Optimism Sepolia',
     symbol: 'ETH',
-    explorer: 'https://sepolia-optimism.etherscan.io//tx/'
+    explorer: 'https://sepolia-optimism.etherscan.io/tx/'
   },
-  ethereum_arbitrum: {
-    id: "ethereum_arbitrum",
+  arbitrum_sepolia: {
+    id: "arbitrum_sepolia",
     rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
-    chainId: 421613, // Arbitrum Sepolia
-    name: 'Ethereum Arbitrum',
+    chainId: 421614, // Arbitrum Sepolia
+    name: 'Arbitrum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.arbiscan.io/tx/'
+  },
+  blast_sepolia: {
+    id: "blast_sepolia",
+    rpcUrl: 'https://sepolia.blast.io',
+    chainId: 168587773, // Blast Sepolia
+    name: 'Blast Sepolia',
+    symbol: 'ETH',
+    explorer: 'https://sepolia.blastscan.io/tx/'
   }
 };

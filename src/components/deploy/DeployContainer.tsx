@@ -143,9 +143,9 @@ const DeployContainer = () => {
       
       // Deploy with higher gas limit to ensure it can complete
       const deploymentOptions = {
-        gasLimit: 8000000, // Increased gas limit for more complex contracts
-        maxFeePerGas: ethers.parseUnits("50", "gwei"),
-        maxPriorityFeePerGas: ethers.parseUnits("5", "gwei"),
+        gasLimit: 10000000, // Increased gas limit for more complex contracts
+        maxFeePerGas: ethers.parseUnits("100", "gwei"),
+        maxPriorityFeePerGas: ethers.parseUnits("10", "gwei"),
       };
       
       // Deploy with or without constructor arguments
@@ -167,18 +167,49 @@ const DeployContainer = () => {
         setTxHash(txHash);
         
         console.log("Waiting for contract deployment to complete...");
-        await contract.waitForDeployment();
         
-        const contractAddress = await contract.getAddress();
-        console.log("Contract successfully deployed at address:", contractAddress);
-        
-        setContractAddress(contractAddress);
-        setDeploySuccess(true);
-        
-        toast({
-          title: "Smart contract deployed!",
-          description: `Your ${deployMode === 'basic' ? 'Simple Storage' : 'ERC20 Token'} contract has been successfully deployed to the blockchain.`,
+        // Add a timeout for transaction confirmation
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 120000); // 2 minutes timeout
         });
+        
+        // Wait for contract deployment with timeout
+        try {
+          await Promise.race([contract.waitForDeployment(), timeoutPromise]);
+          
+          const contractAddress = await contract.getAddress();
+          console.log("Contract successfully deployed at address:", contractAddress);
+          
+          setContractAddress(contractAddress);
+          setDeploySuccess(true);
+          
+          toast({
+            title: "Smart contract deployed!",
+            description: `Your ${deployMode === 'basic' ? 'Counter' : 'ERC20 Token'} contract has been successfully deployed to the blockchain.`,
+          });
+        } catch (timeoutError) {
+          console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
+          
+          // We don't fail here, just notify the user that it might take longer
+          toast({
+            title: "Deployment in progress",
+            description: "Your transaction is still being processed. This may take a few minutes. Check your wallet for updates.",
+          });
+          
+          // Continue waiting without timeout
+          await contract.waitForDeployment();
+          
+          const contractAddress = await contract.getAddress();
+          console.log("Contract successfully deployed at address:", contractAddress);
+          
+          setContractAddress(contractAddress);
+          setDeploySuccess(true);
+          
+          toast({
+            title: "Smart contract deployed!",
+            description: `Your ${deployMode === 'basic' ? 'Counter' : 'ERC20 Token'} contract has been successfully deployed to the blockchain.`,
+          });
+        }
       } else {
         throw new Error("No deployment transaction found");
       }
@@ -202,6 +233,12 @@ const DeployContainer = () => {
           errorMessage = "Invalid bytecode format. Please try again or contact support.";
         } else if (error.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet. Please try again.";
+        } else if (error.message.includes("replacement transaction underpriced")) {
+          errorMessage = "Transaction gas price too low. Please try again with a higher gas price or wait for the network to be less congested.";
+        } else if (error.message.includes("nonce has already been used")) {
+          errorMessage = "Transaction nonce conflict. Please try refreshing the page and try again.";
+        } else if (error.message.includes("intrinsic gas too low")) {
+          errorMessage = "Gas limit too low for this contract. Please try again with automatic gas settings.";
         } else if (error.message.length > 100) {
           errorMessage = error.message.substring(0, 100) + "...";
         } else {
@@ -263,7 +300,7 @@ const DeployContainer = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="basic" id="basic" />
-                        <Label htmlFor="basic" className="text-lg">Simple Storage</Label>
+                        <Label htmlFor="basic" className="text-lg">Counter Contract</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="erc20" id="erc20" />
@@ -274,10 +311,10 @@ const DeployContainer = () => {
                   
                   {deployMode === 'basic' ? (
                     <div className="space-y-2">
-                      <h3 className="text-xl font-medium">Simple Storage Contract</h3>
+                      <h3 className="text-xl font-medium">Counter Contract</h3>
                       <p className="text-muted-foreground mb-4">
-                        This contract allows you to store and retrieve a uint256 value. 
-                        After deployment, you can call the 'set' function to update the value.
+                        This contract allows you to maintain a counter value that can be incremented and decremented.
+                        After deployment, you can call 'increment()' and 'decrement()' functions to update the counter.
                       </p>
                     </div>
                   ) : (

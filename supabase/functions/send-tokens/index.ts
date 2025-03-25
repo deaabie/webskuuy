@@ -11,7 +11,7 @@ const corsHeaders = {
 // Replace with your actual private key for the faucet wallet
 const FAUCET_PRIVATE_KEY = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
 
-// Define RPC endpoints and network configuration
+// Define RPC endpoints and network configuration - updated to latest testnet networks
 const NETWORK_CONFIG = {
   ethereum_sepolia: {
     rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public gateway
@@ -27,26 +27,33 @@ const NETWORK_CONFIG = {
     symbol: 'ETH',
     explorer: 'https://holesky.etherscan.io/tx/'
   },
-  ethereum_base: {
-    rpcUrl: 'https://goerli.base.org',
-    chainId: 84531, // Base Goerli
-    name: 'Ethereum Base',
+  base_sepolia: {
+    rpcUrl: 'https://sepolia.base.org',
+    chainId: 84532, // Base Sepolia
+    name: 'Base Sepolia',
     symbol: 'ETH',
-    explorer: 'https://goerli.basescan.org/tx/'
+    explorer: 'https://sepolia.basescan.org/tx/'
   },
-  ethereum_optimism: {
-    rpcUrl: 'https://goerli.optimism.io',
-    chainId: 420, // Optimism Goerli
-    name: 'Ethereum Optimism',
+  optimism_sepolia: {
+    rpcUrl: 'https://sepolia.optimism.io',
+    chainId: 11155420, // Optimism Sepolia
+    name: 'Optimism Sepolia',
     symbol: 'ETH',
-    explorer: 'https://goerli-optimism.etherscan.io/tx/'
+    explorer: 'https://sepolia-optimism.etherscan.io/tx/'
   },
-  ethereum_arbitrum: {
-    rpcUrl: 'https://goerli-rollup.arbitrum.io/rpc',
-    chainId: 421613, // Arbitrum Goerli
-    name: 'Ethereum Arbitrum',
+  arbitrum_sepolia: {
+    rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
+    chainId: 421614, // Arbitrum Sepolia
+    name: 'Arbitrum Sepolia',
     symbol: 'ETH',
-    explorer: 'https://goerli.arbiscan.io/tx/'
+    explorer: 'https://sepolia.arbiscan.io/tx/'
+  },
+  blast_sepolia: {
+    rpcUrl: 'https://sepolia.blast.io',
+    chainId: 168587773, // Blast Sepolia
+    name: 'Blast Sepolia',
+    symbol: 'ETH',
+    explorer: 'https://sepolia.blastscan.io/tx/'
   }
 }
 
@@ -148,6 +155,9 @@ Deno.serve(async (req) => {
     const tx = await wallet.sendTransaction({
       to: address,
       value: ethers.parseEther(CLAIM_AMOUNT),
+      gasLimit: 21000, // Standard gas limit for ETH transfers
+      maxFeePerGas: ethers.parseUnits("5", "gwei"),
+      maxPriorityFeePerGas: ethers.parseUnits("1", "gwei")
     })
 
     console.log(`Transaction sent: ${tx.hash}`)

@@ -179,6 +179,8 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
   const [imageUrl, setImageUrl] = useState("");
   const [imageError, setImageError] = useState<string | null>(null);
   const [customNetworkDialog, setCustomNetworkDialog] = useState(false);
+  const [isImageTested, setIsImageTested] = useState(false);
+  const [imageTestResult, setImageTestResult] = useState(true);
 
   // Apply network images to networks
   const testnetsWithImages = TESTNETS.map(network => ({
@@ -214,6 +216,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
     setCurrentNetworkId(networkId);
     setImageUrl(networkImages[networkId] || "");
     setImageError(null);
+    setIsImageTested(false);
     setShowImageDialog(true);
   };
 
@@ -235,6 +238,24 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
     // Clear any previous errors
     setImageError(null);
     return true;
+  };
+
+  const testImageUrl = () => {
+    if (validateImageUrl(imageUrl)) {
+      // Create a test image to check if the URL is valid
+      const img = new Image();
+      img.onload = () => {
+        setImageTestResult(true);
+        setIsImageTested(true);
+        setImageError(null);
+      };
+      img.onerror = () => {
+        setImageTestResult(false);
+        setIsImageTested(true);
+        setImageError("Image couldn't be loaded. The URL might be invalid or the server doesn't allow direct access.");
+      };
+      img.src = imageUrl;
+    }
   };
 
   const saveNetworkImage = () => {
@@ -347,7 +368,10 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               <Input
                 id="imageUrl"
                 value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
+                onChange={(e) => {
+                  setImageUrl(e.target.value);
+                  setIsImageTested(false);
+                }}
                 placeholder="https://raw.githubusercontent.com/..."
                 className={imageError ? "border-red-500" : ""}
               />
@@ -357,18 +381,24 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               <p className="text-xs text-muted-foreground">
                 Example: https://raw.githubusercontent.com/user/repo/main/image.png
               </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={testImageUrl}
+                className="mt-1"
+              >
+                <RotateCw className="h-3 w-3 mr-2" /> Test URL
+              </Button>
             </div>
-            {imageUrl && (
+            {isImageTested && imageTestResult && (
               <div className="flex justify-center">
                 <div className="border border-border rounded-md p-2 bg-muted/50 max-w-[100px]">
                   <img
                     src={imageUrl}
                     alt="Preview"
                     className="max-h-16 max-w-16 object-contain mx-auto"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "https://placehold.co/40x40/svg?text=Error";
-                    }}
                   />
+                  <p className="text-xs text-green-500 text-center mt-2">Image loaded successfully!</p>
                 </div>
               </div>
             )}
@@ -385,7 +415,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               <Button variant="outline" onClick={() => setShowImageDialog(false)} className="mr-2">
                 Cancel
               </Button>
-              <Button onClick={saveNetworkImage}>Save</Button>
+              <Button onClick={saveNetworkImage} disabled={imageError !== null}>Save</Button>
             </div>
           </DialogFooter>
         </DialogContent>
