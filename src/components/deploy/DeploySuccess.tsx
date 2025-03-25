@@ -1,4 +1,3 @@
-
 import { Button } from "../ui/button";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { useState } from "react";
@@ -32,71 +31,78 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
   };
 
   const getExplorerUrl = (type: 'tx' | 'address') => {
-    const path = type === 'tx' ? `tx/${txHash}` : `address/${contractAddress}`;
+    const path = type === 'tx' ? `${txHash}` : `address/${contractAddress}`;
     
-    // Handle mainnet networks
-    if (network.includes('_mainnet') || !network.includes('_')) {
-      switch (network) {
-        case "ethereum_mainnet":
-          return `https://etherscan.io/${path}`;
-        case "polygon_mainnet":
-          return `https://polygonscan.com/${path}`;
-        case "optimism_mainnet":
-          return `https://optimistic.etherscan.io/${path}`;
-        case "arbitrum_mainnet":
-          return `https://arbiscan.io/${path}`;
-        case "base_mainnet":
-          return `https://basescan.org/${path}`;
-        case "blast_mainnet":
-          return `https://blastscan.io/${path}`;
-        default:
-          // Try to find a custom network first
-          const customNetworksStr = localStorage.getItem('customNetworks');
-          if (customNetworksStr) {
-            try {
-              const customNetworks = JSON.parse(customNetworksStr);
-              const customNetwork = customNetworks.find((n: any) => n.id === network);
-              if (customNetwork && customNetwork.blockExplorer) {
-                return `${customNetwork.blockExplorer}/${path}`;
-              }
-            } catch (e) {
-              console.error('Failed to parse custom networks', e);
-            }
+    // Try to find network in custom networks first
+    const customNetworksStr = localStorage.getItem('customNetworks');
+    if (customNetworksStr) {
+      try {
+        const customNetworks = JSON.parse(customNetworksStr);
+        const customNetwork = customNetworks.find((n: any) => n.id === network);
+        if (customNetwork && customNetwork.explorer) {
+          // Make sure explorer URL ends with /
+          const explorerBase = customNetwork.explorer.endsWith('/') 
+            ? customNetwork.explorer 
+            : `${customNetwork.explorer}/`;
+          
+          // If explorer already has tx/ or address/ in it, adjust accordingly
+          if (type === 'tx' && explorerBase.endsWith('tx/')) {
+            return `${explorerBase}${path}`;
+          } else if (type === 'address' && explorerBase.endsWith('address/')) {
+            return `${explorerBase}${contractAddress}`;
           }
-          // Default fallback
-          return `https://etherscan.io/${path}`;
+          
+          // Otherwise, return appropriate path
+          return type === 'tx' 
+            ? `${explorerBase}${path}`
+            : `${explorerBase}address/${contractAddress}`;
+        }
+      } catch (e) {
+        console.error('Failed to parse custom networks', e);
+      }
+    }
+
+    // Handle mainnet networks
+    if (network.includes('_mainnet') || network === 'ethereum' || network === 'arbitrum' || 
+        network === 'optimism' || network === 'base' || network === 'blast') {
+      
+      switch (network.replace('_mainnet', '')) {
+        case "ethereum":
+          return `https://etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "polygon":
+          return `https://polygonscan.com/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "optimism":
+          return `https://optimistic.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "arbitrum":
+          return `https://arbiscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "base":
+          return `https://basescan.org/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "blast":
+          return `https://blastscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        default:
+          return `https://etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
       }
     }
     // Handle testnet networks
     else {
-      switch (network) {
-        case "ethereum_sepolia":
-          return `https://sepolia.etherscan.io/${path}`;
-        case "ethereum_holesky":
-          return `https://holesky.etherscan.io/${path}`;
-        case "arbitrum_sepolia":
-          return `https://sepolia.arbiscan.io/${path}`;
-        case "optimism_sepolia":
-          return `https://sepolia-optimistic.etherscan.io/${path}`;
-        case "base_sepolia":
-          return `https://sepolia.basescan.org/${path}`;
-        case "blast_sepolia":
-          return `https://sepolia.blastscan.io/${path}`;
-        default:
-          // Try to use a custom explorer if available for custom networks
-          const customNetworksStr = localStorage.getItem('customNetworks');
-          if (customNetworksStr) {
-            try {
-              const customNetworks = JSON.parse(customNetworksStr);
-              const customNetwork = customNetworks.find((n: any) => n.id === network);
-              if (customNetwork && customNetwork.blockExplorer) {
-                return `${customNetwork.blockExplorer}/${path}`;
-              }
-            } catch (e) {
-              console.error('Failed to parse custom networks', e);
-            }
+      switch (network.replace('_sepolia', '').replace('_holesky', '')) {
+        case "ethereum":
+          if (network.includes('sepolia')) {
+            return `https://sepolia.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+          } else if (network.includes('holesky')) {
+            return `https://holesky.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
           }
-          return `https://etherscan.io/${path}`;
+          return `https://sepolia.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "arbitrum":
+          return `https://sepolia.arbiscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "optimism":
+          return `https://sepolia-optimistic.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "base":
+          return `https://sepolia.basescan.org/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        case "blast":
+          return `https://sepolia.blastscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
+        default:
+          return `https://sepolia.etherscan.io/${type}/${type === 'tx' ? txHash : contractAddress}`;
       }
     }
   };
@@ -144,7 +150,11 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => window.open(getExplorerUrl('tx'), '_blank')}
+            onClick={() => {
+              const url = getExplorerUrl('tx');
+              console.log("Opening transaction URL:", url);
+              window.open(url, '_blank');
+            }}
           >
             View Transaction <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
@@ -152,7 +162,11 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => window.open(getExplorerUrl('address'), '_blank')}
+            onClick={() => {
+              const url = getExplorerUrl('address');
+              console.log("Opening contract URL:", url);
+              window.open(url, '_blank');
+            }}
           >
             View Contract <ExternalLink className="ml-2 h-4 w-4" />
           </Button>
