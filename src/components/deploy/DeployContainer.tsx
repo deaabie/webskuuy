@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
-import { ExternalLink, Check } from 'lucide-react';
-import { getContractByMode, getInitialStorageValue } from '../../utils/contractUtils';
+import { ExternalLink } from 'lucide-react';
+import { getContractByMode } from '../../utils/contractUtils';
 import {
   Form,
   FormControl,
@@ -34,9 +33,6 @@ const DeployContainer = () => {
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  
-  // SimpleStorage specific fields
-  const [initialStorageValue, setInitialStorageValue] = useState(getInitialStorageValue());
 
   useEffect(() => {
     const getBalance = async () => {
@@ -111,12 +107,8 @@ const DeployContainer = () => {
     });
 
     try {
-      // Prepare deployment arguments based on mode
-      const deployArgs = deployMode === 'storage' 
-        ? { initialValue: parseInt(initialStorageValue) } 
-        : null;
-      
-      const contractData = getContractByMode(deployMode, deployArgs);
+      // Get contract data based on deployment mode
+      const contractData = getContractByMode(deployMode);
       
       console.log(`Deploying ${deployMode} contract`);
       console.log("Contract args:", contractData.contractArgs);
@@ -296,17 +288,8 @@ const DeployContainer = () => {
                       <h3 className="text-xl font-medium">SimpleStorage Contract</h3>
                       <p className="text-muted-foreground mb-4">
                         This contract allows you to store and retrieve a simple numeric value on the blockchain.
+                        After deployment, you can call 'set(uint256)' to store a value and 'get()' to retrieve it.
                       </p>
-                      <div>
-                        <Label htmlFor="initialValue">Initial Storage Value</Label>
-                        <Input 
-                          id="initialValue"
-                          placeholder="42" 
-                          value={initialStorageValue}
-                          onChange={(e) => setInitialStorageValue(e.target.value)}
-                          type="number"
-                        />
-                      </div>
                     </div>
                   )}
                   

@@ -34,42 +34,53 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
   const getExplorerUrl = (type: 'tx' | 'address') => {
     const path = type === 'tx' ? `tx/${txHash}` : `address/${contractAddress}`;
     
-    // Extract network type (mainnet/testnet) and chain from network id
-    const [chain, networkType] = network.split('_');
-    
     // Handle mainnet networks
-    if (networkType === 'mainnet') {
-      switch (chain) {
-        case 'ethereum':
+    if (network.includes('_mainnet') || !network.includes('_')) {
+      switch (network) {
+        case "ethereum_mainnet":
           return `https://etherscan.io/${path}`;
-        case 'polygon':
+        case "polygon_mainnet":
           return `https://polygonscan.com/${path}`;
-        case 'optimism':
+        case "optimism_mainnet":
           return `https://optimistic.etherscan.io/${path}`;
-        case 'arbitrum':
+        case "arbitrum_mainnet":
           return `https://arbiscan.io/${path}`;
-        case 'base':
+        case "base_mainnet":
           return `https://basescan.org/${path}`;
-        case 'blast':
+        case "blast_mainnet":
           return `https://blastscan.io/${path}`;
         default:
+          // Try to find a custom network first
+          const customNetworksStr = localStorage.getItem('customNetworks');
+          if (customNetworksStr) {
+            try {
+              const customNetworks = JSON.parse(customNetworksStr);
+              const customNetwork = customNetworks.find((n: any) => n.id === network);
+              if (customNetwork && customNetwork.blockExplorer) {
+                return `${customNetwork.blockExplorer}/${path}`;
+              }
+            } catch (e) {
+              console.error('Failed to parse custom networks', e);
+            }
+          }
+          // Default fallback
           return `https://etherscan.io/${path}`;
       }
     }
     // Handle testnet networks
     else {
       switch (network) {
-        case 'ethereum_sepolia':
+        case "ethereum_sepolia":
           return `https://sepolia.etherscan.io/${path}`;
-        case 'ethereum_holesky':
+        case "ethereum_holesky":
           return `https://holesky.etherscan.io/${path}`;
-        case 'arbitrum_sepolia':
+        case "arbitrum_sepolia":
           return `https://sepolia.arbiscan.io/${path}`;
-        case 'optimism_sepolia':
+        case "optimism_sepolia":
           return `https://sepolia-optimistic.etherscan.io/${path}`;
-        case 'base_sepolia':
+        case "base_sepolia":
           return `https://sepolia.basescan.org/${path}`;
-        case 'blast_sepolia':
+        case "blast_sepolia":
           return `https://sepolia.blastscan.io/${path}`;
         default:
           // Try to use a custom explorer if available for custom networks
