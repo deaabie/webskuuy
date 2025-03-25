@@ -40,7 +40,10 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectorProps) => {
         <SelectValue placeholder="Select Network" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="" disabled>Select Network</SelectItem>
+        {/* Replace the problematic disabled item with a label or separator */}
+        <SelectItem value="select_placeholder" disabled className="font-bold">
+          Select Network
+        </SelectItem>
         
         {/* Testnets from config */}
         <SelectItem value="testnet_header" disabled className="font-bold bg-muted">
