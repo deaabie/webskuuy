@@ -36,7 +36,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     name: 'Base Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.basescan.org/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/0xPolygon/polygon-token-assets/main/assets/base/info/logo.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png'
   },
   optimism_sepolia: {
     id: "optimism_sepolia",

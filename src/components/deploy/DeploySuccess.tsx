@@ -18,10 +18,16 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
     tx: "",
     address: ""
   });
+  const [networkSymbol, setNetworkSymbol] = useState("ETH");
 
   useEffect(() => {
     // Set the explorer URLs when component mounts or network/txHash/address changes
-    setExplorerUrls(getExplorerUrls());
+    const urls = getExplorerUrls();
+    setExplorerUrls(urls);
+    
+    // Get the network symbol
+    const symbol = getNetworkSymbol();
+    setNetworkSymbol(symbol);
   }, [network, txHash, contractAddress]);
 
   const copyToClipboard = (text: string, type: 'tx' | 'address') => {
@@ -41,6 +47,31 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
     });
   };
 
+  const getNetworkSymbol = (): string => {
+    // Try to find network in predefined networks first
+    if (network && NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG]) {
+      return NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG].symbol;
+    }
+    
+    // Try to find network in custom networks from localStorage
+    const customNetworksStr = localStorage.getItem('customNetworks');
+    if (customNetworksStr) {
+      try {
+        const customNetworks = JSON.parse(customNetworksStr);
+        const customNetwork = customNetworks.find((n: any) => n.id === network);
+        
+        if (customNetwork && customNetwork.symbol) {
+          return customNetwork.symbol;
+        }
+      } catch (e) {
+        console.error('Failed to parse custom networks', e);
+      }
+    }
+
+    // Default to ETH for unknown networks
+    return "ETH";
+  };
+
   const getExplorerUrls = () => {
     let txUrl = "";
     let addressUrl = "";
@@ -56,7 +87,12 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
       }
       
       txUrl = `${explorerBase}${txHash}`;
-      addressUrl = `${explorerBase.replace(/tx\/$/, '')}address/${contractAddress}`;
+      // For address URL, replace tx/ with address/ if present, otherwise add address/
+      if (explorerBase.includes('tx/')) {
+        addressUrl = explorerBase.replace('tx/', 'address/') + contractAddress;
+      } else {
+        addressUrl = `${explorerBase}address/${contractAddress}`;
+      }
       
       console.log("Using predefined network explorer:", network, explorerBase);
       return { tx: txUrl, address: addressUrl };
@@ -169,6 +205,13 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
             </Button>
           </div>
           <div className="mt-1 break-all font-mono text-sm">{contractAddress || "N/A"}</div>
+        </div>
+        
+        <div className="w-full bg-muted p-4 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Network Currency:</span>
+          </div>
+          <div className="mt-1 font-mono text-sm">{networkSymbol}</div>
         </div>
         
         <div className="w-full space-y-3">
