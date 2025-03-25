@@ -35,7 +35,7 @@ const DEFAULT_NETWORK_IMAGES: NetworkImage = {
   ethereum_goerli: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
   Citrea: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png",
   optimism_mainnet: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
-  optimism_sepolia: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
+  Berachain_bepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png",
   arbitrum_mainnet: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
   arbitrum_sepolia: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
   base_mainnet: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png",
@@ -74,13 +74,13 @@ const TESTNETS: NetworkConfig[] = [
     imageUrl: DEFAULT_NETWORK_IMAGES.base_sepolia
   },
   {
-    id: "optimism_sepolia",
-    chainId: 11155420,
-    name: "Optimism Sepolia",
-    symbol: "ETH",
-    rpcUrl: "https://sepolia.optimism.io",
-    explorer: "https://sepolia-optimism.etherscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.optimism_sepolia
+    id: "Berachain_bepolia",
+    chainId: 80069,
+    name: "Berachain bepolia",
+    symbol: "BERA",
+    rpcUrl: "https://bepolia.rpc.berachain.com",
+    explorer: "https://bepolia.beratrail.io/tx/",
+    imageUrl: DEFAULT_NETWORK_IMAGES.Berachain_bepolia
   },
   {
     id: "arbitrum_sepolia",
