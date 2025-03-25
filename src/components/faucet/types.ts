@@ -6,6 +6,7 @@ export interface NetworkConfig {
   rpcUrl: string;
   chainId: number;
   explorer: string;
+  imageUrl?: string;
 }
 
 export interface TransactionDetails {
