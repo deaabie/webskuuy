@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -30,27 +29,8 @@ const DeployContainer = () => {
   const [txHash, setTxHash] = useState("");
   const [contractAddress, setContractAddress] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
-  const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
-
-  useEffect(() => {
-    const getBalance = async () => {
-      if (provider && walletAddress) {
-        try {
-          const balance = await provider.getBalance(walletAddress);
-          setWalletBalance(ethers.formatEther(balance));
-        } catch (error) {
-          console.error("Error fetching balance:", error);
-          setWalletBalance(null);
-        }
-      } else {
-        setWalletBalance(null);
-      }
-    };
-
-    getBalance();
-  }, [provider, walletAddress, network]);
 
   const handleWalletConnection = (status: boolean, address: string, providerInstance: ethers.Provider | null, signerInstance: ethers.Signer | null) => {
     setConnected(status);
@@ -107,14 +87,12 @@ const DeployContainer = () => {
     });
 
     try {
-      // Get contract data based on deployment mode
       const contractData = getContractByMode(deployMode);
       
       console.log(`Deploying ${deployMode} contract`);
       console.log("Contract args:", contractData.contractArgs);
       console.log("Bytecode length:", contractData.bytecode.length);
       
-      // Create contract factory
       const contractFactory = new ethers.ContractFactory(
         contractData.abi, 
         contractData.bytecode, 
@@ -123,12 +101,10 @@ const DeployContainer = () => {
       
       console.log("Contract factory created, attempting deployment...");
       
-      // Deploy with higher gas limit to ensure it can complete
       const deploymentOptions = {
-        gasLimit: 3000000, // Increased gas limit for more complex contracts
+        gasLimit: 3000000,
       };
       
-      // Deploy with or without constructor arguments
       let contract;
       if (contractData.contractArgs && contractData.contractArgs.length > 0) {
         console.log("Deploying with args:", contractData.contractArgs);
@@ -148,12 +124,10 @@ const DeployContainer = () => {
         
         console.log("Waiting for contract deployment to complete...");
         
-        // Add a timeout for transaction confirmation
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 180000); // 3 minutes timeout
+          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 180000);
         });
         
-        // Wait for contract deployment with timeout
         try {
           await Promise.race([contract.waitForDeployment(), timeoutPromise]);
           
@@ -170,13 +144,11 @@ const DeployContainer = () => {
         } catch (timeoutError) {
           console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
           
-          // We don't fail here, just notify the user that it might take longer
           toast({
             title: "Deployment in progress",
             description: "Your transaction is still being processed. This may take a few minutes. Check your wallet for updates.",
           });
           
-          // Continue waiting without timeout
           await contract.waitForDeployment();
           
           const contractAddress = await contract.getAddress();
@@ -238,15 +210,6 @@ const DeployContainer = () => {
             <div className="space-y-4">
               <div className="mb-6">
                 <ConnectWalletButton onConnectionChange={handleWalletConnection} />
-                
-                {walletBalance !== null && connected && (
-                  <div className="mt-2 text-sm">
-                    <span className="text-muted-foreground">Balance: </span>
-                    <span className="font-medium text-green-500">
-                      {parseFloat(walletBalance).toFixed(4)} ETH
-                    </span>
-                  </div>
-                )}
               </div>
               
               {connected && (
