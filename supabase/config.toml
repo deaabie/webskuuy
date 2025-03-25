@@ -1,6 +1,5 @@
 
 project_id = "vgxewywkaetxpjgzhxee"
 
-[[functions]]
-name = "send-tokens"
+[functions.send-tokens]
 verify_jwt = false
