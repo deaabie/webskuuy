@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Check, Copy, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
-import { NETWORK_CONFIG } from "@/config/faucet-config";
+import { DEPLOY_NETWORK_CONFIG } from "@/config/deploy-config";
 
 interface DeploySuccessProps {
   txHash: string;
@@ -49,8 +49,8 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
 
   const getNetworkSymbol = (): string => {
     // Try to find network in predefined networks first
-    if (network && NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG]) {
-      return NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG].symbol;
+    if (network && DEPLOY_NETWORK_CONFIG[network as keyof typeof DEPLOY_NETWORK_CONFIG]) {
+      return DEPLOY_NETWORK_CONFIG[network as keyof typeof DEPLOY_NETWORK_CONFIG].symbol;
     }
     
     // Try to find network in custom networks from localStorage
@@ -77,8 +77,8 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
     let addressUrl = "";
 
     // Try to find network in predefined networks first
-    if (network && NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG]) {
-      const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG];
+    if (network && DEPLOY_NETWORK_CONFIG[network as keyof typeof DEPLOY_NETWORK_CONFIG]) {
+      const networkConfig = DEPLOY_NETWORK_CONFIG[network as keyof typeof DEPLOY_NETWORK_CONFIG];
       
       let explorerBase = networkConfig.explorer;
       // Make sure explorer URL ends with /

@@ -1,4 +1,3 @@
-
 # Welcome to your Lovable project
 
 ## Project info
@@ -66,6 +65,47 @@ const supabaseUrl = 'YOUR_SUPABASE_PROJECT_URL';
 const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
 ```
 
+## Customizing Network Configurations
+
+### Deploy Page Configuration
+
+The Deploy page uses a dedicated configuration file to define blockchain networks. You can easily customize networks by modifying the `src/config/deploy-config.ts` file.
+
+#### Adding or Modifying Networks
+
+To add or modify a network, edit the `DEPLOY_NETWORK_CONFIG` object in `src/config/deploy-config.ts`:
+
+```typescript
+export const DEPLOY_NETWORK_CONFIG: Record<string, NetworkConfig> = {
+  // Example of adding a new network
+  "my_network": {
+    id: "my_network",               // Unique identifier
+    rpcUrl: 'https://rpc.example.com', // RPC endpoint
+    chainId: 12345,                 // Numeric chain ID
+    name: 'My Network',             // Display name
+    symbol: 'MYC',                  // Currency symbol
+    explorer: 'https://explorer.example.com/tx/', // Explorer URL (include /tx/)
+    imageUrl: 'https://raw.githubusercontent.com/username/repo/main/network-logo.png' // Logo URL (preferably from GitHub raw)
+  },
+  // Existing networks...
+};
+```
+
+#### Network Image URLs
+
+For network logos, we recommend using GitHub raw URLs for reliable hosting:
+
+1. Upload your network logo image to a GitHub repository
+2. Navigate to the image in the repository
+3. Click on "Raw" to get the direct image URL
+4. Use this URL in the `imageUrl` field
+
+The URL should follow the format: `https://raw.githubusercontent.com/username/repo/branch/path/to/image.png`
+
+#### Custom Networks
+
+Users can also add custom networks through the UI. These are stored in the browser's localStorage and will persist between sessions.
+
 ## Project Structure
 
 - `/src` - Source code
@@ -75,6 +115,7 @@ const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
   - `/hooks` - Custom React hooks
   - `/types` - TypeScript type definitions
   - `/integrations` - Third-party integrations (Supabase)
+  - `/config` - Configuration files for different app sections
 
 ## Built With
 
