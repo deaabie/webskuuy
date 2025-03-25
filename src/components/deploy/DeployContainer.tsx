@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import ConnectWalletButton from './ConnectWalletButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
@@ -35,13 +34,9 @@ const DeployContainer = () => {
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  const [initialStorageValue, setInitialStorageValue] = useState("0");
-
-  // ERC20 Token specific fields
-  const [tokenName, setTokenName] = useState("Simple Token"); 
-  const [tokenSymbol, setTokenSymbol] = useState("SMP");
-  const [initialSupply, setInitialSupply] = useState("1000000");
-  const [useSkuuyToken, setUseSkuuyToken] = useState(false);
+  
+  // SimpleStorage specific fields
+  const [initialStorageValue, setInitialStorageValue] = useState(getInitialStorageValue());
 
   useEffect(() => {
     const getBalance = async () => {
@@ -117,13 +112,8 @@ const DeployContainer = () => {
 
     try {
       // Prepare deployment arguments based on mode
-      const deployArgs = deployMode === 'erc20' 
-        ? { 
-            initialSupply: parseInt(initialSupply), 
-            tokenName, 
-            tokenSymbol,
-            useSkuuyToken
-          } 
+      const deployArgs = deployMode === 'storage' 
+        ? { initialValue: parseInt(initialStorageValue) } 
         : null;
       
       const contractData = getContractByMode(deployMode, deployArgs);
@@ -143,9 +133,7 @@ const DeployContainer = () => {
       
       // Deploy with higher gas limit to ensure it can complete
       const deploymentOptions = {
-        gasLimit: 10000000, // Increased gas limit for more complex contracts
-        maxFeePerGas: ethers.parseUnits("100", "gwei"),
-        maxPriorityFeePerGas: ethers.parseUnits("10", "gwei"),
+        gasLimit: 3000000, // Increased gas limit for more complex contracts
       };
       
       // Deploy with or without constructor arguments
@@ -170,7 +158,7 @@ const DeployContainer = () => {
         
         // Add a timeout for transaction confirmation
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 120000); // 2 minutes timeout
+          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 180000); // 3 minutes timeout
         });
         
         // Wait for contract deployment with timeout
@@ -185,7 +173,7 @@ const DeployContainer = () => {
           
           toast({
             title: "Smart contract deployed!",
-            description: `Your ${deployMode === 'basic' ? 'Counter' : 'ERC20 Token'} contract has been successfully deployed to the blockchain.`,
+            description: `Your ${deployMode === 'basic' ? 'Counter' : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
           });
         } catch (timeoutError) {
           console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
@@ -207,7 +195,7 @@ const DeployContainer = () => {
           
           toast({
             title: "Smart contract deployed!",
-            description: `Your ${deployMode === 'basic' ? 'Counter' : 'ERC20 Token'} contract has been successfully deployed to the blockchain.`,
+            description: `Your ${deployMode === 'basic' ? 'Counter' : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
           });
         }
       } else {
@@ -223,22 +211,8 @@ const DeployContainer = () => {
           errorMessage = "Transaction was rejected by the user.";
         } else if (error.message.includes("insufficient funds")) {
           errorMessage = "Insufficient funds to deploy the contract. Please add more ETH to your wallet.";
-        } else if (error.message.includes("gas required exceeds allowance")) {
-          errorMessage = "Gas limit too low. Contract deployment needs more gas.";
-        } else if (error.message.includes("missing revert data")) {
-          errorMessage = "Network error during deployment. Please try again or select a different network.";
-        } else if (error.message.includes("transaction execution reverted")) {
-          errorMessage = "Contract deployment reverted. Please try a different network or check your token parameters.";
-        } else if (error.message.includes("invalid bytecode")) {
-          errorMessage = "Invalid bytecode format. Please try again or contact support.";
         } else if (error.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet. Please try again.";
-        } else if (error.message.includes("replacement transaction underpriced")) {
-          errorMessage = "Transaction gas price too low. Please try again with a higher gas price or wait for the network to be less congested.";
-        } else if (error.message.includes("nonce has already been used")) {
-          errorMessage = "Transaction nonce conflict. Please try refreshing the page and try again.";
-        } else if (error.message.includes("intrinsic gas too low")) {
-          errorMessage = "Gas limit too low for this contract. Please try again with automatic gas settings.";
         } else if (error.message.length > 100) {
           errorMessage = error.message.substring(0, 100) + "...";
         } else {
@@ -303,8 +277,8 @@ const DeployContainer = () => {
                         <Label htmlFor="basic" className="text-lg">Counter Contract</Label>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="erc20" id="erc20" />
-                        <Label htmlFor="erc20" className="text-lg">ERC20 Token</Label>
+                        <RadioGroupItem value="storage" id="storage" />
+                        <Label htmlFor="storage" className="text-lg">SimpleStorage Contract</Label>
                       </div>
                     </RadioGroup>
                   </div>
@@ -318,71 +292,21 @@ const DeployContainer = () => {
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <Switch 
-                          id="useSkuuyToken" 
-                          checked={useSkuuyToken}
-                          onCheckedChange={setUseSkuuyToken}
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-medium">SimpleStorage Contract</h3>
+                      <p className="text-muted-foreground mb-4">
+                        This contract allows you to store and retrieve a simple numeric value on the blockchain.
+                      </p>
+                      <div>
+                        <Label htmlFor="initialValue">Initial Storage Value</Label>
+                        <Input 
+                          id="initialValue"
+                          placeholder="42" 
+                          value={initialStorageValue}
+                          onChange={(e) => setInitialStorageValue(e.target.value)}
+                          type="number"
                         />
-                        <Label htmlFor="useSkuuyToken">Use Skuuy Token Standard</Label>
                       </div>
-                      
-                      {useSkuuyToken ? (
-                        <div className="p-4 bg-muted rounded-md">
-                          <div className="flex items-start space-x-2">
-                            <Check className="h-5 w-5 text-green-500 mt-0.5" />
-                            <div>
-                              <h4 className="font-medium">Skuuy Token Properties:</h4>
-                              <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                                <li>• Name: Skuuy Token</li>
-                                <li>• Symbol: SKUUY</li>
-                                <li>• Decimals: 18</li>
-                                <li>• Total Supply: 21,000 tokens</li>
-                                <li>• All tokens will be sent to your wallet</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <div>
-                            <Label htmlFor="tokenName">Token Name</Label>
-                            <Input 
-                              id="tokenName"
-                              placeholder="Simple Token" 
-                              value={tokenName}
-                              onChange={(e) => setTokenName(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="tokenSymbol">Token Symbol</Label>
-                            <Input 
-                              id="tokenSymbol"
-                              placeholder="SMP" 
-                              value={tokenSymbol}
-                              onChange={(e) => setTokenSymbol(e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor="initialSupply">Initial Supply (tokens)</Label>
-                            <Input 
-                              id="initialSupply"
-                              placeholder="1000000" 
-                              value={initialSupply}
-                              onChange={(e) => setInitialSupply(e.target.value)}
-                              type="number"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              This is the number of tokens before decimals (each token has 18 decimals)
-                            </p>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            Your token will be deployed with full ERC20 functionality.
-                            The entire supply will be sent to your connected wallet address.
-                          </p>
-                        </>
-                      )}
                     </div>
                   )}
                   

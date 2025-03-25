@@ -34,46 +34,59 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
   const getExplorerUrl = (type: 'tx' | 'address') => {
     const path = type === 'tx' ? `tx/${txHash}` : `address/${contractAddress}`;
     
-    switch (network) {
-      case 'ethereum':
-        return `https://etherscan.io/${path}`;
-      case 'polygon':
-        return `https://polygonscan.com/${path}`;
-      case 'bsc':
-        return `https://bscscan.com/${path}`;
-      case 'optimism':
-        return `https://optimistic.etherscan.io/${path}`;
-      case 'arbitrum':
-        return `https://arbiscan.io/${path}`;
-      case 'avalanche':
-        return `https://snowtrace.io/${path}`;
-      case 'base':
-        return `https://basescan.org/${path}`;
-      case 'sepolia':
-        return `https://sepolia.etherscan.io/${path}`;
-      case 'arbitrum-sepolia':
-        return `https://sepolia.arbiscan.io/${path}`;
-      case 'optimism-sepolia':
-        return `https://sepolia-optimistic.etherscan.io/${path}`;
-      case 'base-sepolia':
-        return `https://sepolia.basescan.org/${path}`;
-      case 'blast-sepolia':
-        return `https://sepolia.blastscan.io/${path}`;
-      default:
-        // Try to use a custom explorer if available for custom networks
-        const customNetworksStr = localStorage.getItem('customNetworks');
-        if (customNetworksStr) {
-          try {
-            const customNetworks = JSON.parse(customNetworksStr);
-            const customNetwork = customNetworks.find((n: any) => n.id === network);
-            if (customNetwork && customNetwork.blockExplorer) {
-              return `${customNetwork.blockExplorer}/${path}`;
+    // Extract network type (mainnet/testnet) and chain from network id
+    const [chain, networkType] = network.split('_');
+    
+    // Handle mainnet networks
+    if (networkType === 'mainnet') {
+      switch (chain) {
+        case 'ethereum':
+          return `https://etherscan.io/${path}`;
+        case 'polygon':
+          return `https://polygonscan.com/${path}`;
+        case 'optimism':
+          return `https://optimistic.etherscan.io/${path}`;
+        case 'arbitrum':
+          return `https://arbiscan.io/${path}`;
+        case 'base':
+          return `https://basescan.org/${path}`;
+        case 'blast':
+          return `https://blastscan.io/${path}`;
+        default:
+          return `https://etherscan.io/${path}`;
+      }
+    }
+    // Handle testnet networks
+    else {
+      switch (network) {
+        case 'ethereum_sepolia':
+          return `https://sepolia.etherscan.io/${path}`;
+        case 'ethereum_holesky':
+          return `https://holesky.etherscan.io/${path}`;
+        case 'arbitrum_sepolia':
+          return `https://sepolia.arbiscan.io/${path}`;
+        case 'optimism_sepolia':
+          return `https://sepolia-optimistic.etherscan.io/${path}`;
+        case 'base_sepolia':
+          return `https://sepolia.basescan.org/${path}`;
+        case 'blast_sepolia':
+          return `https://sepolia.blastscan.io/${path}`;
+        default:
+          // Try to use a custom explorer if available for custom networks
+          const customNetworksStr = localStorage.getItem('customNetworks');
+          if (customNetworksStr) {
+            try {
+              const customNetworks = JSON.parse(customNetworksStr);
+              const customNetwork = customNetworks.find((n: any) => n.id === network);
+              if (customNetwork && customNetwork.blockExplorer) {
+                return `${customNetwork.blockExplorer}/${path}`;
+              }
+            } catch (e) {
+              console.error('Failed to parse custom networks', e);
             }
-          } catch (e) {
-            console.error('Failed to parse custom networks', e);
           }
-        }
-        return `https://etherscan.io/${path}`;
+          return `https://etherscan.io/${path}`;
+      }
     }
   };
 

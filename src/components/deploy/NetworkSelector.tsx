@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RotateCw, Settings, Plus, Chain, Link } from 'lucide-react';
+import { RotateCw, Settings, Plus, Link } from 'lucide-react';
 
 // Define network types and interfaces
 interface NetworkImage {
