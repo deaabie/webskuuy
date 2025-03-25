@@ -11,7 +11,6 @@ import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
 import { ExternalLink } from 'lucide-react';
 import { getContractByMode } from '../../utils/contractUtils';
-import { DEPLOY_NETWORK_CONFIG, DEPLOYMENT_GAS_LIMIT, GAS_PRICE_CONFIG } from '@/config/deploy-config';
 import {
   Form,
   FormControl,
@@ -34,7 +33,6 @@ const DeployContainer = () => {
   const [walletBalance, setWalletBalance] = useState<string | null>(null);
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
-  const [networkSymbol, setNetworkSymbol] = useState("ETH");
 
   useEffect(() => {
     const getBalance = async () => {
@@ -53,35 +51,6 @@ const DeployContainer = () => {
 
     getBalance();
   }, [provider, walletAddress, network]);
-
-  useEffect(() => {
-    // Update network symbol when network changes
-    if (network) {
-      if (DEPLOY_NETWORK_CONFIG[network as keyof typeof DEPLOY_NETWORK_CONFIG]) {
-        setNetworkSymbol(DEPLOY_NETWORK_CONFIG[network as keyof typeof DEPLOY_NETWORK_CONFIG].symbol);
-      } else {
-        // Check custom networks
-        const customNetworksStr = localStorage.getItem('customNetworks');
-        if (customNetworksStr) {
-          try {
-            const customNetworks = JSON.parse(customNetworksStr);
-            const customNetwork = customNetworks.find((n: any) => n.id === network);
-            
-            if (customNetwork && customNetwork.symbol) {
-              setNetworkSymbol(customNetwork.symbol);
-            } else {
-              setNetworkSymbol("ETH"); // Default
-            }
-          } catch (e) {
-            console.error('Failed to parse custom networks', e);
-            setNetworkSymbol("ETH");
-          }
-        } else {
-          setNetworkSymbol("ETH");
-        }
-      }
-    }
-  }, [network]);
 
   const handleWalletConnection = (status: boolean, address: string, providerInstance: ethers.Provider | null, signerInstance: ethers.Signer | null) => {
     setConnected(status);
@@ -156,9 +125,7 @@ const DeployContainer = () => {
       
       // Deploy with higher gas limit to ensure it can complete
       const deploymentOptions = {
-        gasLimit: DEPLOYMENT_GAS_LIMIT, // Use from config
-        maxFeePerGas: ethers.parseUnits(GAS_PRICE_CONFIG.maxFeePerGas, "gwei"),
-        maxPriorityFeePerGas: ethers.parseUnits(GAS_PRICE_CONFIG.maxPriorityFeePerGas, "gwei")
+        gasLimit: 3000000, // Increased gas limit for more complex contracts
       };
       
       // Deploy with or without constructor arguments
