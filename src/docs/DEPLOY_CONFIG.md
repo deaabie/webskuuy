@@ -96,3 +96,5 @@ Users can also add custom networks directly through the user interface:
 5. Click "Add Network" to save
 
 Custom networks are stored in the browser's localStorage and are only available in the browser where they were added.
+
+Note: Custom networks automatically use a default network logo. The Network Image URL field has been removed to simplify the custom network creation process.

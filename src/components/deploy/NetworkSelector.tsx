@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +34,9 @@ const saveCustomNetworks = (networks: NetworkConfig[]) => {
   }
 };
 
+// Default custom network image
+const DEFAULT_CUSTOM_NETWORK_IMAGE = "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/custom%20network.png";
+
 const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
   const [selectedNetwork, setSelectedNetwork] = useState("");
   const [networkMode, setNetworkMode] = useState("testnet");
@@ -47,7 +49,6 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
     symbol: "ETH",
     rpcUrl: "",
     explorer: "",
-    imageUrl: ""
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   
@@ -74,7 +75,6 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
       symbol: "ETH",
       rpcUrl: "",
       explorer: "",
-      imageUrl: ""
     });
     setFormErrors({});
     setShowAddNetworkDialog(true);
@@ -108,7 +108,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
       symbol: newNetwork.symbol || "ETH",
       rpcUrl: newNetwork.rpcUrl!,
       explorer: newNetwork.explorer!,
-      imageUrl: newNetwork.imageUrl || "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png"
+      imageUrl: DEFAULT_CUSTOM_NETWORK_IMAGE
     };
     
     const updatedNetworks = [...customNetworks, networkToAdd];
@@ -315,19 +315,6 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
               {formErrors.explorer && <p className="text-xs text-red-500">{formErrors.explorer}</p>}
               <p className="text-xs text-muted-foreground">
                 Make sure to include /tx/ at the end for transaction links
-              </p>
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="imageUrl">Network Image URL (GitHub)</Label>
-              <Input
-                id="imageUrl"
-                placeholder="https://raw.githubusercontent.com/username/repo/main/image.png"
-                value={newNetwork.imageUrl || ""}
-                onChange={(e) => setNewNetwork({...newNetwork, imageUrl: e.target.value})}
-              />
-              <p className="text-xs text-muted-foreground">
-                Enter a GitHub raw URL to your network's logo image (must start with https://raw.githubusercontent.com/)
               </p>
             </div>
           </div>
