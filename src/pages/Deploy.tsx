@@ -7,7 +7,7 @@ const Deploy = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/90 text-foreground">
       <Helmet>
-        <title>Deploy Smart Contract | SKUUY</title>
+        <title>Skuuy.com | Deploy Smart Contract</title>
         <meta name="description" content="Deploy your own smart contract on various blockchain networks" />
       </Helmet>
       
