@@ -18,7 +18,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   ethereum_holesky: {
     id: "ethereum_holesky",
@@ -27,7 +27,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     name: 'Ethereum Holesky',
     symbol: 'ETH',
     explorer: 'https://holesky.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   base_sepolia: {
     id: "base_sepolia",
@@ -45,7 +45,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     name: 'Optimism Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia-optimism.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   arbitrum_sepolia: {
     id: "arbitrum_sepolia",
@@ -54,7 +54,7 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     name: 'Arbitrum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.arbiscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   blast_sepolia: {
     id: "blast_sepolia",
@@ -63,6 +63,6 @@ export const NETWORK_CONFIG: Record<string, NetworkConfig> = {
     name: 'Blast Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.blastscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   }
 };
