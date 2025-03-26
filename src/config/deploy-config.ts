@@ -44,14 +44,14 @@ const TESTNETS: Record<string, NetworkConfig> = {
     explorer: 'https://sepolia-optimism.etherscan.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg'
   },
-  arbitrum_sepolia: {
-    id: "arbitrum_sepolia",
-    rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
-    chainId: 421614,
-    name: 'Arbitrum Sepolia',
-    symbol: 'ETH',
-    explorer: 'https://sepolia.arbiscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png'
+  monad_testnet: {
+    id: "monad_testnet",
+    rpcUrl: 'https://testnet-rpc.monad.xyz',
+    chainId: 10143,
+    name: 'Monad Testnet',
+    symbol: 'MON',
+    explorer: 'https://testnet.monadexplorer.com/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/monad.png'
   },
   blast_sepolia: {
     id: "blast_sepolia",
