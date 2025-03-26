@@ -42,7 +42,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
     name: 'Optimism Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia-optimism.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/optimism-ethereum-op-logo.png'
   },
   monad_testnet: {
     id: "monad_testnet",
