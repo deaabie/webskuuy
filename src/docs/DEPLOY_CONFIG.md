@@ -84,3 +84,15 @@ const allTestnets = getTestnets();
 // Get all mainnets
 const allMainnets = getMainnets();
 ```
+
+## Adding Custom Networks in the UI
+
+Users can also add custom networks directly through the user interface:
+
+1. Go to the Deploy page
+2. Select the "Custom" tab in the network selector
+3. Click "Add Network"
+4. Fill in the network details
+5. Click "Add Network" to save
+
+Custom networks are stored in the browser's localStorage and are only available in the browser where they were added.

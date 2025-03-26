@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
 import { ExternalLink } from 'lucide-react';
 import { getContractByMode } from '../../utils/contractUtils';
+import { getNetworkById } from '@/config/deploy-config';
 import {
   Form,
   FormControl,

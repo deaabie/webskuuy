@@ -8,147 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-// Define network types and interfaces
-interface NetworkImage {
-  [key: string]: string;
-}
-
-interface NetworkConfig {
-  id: string;
-  chainId: number;
-  name: string;
-  symbol: string;
-  rpcUrl: string;
-  explorer: string;
-  imageUrl?: string;
-}
+import { getTestnets, getMainnets, getAllNetworks } from "@/config/deploy-config";
+import { NetworkConfig } from "@/components/faucet/types";
 
 interface NetworkSelectionProps {
   onNetworkChange: (networkId: string) => void;
 }
-
-// Default network image URLs
-const DEFAULT_NETWORK_IMAGES: NetworkImage = {
-  ethereum_mainnet: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png",
-  ethereum_sepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png",
-  ethereum_goerli: "https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png",
-  Citrea: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png",
-  optimism_mainnet: "https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg",
-  Berachain_bepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png",
-  arbitrum_mainnet: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
-  arbitrum_sepolia: "https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png",
-  base_mainnet: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png",
-  base_sepolia: "https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png",
-  blast_mainnet: "https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png",
-  blast_sepolia: "https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png",
-};
-
-// Default network configurations
-const TESTNETS: NetworkConfig[] = [
-  {
-    id: "ethereum_sepolia",
-    chainId: 11155111,
-    name: "Ethereum Sepolia",
-    symbol: "ETH",
-    rpcUrl: "https://rpc.sepolia.org",
-    explorer: "https://sepolia.etherscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.ethereum_sepolia
-  },
-  {
-    id: "Citrea",
-    chainId: 17000,
-    name: "Citrea",
-    symbol: "cBTC",
-    rpcUrl: "https://rpc.testnet.citrea.xyz",
-    explorer: "https://explorer.testnet.citrea.xyz/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.Citrea
-  },
-  {
-    id: "base_sepolia",
-    chainId: 84532,
-    name: "Base Sepolia",
-    symbol: "ETH",
-    rpcUrl: "https://sepolia.base.org",
-    explorer: "https://sepolia.basescan.org/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.base_sepolia
-  },
-  {
-    id: "Berachain_bepolia",
-    chainId: 80069,
-    name: "Berachain bepolia",
-    symbol: "BERA",
-    rpcUrl: "https://bepolia.rpc.berachain.com",
-    explorer: "https://bepolia.beratrail.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.Berachain_bepolia
-  },
-  {
-    id: "arbitrum_sepolia",
-    chainId: 421614,
-    name: "Arbitrum Sepolia",
-    symbol: "ETH",
-    rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
-    explorer: "https://sepolia.arbiscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.arbitrum_sepolia
-  },
-  {
-    id: "blast_sepolia",
-    chainId: 168587773,
-    name: "Blast Sepolia",
-    symbol: "ETH",
-    rpcUrl: "https://sepolia.blast.io",
-    explorer: "https://sepolia.blastscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.blast_sepolia
-  },
-];
-
-const MAINNETS: NetworkConfig[] = [
-  {
-    id: "ethereum_mainnet",
-    chainId: 1,
-    name: "Ethereum",
-    symbol: "ETH",
-    rpcUrl: "https://eth.public-rpc.com",
-    explorer: "https://etherscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.ethereum_mainnet
-  },
-  {
-    id: "optimism_mainnet",
-    chainId: 10,
-    name: "Optimism",
-    symbol: "ETH",
-    rpcUrl: "https://mainnet.optimism.io",
-    explorer: "https://optimistic.etherscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.optimism_mainnet
-  },
-  {
-    id: "arbitrum_mainnet",
-    chainId: 42161,
-    name: "Arbitrum",
-    symbol: "ETH",
-    rpcUrl: "https://arb1.arbitrum.io/rpc",
-    explorer: "https://arbiscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.arbitrum_mainnet
-  },
-  {
-    id: "base_mainnet",
-    chainId: 8453,
-    name: "Base",
-    symbol: "ETH",
-    rpcUrl: "https://mainnet.base.org",
-    explorer: "https://basescan.org/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.base_mainnet
-  },
-  {
-    id: "blast_mainnet",
-    chainId: 81457,
-    name: "Blast",
-    symbol: "ETH",
-    rpcUrl: "https://rpc.blast.io",
-    explorer: "https://blastscan.io/tx/",
-    imageUrl: DEFAULT_NETWORK_IMAGES.blast_mainnet
-  },
-];
 
 // Get custom networks from localStorage
 const getCustomNetworks = (): NetworkConfig[] => {
@@ -185,6 +50,10 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
     imageUrl: ""
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  
+  // Get networks from the config
+  const TESTNETS = Object.values(getTestnets());
+  const MAINNETS = Object.values(getMainnets());
 
   // Forward selected network to parent component
   useEffect(() => {
@@ -220,8 +89,8 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
     if (!newNetwork.rpcUrl) errors.rpcUrl = "RPC URL is required";
     if (!newNetwork.explorer) errors.explorer = "Explorer URL is required";
     
-    const existingIds = [...TESTNETS, ...MAINNETS, ...customNetworks].map(n => n.id);
-    if (existingIds.includes(newNetwork.id || "")) {
+    const allNetworks = getAllNetworks();
+    if (allNetworks[newNetwork.id || ""] || customNetworks.some(n => n.id === newNetwork.id)) {
       errors.id = "Network ID already exists";
     }
     
