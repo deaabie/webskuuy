@@ -107,7 +107,7 @@ const MAINNETS: Record<string, NetworkConfig> = {
     name: 'Optimism',
     symbol: 'ETH',
     explorer: 'https://optimistic.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/optimism-ethereum-op-logo.png'
   },
   arbitrum_mainnet: {
     id: "arbitrum_mainnet",
@@ -116,7 +116,7 @@ const MAINNETS: Record<string, NetworkConfig> = {
     name: 'Arbitrum',
     symbol: 'ETH',
     explorer: 'https://arbiscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/arbitrum-arb-logo.png'
   },
   base_mainnet: {
     id: "base_mainnet",
