@@ -48,7 +48,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
     id: "monad_testnet",
     rpcUrl: 'https://testnet-rpc.monad.xyz',
     chainId: 10143,
-    name: 'Monad Testnet',
+    name: 'Monad ',
     symbol: 'MON',
     explorer: 'https://testnet.monadexplorer.com/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/monad.png'
@@ -60,7 +60,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
     name: 'Blast Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.blastscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png'
   },
   
   // Non-EVM Networks
@@ -68,7 +68,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
     id: "citrea_testnet",
     rpcUrl: 'https://rpc.testnet.citrea.xyz',
     chainId: 17000,
-    name: 'Citrea Testnet',
+    name: 'Citrea ',
     symbol: 'cBTC',
     explorer: 'https://explorer.testnet.citrea.xyz/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png'
@@ -77,7 +77,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
     id: "berachain_testnet",
     rpcUrl: 'https://bepolia.rpc.berachain.com',
     chainId: 80069,
-    name: 'Berachain Testnet',
+    name: 'Berachain Bepolia',
     symbol: 'BERA',
     explorer: 'https://bepolia.beratrail.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png'
@@ -134,7 +134,7 @@ const MAINNETS: Record<string, NetworkConfig> = {
     name: 'Blast',
     symbol: 'ETH',
     explorer: 'https://blastscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png'
   }
 };
 
