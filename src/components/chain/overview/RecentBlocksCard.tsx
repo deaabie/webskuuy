@@ -1,63 +1,24 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Blocks } from 'lucide-react';
-import { Block, Validator, getValidators } from '@/services/cosmosService';
-import { formatDistanceToNow } from 'date-fns';
+import { Block } from '@/services/cosmosService';
 
 interface RecentBlocksCardProps {
   blocks: Block[];
   formatDate: (dateString: string) => string;
   onBlockClick: (block: Block) => void;
-  apiUrl?: string;
 }
 
 const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({ 
   blocks, 
   formatDate,
-  onBlockClick,
-  apiUrl
+  onBlockClick
 }) => {
   // Take only the 10 most recent blocks
   const recentBlocks = blocks.slice(0, 10);
-  const [proposerMap, setProposerMap] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const fetchValidators = async () => {
-      if (!apiUrl) return;
-      
-      try {
-        const validatorsData = await getValidators(apiUrl);
-        
-        // Create a map of proposer address to validator moniker
-        const addressToMoniker: Record<string, string> = {};
-        validatorsData.forEach(validator => {
-          addressToMoniker[validator.address.toLowerCase()] = validator.moniker;
-        });
-        
-        setProposerMap(addressToMoniker);
-      } catch (error) {
-        console.error('Error fetching validators:', error);
-      }
-    };
-    
-    fetchValidators();
-  }, [apiUrl]);
-
-  const getProposerMoniker = (proposerAddress: string): string => {
-    const moniker = proposerMap[proposerAddress.toLowerCase()];
-    return moniker || proposerAddress.substring(0, 8) + '...' + proposerAddress.substring(proposerAddress.length - 8);
-  };
-
-  const getTimeAgo = (timestamp: string): string => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-    } catch (error) {
-      return 'Unknown time';
-    }
-  };
 
   return (
     <Card>
@@ -74,9 +35,8 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
             <TableRow>
               <TableHead>Height</TableHead>
               <TableHead>Hash</TableHead>
-              <TableHead>Proposer</TableHead>
-              <TableHead>TX Count</TableHead>
-              <TableHead className="text-right">Created At</TableHead>
+              <TableHead>Txs</TableHead>
+              <TableHead>Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -93,18 +53,13 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
                     </Button>
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
-                  <TableCell>
-                    <span className="text-indigo-400 font-medium">
-                      {getProposerMoniker(block.proposer)}
-                    </span>
-                  </TableCell>
                   <TableCell>{block.txs}</TableCell>
-                  <TableCell className="text-right">{getTimeAgo(block.timestamp)}</TableCell>
+                  <TableCell>{formatDate(block.timestamp)}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-4">
+                <TableCell colSpan={4} className="text-center py-4">
                   Loading blocks...
                 </TableCell>
               </TableRow>
