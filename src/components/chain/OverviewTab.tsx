@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Block, Transaction, BlockchainStats, ChainConfig } from '@/services/cosmosService';
 import { Search } from 'lucide-react';
@@ -50,7 +49,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     setIsSearching(true);
     
     try {
-      // Check if it's a block height (numeric)
       if (/^\d+$/.test(searchQuery)) {
         const height = parseInt(searchQuery);
         const existingBlock = blocks.find(b => b.height === height);
@@ -81,11 +79,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             });
           }
         }
-      }
-      // Check if it's a transaction hash (hex string)
-      else if (/^[0-9a-fA-F]{64}$/i.test(searchQuery) || /^[0-9A-F]{40}$/i.test(searchQuery)) {
+      } else if (/^[0-9a-fA-F]{64}$/i.test(searchQuery) || /^[0-9A-F]{40}$/i.test(searchQuery)) {
         try {
-          // First try to find the transaction in our cached list
           const existingTx = transactions.find(t => 
             t.hash.toLowerCase() === searchQuery.toLowerCase() || 
             t.hash.includes(searchQuery)
@@ -96,18 +91,13 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             setSelectedTransaction(existingTx);
             setIsHashModalOpen(true);
           } else {
-            // If not found in cache, fetch it from the API
-            console.log("Fetching transaction from API:", searchQuery);
             let txResponse;
             try {
               txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${searchQuery}`);
             } catch (error) {
               console.log("First TX lookup failed, trying alternative format");
-              // Try alternative format
               txResponse = await axios.get(`${apiUrl}/txs/${searchQuery}`);
             }
-            
-            console.log("TX Response:", txResponse.data);
             
             if (txResponse.data?.tx_response || txResponse.data?.tx) {
               const txData = txResponse.data?.tx_response || txResponse.data?.tx;
@@ -136,9 +126,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
             variant: "destructive"
           });
         }
-      }
-      // Assume it's an account address
-      else if (searchQuery.startsWith(chain.addr_prefix)) {
+      } else if (searchQuery.startsWith(chain.addr_prefix)) {
         setSelectedAccount(searchQuery);
         setIsAccountModalOpen(true);
       } else {
@@ -195,6 +183,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         blocks={blocks} 
         onBlockClick={handleBlockClick}
         formatDate={formatDate}
+        apiUrl={apiUrl}
       />
 
       <BlockDetailsModal

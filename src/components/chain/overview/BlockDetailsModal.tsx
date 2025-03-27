@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Blocks, Hash, User, Clock } from 'lucide-react';
+import { Blocks, Hash, User, Clock, LayoutGrid } from 'lucide-react';
 import { Block, Validator, getValidators } from '@/services/cosmosService';
+import { Badge } from "@/components/ui/badge";
 
 interface BlockDetailsModalProps {
   isOpen: boolean;
@@ -20,11 +21,14 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   apiUrl
 }) => {
   const [proposerName, setProposerName] = useState<string>("");
+  const [proposerLoading, setProposerLoading] = useState<boolean>(false);
   
   useEffect(() => {
     // Fetch validator info to get the moniker name
     const fetchProposerInfo = async () => {
       if (!block || !apiUrl) return;
+      
+      setProposerLoading(true);
       
       try {
         const validators = await getValidators(apiUrl);
@@ -43,6 +47,8 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
         console.error("Error fetching proposer info:", error);
         // Fallback to shortened address format
         setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+      } finally {
+        setProposerLoading(false);
       }
     };
     
@@ -57,16 +63,19 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Block #{block.height}</DialogTitle>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <Blocks className="h-5 w-5 text-purple-500" />
+            Block #{block.height}
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 mt-2">
+        <div className="space-y-6 mt-2">
           <div className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-3 items-start">
             <div className="flex items-center gap-2">
-              <Blocks className="h-5 w-5 text-purple-500" />
+              <LayoutGrid className="h-5 w-5 text-purple-500" />
               <span className="font-semibold">Height:</span>
             </div>
-            <div>{block.height}</div>
+            <div className="font-medium">{block.height}</div>
             
             <div className="flex items-center gap-2">
               <Hash className="h-5 w-5 text-blue-500" />
@@ -79,8 +88,15 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <span className="font-semibold">Proposer:</span>
             </div>
             <div>
-              {proposerName || (
-                <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
+              {proposerLoading ? (
+                <div className="h-5 w-24 animate-pulse bg-muted rounded"></div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs overflow-hidden">
+                    {proposerName.charAt(0)}
+                  </div>
+                  <span>{proposerName}</span>
+                </div>
               )}
             </div>
             
@@ -88,15 +104,20 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <Clock className="h-5 w-5 text-amber-500" />
               <span className="font-semibold">Time:</span>
             </div>
-            <div>{formatDate(block.timestamp)}</div>
+            <div>
+              {formatDate(block.timestamp)}
+              <span className="text-xs text-muted-foreground ml-2">
+                ({Math.floor((Date.now() - new Date(block.timestamp).getTime()) / 1000 / 60)} min ago)
+              </span>
+            </div>
           </div>
           
           <div className="pt-2">
             <div className="flex items-center gap-2 mb-2">
               <span className="font-semibold">Transactions:</span>
-              <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 px-2 py-0.5 rounded-full text-xs">
+              <Badge variant="outline" className="bg-primary/10">
                 {block.txs}
-              </span>
+              </Badge>
             </div>
             {block.txs > 0 ? (
               <p className="text-sm text-muted-foreground">
