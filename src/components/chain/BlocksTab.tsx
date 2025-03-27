@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Blocks } from 'lucide-react';
-import { Block, ChainConfig } from '@/services/cosmosService';
+import { Block, ChainConfig, Validator } from '@/services/cosmosService';
 import BlockDetailsModal from './overview/BlockDetailsModal';
 
 interface BlocksTabProps {
@@ -12,15 +12,49 @@ interface BlocksTabProps {
   blocks: Block[];
   formatDate: (dateString: string) => string;
   apiUrl?: string;
+  validators?: Validator[];
 }
 
-const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl }) => {
+const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl, validators = [] }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [proposerMap, setProposerMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    // Create a mapping from validator address to moniker
+    if (validators.length > 0) {
+      const mapping: Record<string, string> = {};
+      validators.forEach(validator => {
+        if (validator.operator_address) {
+          mapping[validator.operator_address] = validator.moniker || 'Unknown';
+        }
+      });
+      setProposerMap(mapping);
+    }
+  }, [validators]);
 
   const handleBlockClick = (block: Block) => {
     setSelectedBlock(block);
     setIsModalOpen(true);
+  };
+
+  // Function to format time as "X time ago"
+  const getTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const blockTime = new Date(timestamp);
+    const diffMs = now.getTime() - blockTime.getTime();
+    
+    const seconds = Math.floor(diffMs / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   };
 
   return (
@@ -38,7 +72,7 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl
             <TableHeader>
               <TableRow>
                 <TableHead>Height</TableHead>
-                <TableHead>Hash</TableHead>
+                <TableHead>Proposer</TableHead>
                 <TableHead>Txs</TableHead>
                 <TableHead>Time</TableHead>
               </TableRow>
@@ -55,9 +89,14 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl
                       {block.height}
                     </Button>
                   </TableCell>
-                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
+                  <TableCell>
+                    {proposerMap[block.proposer] || 
+                     (block.proposer ? block.proposer.substring(0, 8) + '...' : 'Unknown')}
+                  </TableCell>
                   <TableCell>{block.txs}</TableCell>
-                  <TableCell>{formatDate(block.timestamp)}</TableCell>
+                  <TableCell title={formatDate(block.timestamp)}>
+                    {getTimeAgo(block.timestamp)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -71,6 +110,7 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl
         block={selectedBlock}
         formatDate={formatDate}
         apiUrl={apiUrl}
+        proposerName={selectedBlock ? proposerMap[selectedBlock.proposer] || null : null}
       />
     </>
   );

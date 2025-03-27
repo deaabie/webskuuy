@@ -67,6 +67,7 @@ const ChainDashboard: React.FC = () => {
     communityPool: "0",
     inflation: "0%",
     stakingAPR: "0%",
+    bondedTokens: "0"
   };
 
   const fetchBlockchainData = useCallback(async (forceRefresh = false) => {
@@ -251,6 +252,10 @@ const ChainDashboard: React.FC = () => {
     return new Date(dateString).toLocaleString();
   };
 
+  const chainSymbol = chain.assets && chain.assets.length > 0 
+    ? chain.assets[0].symbol 
+    : chain.addr_prefix.toUpperCase();
+
   if (loading && !chain) {
     return (
       <div className="min-h-[calc(100vh-64px)] flex justify-center items-center">
@@ -293,7 +298,11 @@ const ChainDashboard: React.FC = () => {
           </div>
         </div>
         
-        <StatsCards stats={stats || statsPlaceholder} formatNumber={formatNumber} />
+        <StatsCards 
+          stats={stats || statsPlaceholder} 
+          formatNumber={formatNumber} 
+          chainSymbol={chainSymbol}
+        />
         
         <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-4">
@@ -328,6 +337,7 @@ const ChainDashboard: React.FC = () => {
               blocks={blocks} 
               formatDate={formatDate}
               apiUrl={activeEndpoint.api}
+              validators={validators}
             />
           </TabsContent>
           

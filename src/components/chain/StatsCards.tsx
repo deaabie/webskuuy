@@ -1,15 +1,16 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Clock, Activity } from 'lucide-react';
+import { Hash, Users, Clock, CoinStack } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
   stats: BlockchainStats | null;
   formatNumber: (num: number | string) => string;
+  chainSymbol?: string;
 }
 
-const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
+const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber, chainSymbol = 'ATOM' }) => {
   // Format large numbers with M/B suffix
   const formatWithSuffix = (value: string | number): string => {
     const num = typeof value === 'string' ? parseFloat(value) : value;
@@ -35,19 +36,10 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
     ? `${stats.blockTime.toFixed(1)}s` 
     : "0.0s";
   
-  // Determine the network activity based on block time
-  let networkActivity = "Moderate";
-  let activityColor = "text-yellow-500";
-  
-  if (stats?.blockTime) {
-    if (stats.blockTime < 3) {
-      networkActivity = "High";
-      activityColor = "text-green-500";
-    } else if (stats.blockTime > 8) {
-      networkActivity = "Low";
-      activityColor = "text-red-500";
-    }
-  }
+  // Format bonded tokens with appropriate suffix
+  const bondedTokens = stats?.bondedTokens 
+    ? `${formatWithSuffix(stats.bondedTokens)} ${chainSymbol}` 
+    : `0 ${chainSymbol}`;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -68,11 +60,10 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         tooltip="Average time between blocks"
       />
       <StatCard 
-        title="Network Activity" 
-        value={networkActivity} 
-        icon={<Activity size={20} className={activityColor} />} 
-        tooltip="Network activity based on block time"
-        valueClassName={activityColor}
+        title="Bonded Tokens" 
+        value={bondedTokens} 
+        icon={<CoinStack size={20} className="text-purple-500" />} 
+        tooltip="Total tokens bonded to validators"
       />
     </div>
   );
