@@ -215,9 +215,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       <AccountDetailsModal
         isOpen={isAccountModalOpen}
         onOpenChange={setIsAccountModalOpen}
-        address={selectedAccount || ''}
+        address={selectedAccount}
         apiUrl={apiUrl}
-        chainSymbol={chain.assets[0]?.symbol || ''}
       />
     </div>
   );

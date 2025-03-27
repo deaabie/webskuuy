@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 export interface ChainConfig {
@@ -86,13 +87,6 @@ export interface ChainInfoExtended {
   latest_block_time: string;
   bonded_tokens_percentage: string;
   staking_ratio: string;
-}
-
-export interface RichAccount {
-  address: string;
-  balance: string;
-  last_activity: string;
-  tx_count: number;
 }
 
 export const getChainConfigs = async (networkType: 'mainnet' | 'testnet'): Promise<ChainConfig[]> => {
@@ -548,134 +542,5 @@ export const checkEndpointStatus = async (url: string): Promise<boolean> => {
     return true;
   } catch (error) {
     return false;
-  }
-};
-
-export const getAccountStats = async (apiUrl: string): Promise<{
-  dailyActive: number;
-  weeklyActive: number;
-  monthlyActive: number;
-}> => {
-  try {
-    // For demonstration, we're simulating the data
-    // In a real-world scenario, you would fetch this from an API
-    
-    // You can implement actual data fetching here when the endpoint is available
-    // const response = await axios.get(`${apiUrl}/cosmos/accounts/stats`);
-    // return response.data;
-    
-    // Simulated data based on chain activity
-    const dailyActive = Math.floor(Math.random() * 10000) + 1000;
-    const weeklyActive = dailyActive * (Math.floor(Math.random() * 15) + 10);
-    const monthlyActive = weeklyActive * (Math.floor(Math.random() * 5) + 2);
-    
-    return {
-      dailyActive,
-      weeklyActive,
-      monthlyActive
-    };
-  } catch (error) {
-    console.error('Error fetching account stats:', error);
-    return {
-      dailyActive: 6148,
-      weeklyActive: 115446,
-      monthlyActive: 115481
-    };
-  }
-};
-
-export const getRichAccounts = async (apiUrl: string, rpcUrl: string, count: number = 10): Promise<RichAccount[]> => {
-  try {
-    // First try to get accounts with balances
-    // Note: Most Cosmos chains don't expose a rich list endpoint directly
-    // We're using bank total supply as a starting point
-    
-    const accounts: RichAccount[] = [];
-    
-    try {
-      // Get supply info to understand denomination
-      const supplyResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/supply`);
-      
-      // Try to get validators as they usually have high balances
-      const validatorsResponse = await axios.get(
-        `${apiUrl}/cosmos/staking/v1beta1/validators?pagination.limit=20`
-      );
-      
-      // Mock rich accounts data using validator addresses
-      // In a real implementation, you would need to query individual account balances
-      for (let i = 0; i < Math.min(validatorsResponse.data.validators.length, count); i++) {
-        const validator = validatorsResponse.data.validators[i];
-        const address = validator.operator_address;
-        
-        // Calculate a "realistic" balance based on tokens and random factor
-        const baseAmount = parseInt(validator.tokens) / Math.pow(10, 6);
-        const randomFactor = Math.random() * 0.5 + 0.75; // 0.75 to 1.25
-        const balance = String(Math.floor(baseAmount * randomFactor));
-        
-        // Generate a random recent date for last activity
-        const daysAgo = Math.floor(Math.random() * 14); // 0-14 days ago
-        const lastActivity = new Date();
-        lastActivity.setDate(lastActivity.getDate() - daysAgo);
-        
-        accounts.push({
-          address: address,
-          balance: balance,
-          last_activity: lastActivity.toISOString(),
-          tx_count: Math.floor(Math.random() * 1000) + 50
-        });
-      }
-      
-      // If we don't have enough accounts from validators, add some synthetic ones
-      while (accounts.length < count) {
-        const addressNum = Math.floor(Math.random() * 1000000);
-        const address = `cosmos1${Array(38).fill(0).map(() => 
-          "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]
-        ).join('')}`;
-        
-        const balance = String(Math.floor(Math.random() * 10000000) + 100000);
-        
-        const daysAgo = Math.floor(Math.random() * 30); // 0-30 days ago
-        const lastActivity = new Date();
-        lastActivity.setDate(lastActivity.getDate() - daysAgo);
-        
-        accounts.push({
-          address,
-          balance,
-          last_activity: lastActivity.toISOString(),
-          tx_count: Math.floor(Math.random() * 500) + 10
-        });
-      }
-      
-      // Sort by balance in descending order
-      return accounts.sort((a, b) => parseInt(b.balance) - parseInt(a.balance));
-      
-    } catch (error) {
-      throw error;
-    }
-  } catch (error) {
-    console.error('Error fetching rich accounts:', error);
-    
-    // Fallback data
-    const accounts: RichAccount[] = [];
-    for (let i = 0; i < count; i++) {
-      const address = `cosmos1${Array(38).fill(0).map(() => 
-        "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]
-      ).join('')}`;
-      
-      const balance = String(Math.floor(Math.random() * 10000000) + 100000);
-      
-      const daysAgo = Math.floor(Math.random() * 30);
-      const lastActivity = new Date();
-      lastActivity.setDate(lastActivity.getDate() - daysAgo);
-      
-      accounts.push({
-        address,
-        balance,
-        last_activity: lastActivity.toISOString(),
-        tx_count: Math.floor(Math.random() * 500) + 10
-      });
-    }
-    
-    return accounts.sort((a, b) => parseInt(b.balance) - parseInt(a.balance));
   }
 };

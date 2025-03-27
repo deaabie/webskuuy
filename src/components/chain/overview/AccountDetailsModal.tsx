@@ -1,213 +1,226 @@
 
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { RichAccount } from '@/services/cosmosService';
-import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Wallet, Coins, Award, Timer, Users } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import axios from 'axios';
+
+interface Validator {
+  address: string;
+  moniker: string;
+  amount: string;
+}
+
+interface AccountInfo {
+  address: string;
+  balance: string;
+  delegations: string;
+  rewards: string;
+  unbonding: string;
+  validators: Validator[];
+}
 
 interface AccountDetailsModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  account?: RichAccount;
-  address?: string;
-  apiUrl?: string;
-  chainSymbol: string;
+  address: string | null;
+  apiUrl: string | undefined;
 }
 
-const AccountDetailsModal: React.FC<AccountDetailsModalProps> = ({
-  isOpen,
-  onOpenChange,
-  account: propAccount,
+const AccountDetailsModal: React.FC<AccountDetailsModalProps> = ({ 
+  isOpen, 
+  onOpenChange, 
   address,
-  apiUrl,
-  chainSymbol
+  apiUrl
 }) => {
-  const [accountData, setAccountData] = useState<RichAccount | null>(null);
+  const [accountInfo, setAccountInfo] = useState<AccountInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  
   useEffect(() => {
-    const fetchAccountData = async () => {
-      // If we already have account data from props, use that
-      if (propAccount) {
-        setAccountData(propAccount);
-        return;
-      }
+    const fetchAccountDetails = async () => {
+      if (!address || !apiUrl || !isOpen) return;
       
-      // If we have an address but no account data, try to fetch it
-      if (address && apiUrl && isOpen) {
-        setLoading(true);
-        setError(null);
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch account balances
+        const balanceResponse = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/balances/${address}`);
+        const balances = balanceResponse.data.balances;
+        const balance = balances.length > 0 ? 
+          `${balances[0].amount} ${balances[0].denom}` : 
+          "0";
         
-        try {
-          // Try to get account data from API
-          const response = await axios.get(`${apiUrl}/cosmos/bank/v1beta1/balances/${address}`);
-          
-          // Create a simplified account object from the response
-          if (response.data && response.data.balances) {
-            const balanceAmount = response.data.balances[0]?.amount || "0";
-            const formattedBalance = parseInt(balanceAmount) / 1000000; // Convert from micro units
+        // Fetch delegations
+        const delegationsResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/delegations/${address}`);
+        const delegationItems = delegationsResponse.data.delegation_responses || [];
+        const totalDelegated = delegationItems.reduce((sum: number, item: any) => 
+          sum + parseInt(item.balance.amount), 0);
+        
+        // Fetch rewards
+        const rewardsResponse = await axios.get(`${apiUrl}/cosmos/distribution/v1beta1/delegators/${address}/rewards`);
+        const rewardsTotal = rewardsResponse.data.total || [];
+        const rewards = rewardsTotal.length > 0 ? 
+          `${Math.floor(parseInt(rewardsTotal[0].amount) / 1000000)} ${rewardsTotal[0].denom}` : 
+          "0";
+        
+        // Fetch unbonding
+        const unbondingResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/delegators/${address}/unbonding_delegations`);
+        const unbondingItems = unbondingResponse.data.unbonding_responses || [];
+        let totalUnbonding = 0;
+        
+        unbondingItems.forEach((unbonding: any) => {
+          unbonding.entries.forEach((entry: any) => {
+            totalUnbonding += parseInt(entry.balance);
+          });
+        });
+        
+        // Build validators list with details
+        const validators: Validator[] = [];
+        for (const delegation of delegationItems) {
+          try {
+            // Get validator details
+            const validatorResponse = await axios.get(
+              `${apiUrl}/cosmos/staking/v1beta1/validators/${delegation.delegation.validator_address}`
+            );
             
-            setAccountData({
-              address: address,
-              balance: formattedBalance.toString(),
-              last_activity: new Date().toISOString(), // Default to current time
-              tx_count: 0 // Default value
+            const validator = validatorResponse.data.validator;
+            validators.push({
+              address: delegation.delegation.validator_address,
+              moniker: validator.description.moniker || "Unknown Validator",
+              amount: `${parseInt(delegation.balance.amount) / 1000000} ${delegation.balance.denom}`,
             });
-          } else {
-            // If no balance info found, create minimal account data
-            setAccountData({
-              address: address,
-              balance: "0",
-              last_activity: new Date().toISOString(),
-              tx_count: 0
+          } catch (err) {
+            console.error("Error fetching validator details:", err);
+            // Add with limited info if validator details can't be fetched
+            validators.push({
+              address: delegation.delegation.validator_address,
+              moniker: "Unknown Validator",
+              amount: `${parseInt(delegation.balance.amount) / 1000000} ${delegation.balance.denom}`,
             });
           }
-        } catch (error) {
-          console.error("Error fetching account data:", error);
-          setError("Failed to load account data");
-          
-          // Still create minimal account data so we can show the address
-          setAccountData({
-            address: address,
-            balance: "0",
-            last_activity: new Date().toISOString(),
-            tx_count: 0
-          });
-        } finally {
-          setLoading(false);
         }
+        
+        setAccountInfo({
+          address,
+          balance: balance,
+          delegations: `${totalDelegated / 1000000} ${delegationItems[0]?.balance.denom || "tokens"}`,
+          rewards: rewards,
+          unbonding: `${totalUnbonding / 1000000} ${delegationItems[0]?.balance.denom || "tokens"}`,
+          validators
+        });
+      } catch (err) {
+        console.error('Error fetching account details:', err);
+        setError('Failed to fetch account details. Please try again later.');
+        
+        // Set fallback data
+        setAccountInfo({
+          address,
+          balance: "Unknown",
+          delegations: "Unknown",
+          rewards: "Unknown",
+          unbonding: "Unknown",
+          validators: []
+        });
+      } finally {
+        setLoading(false);
       }
     };
-
-    fetchAccountData();
-  }, [propAccount, address, apiUrl, isOpen]);
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      description: "Copied to clipboard",
-    });
-  };
+    
+    fetchAccountDetails();
+  }, [address, apiUrl, isOpen]);
   
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  // Render loading state
-  if (loading) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Account Details</DialogTitle>
-            <DialogDescription>Loading account information...</DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center items-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Render error state
-  if (error && !accountData) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Account Details</DialogTitle>
-            <DialogDescription>Error loading account</DialogDescription>
-          </DialogHeader>
-          <div className="p-6 text-center text-destructive">
-            <p>{error}</p>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
-  // Main render with account data
+  if (!address) return null;
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[650px]">
         <DialogHeader>
-          <DialogTitle>Account Details</DialogTitle>
-          <DialogDescription>
-            Detailed information about this account
-          </DialogDescription>
+          <DialogTitle className="text-xl">Account Details</DialogTitle>
         </DialogHeader>
-
-        {accountData && (
-          <div className="space-y-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="col-span-4">
-                    <Label className="text-sm text-muted-foreground">Address</Label>
-                    <div className="flex items-center mt-1 space-x-2">
-                      <div className="font-mono text-sm break-all">{accountData.address}</div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => copyToClipboard(accountData.address)}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-medium mb-4">Balance Information</h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Total Balance</Label>
-                    <div className="text-xl font-bold mt-1">
-                      {accountData.balance} {chainSymbol}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Last Activity</Label>
-                    <div className="mt-1">{formatDate(accountData.last_activity)}</div>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Transaction Count</Label>
-                    <div className="mt-1">{accountData.tx_count}</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {apiUrl && (
-              <div className="text-center text-sm text-muted-foreground">
-                <p>
-                  Data provided by {apiUrl.replace('https://', '').replace('http://', '').split('/')[0]}
-                </p>
-              </div>
-            )}
+        
+        <div className="space-y-4 mt-2">
+          <div className="font-mono text-xs break-all mb-4">
+            {address}
           </div>
-        )}
+          
+          {loading ? (
+            <div className="py-8 text-center">
+              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p>Loading account details...</p>
+            </div>
+          ) : error ? (
+            <div className="py-4 text-center text-red-500">
+              {error}
+            </div>
+          ) : accountInfo && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Wallet className="h-4 w-4 text-blue-500" />
+                      Balance
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>{accountInfo.balance}</CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Coins className="h-4 w-4 text-green-500" />
+                      Delegations
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>{accountInfo.delegations}</CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Award className="h-4 w-4 text-amber-500" />
+                      Rewards
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>{accountInfo.rewards}</CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Timer className="h-4 w-4 text-purple-500" />
+                      Unbonding
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>{accountInfo.unbonding}</CardContent>
+                </Card>
+              </div>
+              
+              {accountInfo.validators.length > 0 && (
+                <Card>
+                  <CardHeader className="py-3">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Users className="h-4 w-4 text-indigo-500" />
+                      Delegations to Validators
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {accountInfo.validators.map((validator, idx) => (
+                        <div key={idx} className="flex justify-between items-center py-2 border-b last:border-0">
+                          <span>{validator.moniker}</span>
+                          <span>{validator.amount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
