@@ -10,36 +10,15 @@ interface RecentBlocksCardProps {
   blocks: Block[];
   formatDate: (dateString: string) => string;
   onBlockClick: (block: Block) => void;
-  proposers?: Record<string, string>;
 }
 
 const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({ 
   blocks, 
   formatDate,
-  onBlockClick,
-  proposers = {}
+  onBlockClick
 }) => {
   // Take only the 10 most recent blocks
   const recentBlocks = blocks.slice(0, 10);
-
-  // Function to format time as "X time ago"
-  const getTimeAgo = (timestamp: string) => {
-    const now = new Date();
-    const blockTime = new Date(timestamp);
-    const diffMs = now.getTime() - blockTime.getTime();
-    
-    const seconds = Math.floor(diffMs / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-  };
 
   return (
     <Card>
@@ -55,7 +34,7 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
           <TableHeader>
             <TableRow>
               <TableHead>Height</TableHead>
-              <TableHead>Proposer</TableHead>
+              <TableHead>Hash</TableHead>
               <TableHead>Txs</TableHead>
               <TableHead>Time</TableHead>
             </TableRow>
@@ -73,14 +52,9 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
                       {block.height}
                     </Button>
                   </TableCell>
-                  <TableCell>
-                    {proposers[block.proposer] || 
-                     (block.proposer ? block.proposer.substring(0, 8) + '...' : 'Unknown')}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
                   <TableCell>{block.txs}</TableCell>
-                  <TableCell title={formatDate(block.timestamp)}>
-                    {getTimeAgo(block.timestamp)}
-                  </TableCell>
+                  <TableCell>{formatDate(block.timestamp)}</TableCell>
                 </TableRow>
               ))
             ) : (
