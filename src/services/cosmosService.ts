@@ -113,6 +113,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     // Fetch latest block
     const latestBlockResponse = await axios.get(`${rpcUrl}/block`);
     const height = latestBlockResponse.data.result.block.header.height;
+    const latestBlockTime = new Date(latestBlockResponse.data.result.block.header.time).getTime();
     
     // Fetch validators
     const validatorsResponse = await axios.get(`${apiUrl}/cosmos/staking/v1beta1/validators?status=BOND_STATUS_BONDED&pagination.limit=100`);
@@ -152,23 +153,30 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
     const inflationResponse = await axios.get(`${apiUrl}/cosmos/mint/v1beta1/inflation`).catch(() => ({ data: { inflation: "0" } }));
     const inflation = parseFloat(inflationResponse.data.inflation || "0") * 100;
     
-    // Calculate block time by fetching multiple recent blocks and averaging
+    // Calculate block time more accurately by fetching multiple blocks
     let blockTime = 6; // Default if we can't calculate
     try {
-      const currentBlock = latestBlockResponse.data.result.block;
-      const currentHeight = parseInt(height);
-      const previousHeight = currentHeight - 10; // Get block from 10 blocks ago
+      const currentBlockHeight = parseInt(height);
+      // Get more blocks for a more accurate average (20 blocks instead of 10)
+      const sampleSize = 20;
+      const oldBlockHeight = Math.max(1, currentBlockHeight - sampleSize);
       
-      if (previousHeight > 0) {
-        const previousBlockResponse = await axios.get(`${rpcUrl}/block?height=${previousHeight}`);
-        const previousBlock = previousBlockResponse.data.result.block;
+      // Get the oldest block in our sample
+      const oldBlockResponse = await axios.get(`${rpcUrl}/block?height=${oldBlockHeight}`);
+      const oldBlockTime = new Date(oldBlockResponse.data.result.block.header.time).getTime();
+      
+      // Calculate the average time between blocks if we have a valid timespan
+      if (latestBlockTime > oldBlockTime) {
+        const timeDiffMs = latestBlockTime - oldBlockTime;
+        const blockCount = currentBlockHeight - oldBlockHeight;
         
-        const currentTime = new Date(currentBlock.header.time).getTime();
-        const previousTime = new Date(previousBlock.header.time).getTime();
-        
-        const timeDiff = currentTime - previousTime; // Time difference in milliseconds
-        blockTime = Math.round(timeDiff / 10000) / 100; // Average time per block in seconds, rounded to 2 decimal places
+        if (blockCount > 0) {
+          // Calculate average time per block in seconds with 1 decimal point precision
+          blockTime = Math.round((timeDiffMs / blockCount) / 100) / 10;
+        }
       }
+      
+      console.log(`Block time calculation: ${blockTime}s (based on ${sampleSize} blocks)`);
     } catch (error) {
       console.error('Error calculating block time:', error);
     }
