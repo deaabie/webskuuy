@@ -325,10 +325,8 @@ const ChainDashboard: React.FC = () => {
           <TabsContent value="blocks" className="space-y-6 mt-6">
             <BlocksTab 
               chain={chain} 
-              blocks={blocks}
-              stats={stats}
+              blocks={blocks} 
               formatDate={formatDate}
-              formatNumber={formatNumber}
               apiUrl={activeEndpoint.api}
             />
           </TabsContent>
