@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Clock, CoinStack } from 'lucide-react';
+import { Hash, Users, Clock, Coins } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -62,7 +62,7 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber, chainSymbo
       <StatCard 
         title="Bonded Tokens" 
         value={bondedTokens} 
-        icon={<CoinStack size={20} className="text-purple-500" />} 
+        icon={<Coins size={20} className="text-purple-500" />} 
         tooltip="Total tokens bonded to validators"
       />
     </div>

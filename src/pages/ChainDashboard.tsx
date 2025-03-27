@@ -1,179 +1,31 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import SEO from '@/components/SEO';
-import { 
-  ChainConfig, 
-  BlockchainStats, 
-  Validator, 
-  Block, 
-  Transaction,
-  Proposal,
-  getChainConfigs,
-  getBlockchainStats,
-  getValidators,
-  getBlocks,
-  getTransactions,
-  getProposals
-} from '@/services/cosmosService';
 
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import SEO from '@/components/SEO';
+import { ChainConfig, getChainConfigs } from '@/services/cosmosService';
 import StatsCards from '@/components/chain/StatsCards';
-import OverviewTab from '@/components/chain/OverviewTab';
-import ValidatorsTab from '@/components/chain/ValidatorsTab';
-import BlocksTab from '@/components/chain/BlocksTab';
-import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
+import ChainHeader from '@/components/chain/ChainHeader';
+import ChainTabs from '@/components/chain/ChainTabs';
+import { useChainData } from '@/hooks/useChainData';
+import { formatNumber, formatDate } from '@/utils/formatters';
 import { toast } from '@/components/ui/use-toast';
 
 const ChainDashboard: React.FC = () => {
   const { chainName } = useParams<{ chainName: string }>();
   const [chain, setChain] = useState<ChainConfig | null>(null);
-  const [stats, setStats] = useState<BlockchainStats | null>(null);
-  const [validators, setValidators] = useState<Validator[]>([]);
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
   
-  const lastFetchRef = useRef<Record<string, number>>({
-    stats: 0,
-    validators: 0,
-    blocks: 0,
-    proposals: 0,
-    transactions: 0
-  });
-  
-  const fetchInProgressRef = useRef<Record<string, boolean>>({
-    stats: false,
-    validators: false,
-    blocks: false,
-    proposals: false,
-    transactions: false
-  });
+  // Use our custom hook to fetch chain data
+  const { stats, validators, blocks, transactions, proposals, fetchBlockchainData } = useChainData(
+    chain, 
+    activeEndpoint, 
+    activeTab
+  );
 
-  const statsPlaceholder: BlockchainStats = {
-    height: 0,
-    validators: {
-      total: 0,
-      active: 0,
-    },
-    supply: {
-      total: "0",
-      circulating: "0",
-    },
-    blockTime: 0,
-    communityPool: "0",
-    inflation: "0%",
-    stakingAPR: "0%",
-    bondedTokens: "0"
-  };
-
-  const fetchBlockchainData = useCallback(async (forceRefresh = false) => {
-    if (!chain || !activeEndpoint.api || !activeEndpoint.rpc) return;
-    
-    const now = Date.now();
-    const refreshInterval = 2000; // 2 seconds
-    
-    try {
-      if ((forceRefresh || now - lastFetchRef.current.stats > refreshInterval) && !fetchInProgressRef.current.stats) {
-        fetchInProgressRef.current.stats = true;
-        try {
-          console.log("Fetching stats...");
-          const statsData = await getBlockchainStats(activeEndpoint.rpc, activeEndpoint.api);
-          setStats(prev => {
-            if (!prev || statsData.height !== prev.height) {
-              return statsData;
-            }
-            return prev;
-          });
-          lastFetchRef.current.stats = now;
-        } catch (error) {
-          console.error('Error fetching stats:', error);
-        } finally {
-          fetchInProgressRef.current.stats = false;
-        }
-      }
-      
-      if ((forceRefresh || now - lastFetchRef.current.blocks > refreshInterval) && !fetchInProgressRef.current.blocks) {
-        fetchInProgressRef.current.blocks = true;
-        try {
-          console.log("Fetching blocks...");
-          const blocksData = await getBlocks(activeEndpoint.rpc, 10);
-          setBlocks(prev => {
-            if (blocksData.length > 0 && (!prev.length || blocksData[0].height !== prev[0]?.height)) {
-              return blocksData;
-            }
-            return prev;
-          });
-          lastFetchRef.current.blocks = now;
-        } catch (error) {
-          console.error('Error fetching blocks:', error);
-        } finally {
-          fetchInProgressRef.current.blocks = false;
-        }
-      }
-      
-      if ((activeTab === 'validators' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchRef.current.validators > refreshInterval) && 
-          !fetchInProgressRef.current.validators) {
-        fetchInProgressRef.current.validators = true;
-        try {
-          console.log("Fetching validators...");
-          const validatorsData = await getValidators(activeEndpoint.api);
-          setValidators(validatorsData);
-          lastFetchRef.current.validators = now;
-        } catch (error) {
-          console.error('Error fetching validators:', error);
-        } finally {
-          fetchInProgressRef.current.validators = false;
-        }
-      }
-      
-      if ((activeTab === 'government' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchRef.current.proposals > refreshInterval) && 
-          !fetchInProgressRef.current.proposals) {
-        fetchInProgressRef.current.proposals = true;
-        try {
-          console.log("Fetching proposals...");
-          const proposalsData = await getProposals(activeEndpoint.api, 100);
-          setProposals(proposalsData);
-          lastFetchRef.current.proposals = now;
-        } catch (error) {
-          console.error('Error fetching proposals:', error);
-        } finally {
-          fetchInProgressRef.current.proposals = false;
-        }
-      }
-      
-      if ((activeTab === 'blocks' || activeTab === 'overview') && 
-          (forceRefresh || now - lastFetchRef.current.transactions > refreshInterval) && 
-          !fetchInProgressRef.current.transactions) {
-        fetchInProgressRef.current.transactions = true;
-        try {
-          console.log("Fetching transactions...");
-          const txsData = await getTransactions(activeEndpoint.api);
-          setTransactions(txsData);
-          lastFetchRef.current.transactions = now;
-        } catch (error) {
-          console.error('Error fetching transactions:', error);
-        } finally {
-          fetchInProgressRef.current.transactions = false;
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching blockchain data:', error);
-      if (forceRefresh) {
-        toast({
-          title: "Error fetching data",
-          description: "Could not retrieve blockchain data. Please try again later.",
-          variant: "destructive"
-        });
-      }
-    }
-  }, [chain, activeEndpoint, activeTab]);
-
+  // Fetch chain configuration
   useEffect(() => {
     const fetchChainData = async () => {
       setLoading(true);
@@ -218,18 +70,21 @@ const ChainDashboard: React.FC = () => {
     fetchChainData();
   }, [chainName]);
 
+  // Initial data fetch when chain or endpoints change
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
       fetchBlockchainData(true); // Force refresh on initial load
     }
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
+  // Force refresh on tab change
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-      fetchBlockchainData(true); // Force refresh on tab change
+      fetchBlockchainData(true);
     }
   }, [activeTab, fetchBlockchainData]);
 
+  // Set up regular data polling
   useEffect(() => {
     if (!chain || !activeEndpoint.api || !activeEndpoint.rpc) return;
     
@@ -244,17 +99,13 @@ const ChainDashboard: React.FC = () => {
     };
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
-  const formatNumber = (num: number | string): string => {
-    return Number(num).toLocaleString();
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  const chainSymbol = chain.assets && chain.assets.length > 0 
+  const chainSymbol = chain?.assets && chain.assets.length > 0 
     ? chain.assets[0].symbol 
-    : chain.addr_prefix.toUpperCase();
+    : chain?.addr_prefix?.toUpperCase() || '';
 
   if (loading && !chain) {
     return (
@@ -281,75 +132,26 @@ const ChainDashboard: React.FC = () => {
       />
       
       <div className="container mx-auto py-8 px-4 flex-grow">
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <img 
-              src={chain.logo}
-              alt={chain.display_name}
-              className="w-16 h-16 rounded-full"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = "/placeholder.svg";
-              }}
-            />
-            <div>
-              <h1 className="text-3xl font-bold">{chain.display_name}</h1>
-              <p className="text-muted-foreground">{chain.chain_id}</p>
-            </div>
-          </div>
-        </div>
+        <ChainHeader chain={chain} />
         
         <StatsCards 
-          stats={stats || statsPlaceholder} 
+          stats={stats} 
           formatNumber={formatNumber} 
           chainSymbol={chainSymbol}
         />
         
-        <Tabs defaultValue="overview" className="w-full mb-8" onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="validators">Validators</TabsTrigger>
-            <TabsTrigger value="blocks">Blocks</TabsTrigger>
-            <TabsTrigger value="government">Governance</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="overview" className="space-y-6 mt-6">
-            <OverviewTab 
-              chain={chain} 
-              stats={stats} 
-              blocks={blocks} 
-              transactions={transactions} 
-              formatNumber={formatNumber} 
-              formatDate={formatDate}
-              apiUrl={activeEndpoint.api}
-            />
-          </TabsContent>
-          
-          <TabsContent value="validators" className="space-y-6 mt-6">
-            <ValidatorsTab 
-              validators={validators} 
-              formatNumber={formatNumber} 
-            />
-          </TabsContent>
-          
-          <TabsContent value="blocks" className="space-y-6 mt-6">
-            <BlocksTab 
-              chain={chain} 
-              blocks={blocks} 
-              formatDate={formatDate}
-              apiUrl={activeEndpoint.api}
-              validators={validators}
-            />
-          </TabsContent>
-          
-          <TabsContent value="government" className="space-y-6 mt-6">
-            <GovernmentTab 
-              chain={chain} 
-              proposals={proposals} 
-              formatNumber={formatNumber} 
-              formatDate={formatDate} 
-            />
-          </TabsContent>
-        </Tabs>
+        <ChainTabs 
+          chain={chain}
+          stats={stats}
+          validators={validators}
+          blocks={blocks}
+          transactions={transactions}
+          proposals={proposals}
+          formatNumber={formatNumber}
+          formatDate={formatDate}
+          activeEndpoint={activeEndpoint}
+          onTabChange={handleTabChange}
+        />
         
         <EndpointsCard 
           chain={chain} 

@@ -25,8 +25,8 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl
     if (validators.length > 0) {
       const mapping: Record<string, string> = {};
       validators.forEach(validator => {
-        if (validator.operator_address) {
-          mapping[validator.operator_address] = validator.moniker || 'Unknown';
+        if (validator.address) {
+          mapping[validator.address] = validator.moniker || 'Unknown';
         }
       });
       setProposerMap(mapping);
@@ -110,7 +110,6 @@ const BlocksTab: React.FC<BlocksTabProps> = ({ chain, blocks, formatDate, apiUrl
         block={selectedBlock}
         formatDate={formatDate}
         apiUrl={apiUrl}
-        proposerName={selectedBlock ? proposerMap[selectedBlock.proposer] || null : null}
       />
     </>
   );

@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 export interface ChainConfig {
@@ -36,6 +35,7 @@ export interface BlockchainStats {
   communityPool: string;
   inflation: string;
   stakingAPR: string;
+  bondedTokens: string;
 }
 
 export interface Validator {
@@ -206,6 +206,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
       communityPool,
       inflation: inflation.toFixed(2) + "%",
       stakingAPR: stakingAPR.toFixed(2) + "%",
+      bondedTokens: bondedTokens,
     };
   } catch (error) {
     console.error('Error fetching blockchain stats:', error);
@@ -223,6 +224,7 @@ export const getBlockchainStats = async (rpcUrl: string, apiUrl: string): Promis
       communityPool: "0",
       inflation: "0%",
       stakingAPR: "0%",
+      bondedTokens: "0",
     };
   }
 };
