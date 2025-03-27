@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
+import { Hash, Users, Clock, Activity } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -35,10 +35,19 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
     ? `${stats.blockTime.toFixed(1)}s` 
     : "0.0s";
   
-  // Format staking APR to show actual value when available
-  const stakingAPR = stats?.stakingAPR && stats.stakingAPR !== "0%" 
-    ? stats.stakingAPR 
-    : "0.0%";
+  // Determine the network activity based on block time
+  let networkActivity = "Moderate";
+  let activityColor = "text-yellow-500";
+  
+  if (stats?.blockTime) {
+    if (stats.blockTime < 3) {
+      networkActivity = "High";
+      activityColor = "text-green-500";
+    } else if (stats.blockTime > 8) {
+      networkActivity = "Low";
+      activityColor = "text-red-500";
+    }
+  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
@@ -59,10 +68,11 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         tooltip="Average time between blocks"
       />
       <StatCard 
-        title="Staking APR" 
-        value={stakingAPR} 
-        icon={<TrendingUp size={20} className="text-purple-500" />} 
-        tooltip="Annual percentage rate for stakers"
+        title="Network Activity" 
+        value={networkActivity} 
+        icon={<Activity size={20} className={activityColor} />} 
+        tooltip="Network activity based on block time"
+        valueClassName={activityColor}
       />
     </div>
   );
@@ -73,9 +83,10 @@ interface StatCardProps {
   value: string;
   icon: React.ReactNode;
   tooltip?: string;
+  valueClassName?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, tooltip }) => {
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, tooltip, valueClassName }) => {
   return (
     <Card className="border-0 shadow-md hover:shadow-lg transition-shadow">
       <CardHeader className="pb-2">
@@ -85,7 +96,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, tooltip }) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-bold">{value}</div>
+        <div className={`text-3xl font-bold ${valueClassName || ''}`}>{value}</div>
       </CardContent>
     </Card>
   );
