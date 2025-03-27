@@ -9,18 +9,21 @@ import {
   Block, 
   Transaction,
   Proposal,
+  RichAccount,
   getChainConfigs,
   getBlockchainStats,
   getValidators,
   getBlocks,
   getTransactions,
-  getProposals
+  getProposals,
+  getAccountStats,
+  getRichAccounts
 } from '@/services/cosmosService';
 
 import StatsCards from '@/components/chain/StatsCards';
 import OverviewTab from '@/components/chain/OverviewTab';
 import ValidatorsTab from '@/components/chain/ValidatorsTab';
-import BlocksTab from '@/components/chain/BlocksTab';
+import AccountsTab from '@/components/chain/AccountsTab';
 import GovernmentTab from '@/components/chain/GovernmentTab';
 import EndpointsCard from '@/components/chain/EndpointsCard';
 import { toast } from '@/components/ui/use-toast';
@@ -33,6 +36,16 @@ const ChainDashboard: React.FC = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [richAccounts, setRichAccounts] = useState<RichAccount[]>([]);
+  const [accountStats, setAccountStats] = useState<{
+    dailyActive: number;
+    weeklyActive: number;
+    monthlyActive: number;
+  }>({
+    dailyActive: 0,
+    weeklyActive: 0,
+    monthlyActive: 0
+  });
   const [loading, setLoading] = useState(true);
   const [activeEndpoint, setActiveEndpoint] = useState<{api: string, rpc: string}>({api: '', rpc: ''});
   const [activeTab, setActiveTab] = useState('overview');
@@ -42,7 +55,8 @@ const ChainDashboard: React.FC = () => {
     validators: 0,
     blocks: 0,
     proposals: 0,
-    transactions: 0
+    transactions: 0,
+    accounts: 0
   });
   
   const fetchInProgressRef = useRef<Record<string, boolean>>({
@@ -50,7 +64,8 @@ const ChainDashboard: React.FC = () => {
     validators: false,
     blocks: false,
     proposals: false,
-    transactions: false
+    transactions: false,
+    accounts: false
   });
 
   const statsPlaceholder: BlockchainStats = {
@@ -159,6 +174,26 @@ const ChainDashboard: React.FC = () => {
           console.error('Error fetching transactions:', error);
         } finally {
           fetchInProgressRef.current.transactions = false;
+        }
+      }
+      
+      if ((activeTab === 'accounts' || forceRefresh) && 
+          (forceRefresh || now - lastFetchRef.current.accounts > refreshInterval) && 
+          !fetchInProgressRef.current.accounts) {
+        fetchInProgressRef.current.accounts = true;
+        try {
+          console.log("Fetching account data...");
+          const statsData = await getAccountStats(activeEndpoint.api);
+          setAccountStats(statsData);
+          
+          const richAccountsData = await getRichAccounts(activeEndpoint.api, activeEndpoint.rpc, 10);
+          setRichAccounts(richAccountsData);
+          
+          lastFetchRef.current.accounts = now;
+        } catch (error) {
+          console.error('Error fetching account data:', error);
+        } finally {
+          fetchInProgressRef.current.accounts = false;
         }
       }
     } catch (error) {
@@ -299,7 +334,7 @@ const ChainDashboard: React.FC = () => {
           <TabsList className="grid grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="validators">Validators</TabsTrigger>
-            <TabsTrigger value="blocks">Blocks</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
             <TabsTrigger value="government">Governance</TabsTrigger>
           </TabsList>
           
@@ -322,11 +357,12 @@ const ChainDashboard: React.FC = () => {
             />
           </TabsContent>
           
-          <TabsContent value="blocks" className="space-y-6 mt-6">
-            <BlocksTab 
+          <TabsContent value="accounts" className="space-y-6 mt-6">
+            <AccountsTab 
               chain={chain} 
-              blocks={blocks} 
-              formatDate={formatDate}
+              richAccounts={richAccounts}
+              accountStats={accountStats}
+              formatNumber={formatNumber}
               apiUrl={activeEndpoint.api}
             />
           </TabsContent>
