@@ -30,15 +30,15 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
   const height = stats?.height ? formatNumber(stats.height) : "0";
   const validatorsCount = stats?.validators ? `${stats.validators.active}/${stats.validators.total}` : "0/0";
   
-  // Format block time to be more user-friendly
+  // Format block time to be more user-friendly with only 1 decimal place
   const blockTime = stats?.blockTime 
-    ? `${stats.blockTime.toFixed(2)}s` 
-    : "Loading...";
+    ? `${stats.blockTime.toFixed(1)}s` 
+    : "0.0s";
   
-  // Format staking APR with proper handling for missing data
+  // Format staking APR to show actual value when available
   const stakingAPR = stats?.stakingAPR && stats.stakingAPR !== "0%" 
     ? stats.stakingAPR 
-    : "Calculating...";
+    : "0.0%";
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
