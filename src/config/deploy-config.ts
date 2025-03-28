@@ -135,6 +135,15 @@ const MAINNETS: Record<string, NetworkConfig> = {
     symbol: 'ETH',
     explorer: 'https://blastscan.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png'
+  },
+  blast_mainnet: {
+    id: "berachain_mainnet",
+    rpcUrl: 'https://rpc.berachain.com',
+    chainId: 80094,
+    name: 'Bera',
+    symbol: 'BERA',
+    explorer: 'https://berascan.com/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png'
   }
 };
 
