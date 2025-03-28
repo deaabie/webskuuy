@@ -140,7 +140,7 @@ const MAINNETS: Record<string, NetworkConfig> = {
     id: "berachain_mainnet",
     rpcUrl: 'https://rpc.berachain.com',
     chainId: 80094,
-    name: 'Bera',
+    name: 'BERA',
     symbol: 'BERA',
     explorer: 'https://berascan.com/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png'
