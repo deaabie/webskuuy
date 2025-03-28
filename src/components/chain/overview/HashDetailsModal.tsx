@@ -30,15 +30,17 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
         const validators = await getValidators(apiUrl);
         // Find if the sender matches a validator address or account address
         const senderValidator = validators.find(v => 
-          (v.address.toLowerCase() === transaction.sender.toLowerCase()) || 
-          (v.account_address && v.account_address.toLowerCase() === transaction.sender.toLowerCase())
+          (v.address.toLowerCase() === transaction.sender?.toLowerCase()) || 
+          (v.account_address && v.account_address.toLowerCase() === transaction.sender?.toLowerCase())
         );
         
         if (senderValidator) {
           setSenderName(senderValidator.moniker);
         } else {
           // If no matching validator is found, show a shortened address
-          setSenderName(`${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`);
+          if (transaction.sender) {
+            setSenderName(`${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`);
+          }
         }
       } catch (error) {
         console.error("Error fetching sender info:", error);

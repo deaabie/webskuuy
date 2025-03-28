@@ -66,6 +66,7 @@ export interface Transaction {
   timestamp: string;
   gas?: string;
   memo?: string;
+  sender?: string;
 }
 
 export interface Proposal {
@@ -294,7 +295,8 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
       status: tx.code === 0 ? 'Success' : 'Failed',
       timestamp: tx.timestamp || new Date().toISOString(),
       gas: tx.gas_used || 'Unknown',
-      memo: tx.tx?.body?.memo || ''
+      memo: tx.tx?.body?.memo || '',
+      sender: tx.tx?.body?.messages?.[0]?.sender || tx.tx?.body?.messages?.[0]?.delegator_address || tx.tx?.body?.messages?.[0]?.validator_address || ''
     }));
   } catch (error) {
     console.error('Error fetching transactions, trying fallback:', error);
@@ -311,7 +313,8 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
         status: tx.code === 0 ? 'Success' : 'Failed',
         timestamp: tx.timestamp || new Date().toISOString(),
         gas: tx.gas_used || 'Unknown',
-        memo: tx.tx?.body?.memo || ''
+        memo: tx.tx?.body?.memo || '',
+        sender: tx.tx?.body?.messages?.[0]?.sender || tx.tx?.body?.messages?.[0]?.delegator_address || tx.tx?.body?.messages?.[0]?.validator_address || ''
       }));
     } catch (fallbackError) {
       console.error('Error with first fallback for transactions:', fallbackError);
@@ -353,7 +356,8 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
                     status: tx.code === 0 ? 'Success' : 'Failed',
                     timestamp: tx.timestamp || blockTime,
                     gas: tx.gas_used || 'Unknown',
-                    memo: tx.tx?.body?.memo || ''
+                    memo: tx.tx?.body?.memo || '',
+                    sender: tx.tx?.body?.messages?.[0]?.sender || tx.tx?.body?.messages?.[0]?.delegator_address || tx.tx?.body?.messages?.[0]?.validator_address || ''
                   });
                 } catch (txError) {
                   // If we can't get tx details, use a placeholder
@@ -365,7 +369,8 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
                     status: "Unknown",
                     timestamp: blockTime,
                     gas: 'Unknown',
-                    memo: ''
+                    memo: '',
+                    sender: ''
                   });
                 }
                 
@@ -397,7 +402,8 @@ export const getTransactions = async (apiUrl: string, count: number = 10): Promi
             status: "Unknown",
             timestamp: new Date(Date.now() - i * 6000).toISOString(),
             gas: 'Unknown',
-            memo: ''
+            memo: '',
+            sender: ''
           }));
         } catch (finalFallbackError) {
           console.error('Final fallback for transactions failed:', finalFallbackError);
