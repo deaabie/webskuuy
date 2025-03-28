@@ -55,6 +55,7 @@ export interface Block {
   height: number;
   hash: string;
   proposer: string;
+  proposerMoniker?: string;  // Add this new field for the moniker
   txs: number;
   timestamp: string;
 }

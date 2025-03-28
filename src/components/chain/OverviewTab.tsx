@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
-import { Block, Transaction, BlockchainStats, ChainConfig } from '@/services/cosmosService';
-import { Search } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { Grid } from 'lucide-react';
+import { Block, ChainConfig, BlockchainStats, Transaction } from '@/services/cosmos';
+import ChainInfoCard from './overview/ChainInfoCard';
+import TokenomicsCard from './overview/TokenomicsCard';
 import RecentBlocksCard from './overview/RecentBlocksCard';
-import BlockDetailsModal from './overview/BlockDetailsModal';
-import HashDetailsModal from './overview/HashDetailsModal';
+import RecentTransactionsCard from './overview/RecentTransactionsCard';
 import AccountDetailsModal from './overview/AccountDetailsModal';
-import axios from 'axios';
+import HashDetailsModal from './overview/HashDetailsModal';
+import BlockDetailsModal from './overview/BlockDetailsModal';
 
 interface OverviewTabProps {
   chain: ChainConfig;
@@ -18,184 +18,66 @@ interface OverviewTabProps {
   formatNumber: (num: number | string) => string;
   formatDate: (dateString: string) => string;
   apiUrl?: string;
+  rpcUrl?: string;  // Added rpcUrl prop
 }
 
-const OverviewTab: React.FC<OverviewTabProps> = ({ 
-  chain, 
-  blocks, 
-  transactions, 
+const OverviewTab: React.FC<OverviewTabProps> = ({
+  chain,
+  stats,
+  blocks,
+  transactions,
+  formatNumber,
   formatDate,
-  apiUrl
+  apiUrl,
+  rpcUrl,  // Accept rpcUrl
 }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
-  
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+  const [selectedHash, setSelectedHash] = useState<string | null>(null);
+  const [hashType, setHashType] = useState<'transaction' | 'address' | null>(null);
   const [isHashModalOpen, setIsHashModalOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState<string | null>(null);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  
-  const handleSearch = async () => {
-    if (!searchQuery.trim() || !apiUrl) {
-      toast({
-        title: "Invalid search",
-        description: "Please enter a valid block height, transaction hash, or account address",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setIsSearching(true);
-    
-    try {
-      // Check if it's a block height (numeric)
-      if (/^\d+$/.test(searchQuery)) {
-        const height = parseInt(searchQuery);
-        const existingBlock = blocks.find(b => b.height === height);
-        
-        if (existingBlock) {
-          setSelectedBlock(existingBlock);
-          setIsBlockModalOpen(true);
-        } else {
-          try {
-            const blockResponse = await axios.get(`${apiUrl.replace(/\/cosmos.*$/, '')}/block?height=${height}`);
-            if (blockResponse.data?.result?.block) {
-              const block = blockResponse.data.result.block;
-              setSelectedBlock({
-                height: height,
-                hash: block.header.app_hash,
-                proposer: block.header.proposer_address,
-                txs: block.data.txs ? block.data.txs.length : 0,
-                timestamp: block.header.time,
-              });
-              setIsBlockModalOpen(true);
-            }
-          } catch (error) {
-            console.error("Block fetch error:", error);
-            toast({
-              title: "Block not found",
-              description: `Could not find block at height ${height}`,
-              variant: "destructive"
-            });
-          }
-        }
-      }
-      // Check if it's a transaction hash (hex string)
-      else if (/^[0-9a-fA-F]{64}$/i.test(searchQuery) || /^[0-9A-F]{40}$/i.test(searchQuery)) {
-        try {
-          // First try to find the transaction in our cached list
-          const existingTx = transactions.find(t => 
-            t.hash.toLowerCase() === searchQuery.toLowerCase() || 
-            t.hash.includes(searchQuery)
-          );
-          
-          if (existingTx) {
-            console.log("Found existing transaction:", existingTx);
-            setSelectedTransaction(existingTx);
-            setIsHashModalOpen(true);
-          } else {
-            // If not found in cache, fetch it from the API
-            console.log("Fetching transaction from API:", searchQuery);
-            let txResponse;
-            try {
-              txResponse = await axios.get(`${apiUrl}/cosmos/tx/v1beta1/txs/${searchQuery}`);
-            } catch (error) {
-              console.log("First TX lookup failed, trying alternative format");
-              // Try alternative format
-              txResponse = await axios.get(`${apiUrl}/txs/${searchQuery}`);
-            }
-            
-            console.log("TX Response:", txResponse.data);
-            
-            if (txResponse.data?.tx_response || txResponse.data?.tx) {
-              const txData = txResponse.data?.tx_response || txResponse.data?.tx;
-              setSelectedTransaction({
-                hash: txData.txhash || searchQuery,
-                block: parseInt(txData.height) || 0,
-                type: txData.tx?.body?.messages?.[0]?.['@type']?.split('.')?.pop() || 
-                      txData.tx?.type || 'unknown',
-                fee: txData.tx?.auth_info?.fee?.amount?.[0]?.amount || 
-                     txData.tx?.fee?.amount?.[0]?.amount || "0",
-                status: (txData.code === 0 || txData.code === undefined) ? 'Success' : 'Failed',
-                timestamp: txData.timestamp || new Date().toISOString(),
-                gas: txData.gas_used || txData.gas_wanted || 'Unknown',
-                memo: txData.tx?.body?.memo || txData.tx?.memo || ''
-              });
-              setIsHashModalOpen(true);
-            } else {
-              throw new Error("Transaction data format not recognized");
-            }
-          }
-        } catch (error) {
-          console.error("Transaction fetch error:", error);
-          toast({
-            title: "Transaction not found",
-            description: "Could not find transaction with the provided hash",
-            variant: "destructive"
-          });
-        }
-      }
-      // Assume it's an account address
-      else if (searchQuery.startsWith(chain.addr_prefix)) {
-        setSelectedAccount(searchQuery);
-        setIsAccountModalOpen(true);
-      } else {
-        toast({
-          title: "Invalid input",
-          description: "Please enter a valid block height, transaction hash, or account address",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Error during search:', error);
-      toast({
-        title: "Search failed",
-        description: "An error occurred while searching. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const handleBlockClick = (block: Block) => {
     setSelectedBlock(block);
     setIsBlockModalOpen(true);
   };
 
+  const handleHashClick = (hash: string, type: 'transaction' | 'address') => {
+    setSelectedHash(hash);
+    setHashType(type);
+    setIsHashModalOpen(true);
+  };
+
+  const handleAccountClick = (account: string) => {
+    setSelectedAccount(account);
+    setIsAccountModalOpen(true);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="w-full max-w-2xl mx-auto mb-6">
-        <div className="relative rounded-lg overflow-hidden border border-input">
-          <Input 
-            type="text" 
-            placeholder="Search by block height, transaction hash, or account address" 
-            value={searchQuery} 
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            className="pr-12"
-          />
-          <button 
-            onClick={handleSearch}
-            disabled={isSearching}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:text-primary transition-colors disabled:opacity-50"
-          >
-            {isSearching ? (
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            ) : (
-              <Search className="h-5 w-5" />
-            )}
-          </button>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <ChainInfoCard chain={chain} stats={stats} formatNumber={formatNumber} />
+        <TokenomicsCard chain={chain} stats={stats} formatNumber={formatNumber} />
       </div>
 
-      <RecentBlocksCard 
-        blocks={blocks} 
-        onBlockClick={handleBlockClick}
-        formatDate={formatDate}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RecentBlocksCard
+          blocks={blocks}
+          formatDate={formatDate}
+          onBlockClick={handleBlockClick}
+          apiUrl={apiUrl}
+          rpcUrl={rpcUrl}  // Pass rpcUrl to RecentBlocksCard
+        />
+        
+        <RecentTransactionsCard
+          transactions={transactions}
+          formatDate={formatDate}
+          onHashClick={handleHashClick}
+          onAddressClick={handleAccountClick}
+        />
+      </div>
 
       <BlockDetailsModal
         isOpen={isBlockModalOpen}
@@ -208,14 +90,18 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
       <HashDetailsModal
         isOpen={isHashModalOpen}
         onOpenChange={setIsHashModalOpen}
-        transaction={selectedTransaction}
+        hash={selectedHash}
+        type={hashType}
         formatDate={formatDate}
+        apiUrl={apiUrl}
       />
 
       <AccountDetailsModal
         isOpen={isAccountModalOpen}
         onOpenChange={setIsAccountModalOpen}
         address={selectedAccount}
+        formatNumber={formatNumber}
+        formatDate={formatDate}
         apiUrl={apiUrl}
       />
     </div>

@@ -312,6 +312,7 @@ const ChainDashboard: React.FC = () => {
               formatNumber={formatNumber} 
               formatDate={formatDate}
               apiUrl={activeEndpoint.api}
+              rpcUrl={activeEndpoint.rpc}  // Pass the rpcUrl
             />
           </TabsContent>
           
@@ -328,6 +329,7 @@ const ChainDashboard: React.FC = () => {
               blocks={blocks} 
               formatDate={formatDate}
               apiUrl={activeEndpoint.api}
+              rpcUrl={activeEndpoint.rpc}  // Pass the rpcUrl
             />
           </TabsContent>
           

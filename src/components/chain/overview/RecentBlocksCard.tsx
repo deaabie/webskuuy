@@ -4,79 +4,54 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Blocks } from 'lucide-react';
-import { Block, Validator, getValidators } from '@/services/cosmos';
+import { Block, Validator, getValidators, getBlocksWithValidators } from '@/services/cosmos';
 
 interface RecentBlocksCardProps {
   blocks: Block[];
   formatDate: (dateString: string) => string;
   onBlockClick: (block: Block) => void;
   apiUrl?: string;
+  rpcUrl?: string;
 }
 
 const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({ 
   blocks, 
   formatDate,
   onBlockClick,
-  apiUrl
+  apiUrl,
+  rpcUrl
 }) => {
   // Take only the 10 most recent blocks
   const recentBlocks = blocks.slice(0, 10);
-  const [proposers, setProposers] = useState<Record<string, {name: string}>>({});
+  const [blocksWithMonikers, setBlocksWithMonikers] = useState<Block[]>([]);
   const [loading, setLoading] = useState(false);
-  const [validators, setValidators] = useState<Validator[]>([]);
 
   useEffect(() => {
-    const fetchValidators = async () => {
-      if (!apiUrl || recentBlocks.length === 0) return;
+    const fetchBlocksWithMonikers = async () => {
+      if (!apiUrl || !rpcUrl || recentBlocks.length === 0) return;
       
       try {
         setLoading(true);
-        const validatorsData = await getValidators(apiUrl);
-        setValidators(validatorsData);
-        
-        const proposerMap: Record<string, {name: string}> = {};
-        
-        // Create a map of consensus addresses to validator info
-        const validatorMap: Record<string, Validator> = {};
-        validatorsData.forEach(validator => {
-          if (validator.consensus_address) {
-            validatorMap[validator.consensus_address.toLowerCase()] = validator;
-          }
-        });
-        
-        // Match proposers to validators
-        recentBlocks.forEach(block => {
-          const proposerAddress = block.proposer.toLowerCase();
-          const matchedValidator = validatorMap[proposerAddress] || 
-                                  validatorsData.find(v => 
-                                    v.consensus_address?.toLowerCase() === proposerAddress || 
-                                    v.address.toLowerCase() === proposerAddress
-                                  );
-          
-          if (matchedValidator) {
-            proposerMap[block.proposer] = {
-              name: matchedValidator.moniker
-            };
-          } else {
-            // Default shortened address format
-            proposerMap[block.proposer] = {
-              name: `${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`
-            };
-          }
-        });
-        
-        setProposers(proposerMap);
+        const enhancedBlocks = await getBlocksWithValidators(rpcUrl, apiUrl, recentBlocks.length);
+        setBlocksWithMonikers(enhancedBlocks);
       } catch (error) {
-        console.error("Error fetching validators for proposer info:", error);
+        console.error("Error fetching blocks with validator info:", error);
+        // Fall back to original blocks
+        setBlocksWithMonikers(recentBlocks);
       } finally {
         setLoading(false);
       }
     };
     
-    if (recentBlocks.length > 0 && apiUrl) {
-      fetchValidators();
+    if (recentBlocks.length > 0 && apiUrl && rpcUrl) {
+      fetchBlocksWithMonikers();
+    } else {
+      setBlocksWithMonikers(recentBlocks);
     }
-  }, [recentBlocks, apiUrl]);
+  }, [recentBlocks, apiUrl, rpcUrl]);
+
+  // Use blocksWithMonikers if available, otherwise fall back to recentBlocks
+  const displayBlocks = blocksWithMonikers.length > 0 ? blocksWithMonikers : recentBlocks;
 
   return (
     <Card>
@@ -99,8 +74,8 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {recentBlocks.length > 0 ? (
-              recentBlocks.map((block) => (
+            {displayBlocks.length > 0 ? (
+              displayBlocks.map((block) => (
                 <TableRow key={block.height}>
                   <TableCell className="font-medium">
                     <Button 
@@ -115,8 +90,8 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
                   <TableCell>
                     {loading ? (
                       <span className="text-xs">Loading...</span>
-                    ) : proposers[block.proposer] ? (
-                      <span className="text-xs font-medium">{proposers[block.proposer].name}</span>
+                    ) : block.proposerMoniker ? (
+                      <span className="text-xs font-medium">{block.proposerMoniker}</span>
                     ) : (
                       <span className="font-mono text-xs">{block.proposer.substring(0, 6)}...</span>
                     )}

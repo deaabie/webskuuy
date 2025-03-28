@@ -1,116 +1,123 @@
 
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Blocks, Hash, User, Clock } from 'lucide-react';
-import { Block, Validator, getValidators } from '@/services/cosmosService';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Blocks, Calendar, Hash, User, Clock, FileText } from 'lucide-react';
+import { Block } from '@/services/cosmos';
 
 interface BlockDetailsModalProps {
   isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (isOpen: boolean) => void;
   block: Block | null;
   formatDate: (dateString: string) => string;
   apiUrl?: string;
+  rpcUrl?: string;
 }
 
-const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({ 
-  isOpen, 
-  onOpenChange, 
-  block, 
+const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
+  isOpen,
+  onOpenChange,
+  block,
   formatDate,
-  apiUrl
+  apiUrl,
+  rpcUrl,
 }) => {
-  const [proposerName, setProposerName] = useState<string | null>(null);
-  
-  useEffect(() => {
-    // Fetch validator info to get the moniker name
-    const fetchProposerInfo = async () => {
-      if (!block || !apiUrl) return;
-      
-      try {
-        const validators = await getValidators(apiUrl);
-        // Find the validator with the matching address
-        const proposerValidator = validators.find(v => 
-          v.address.toLowerCase() === block.proposer.toLowerCase()
-        );
-        
-        if (proposerValidator) {
-          setProposerName(proposerValidator.moniker);
-        } else {
-          // If no matching validator is found, show a shortened address
-          setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
-        }
-      } catch (error) {
-        console.error("Error fetching proposer info:", error);
-        // Fallback to shortened address format
-        setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
-      }
-    };
-    
-    if (isOpen && block) {
-      fetchProposerInfo();
-    }
-  }, [block, isOpen, apiUrl]);
-  
-  if (!block) return null;
-  
+  if (!block) {
+    return null;
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Block #{block.height}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Blocks className="h-5 w-5 text-purple-500" />
+            Block {block.height}
+          </DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-4 mt-2">
-          <div className="grid grid-cols-[auto,1fr] gap-x-4 gap-y-3 items-start">
-            <div className="flex items-center gap-2">
-              <Blocks className="h-5 w-5 text-purple-500" />
-              <span className="font-semibold">Height:</span>
-            </div>
-            <div>{block.height}</div>
-            
-            <div className="flex items-center gap-2">
-              <Hash className="h-5 w-5 text-blue-500" />
-              <span className="font-semibold">Hash:</span>
-            </div>
-            <div className="font-mono text-xs break-all">{block.hash}</div>
-            
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-green-500" />
-              <span className="font-semibold">Proposer:</span>
-            </div>
-            <div>
-              {proposerName || (
-                <span className="font-mono text-xs">
-                  {block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-amber-500" />
-              <span className="font-semibold">Time:</span>
-            </div>
-            <div>{formatDate(block.timestamp)}</div>
-          </div>
-          
-          <div className="pt-2">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold">Transactions:</span>
-              <span className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 px-2 py-0.5 rounded-full text-xs">
-                {block.txs}
-              </span>
-            </div>
-            {block.txs > 0 ? (
-              <p className="text-sm text-muted-foreground">
-                This block contains {block.txs} transactions.
-              </p>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                This block contains no transactions.
-              </p>
-            )}
-          </div>
-        </div>
+
+        <Tabs defaultValue="overview" className="mt-4">
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="raw">Raw JSON</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-4 py-4">
+            <Card>
+              <CardContent className="pt-6">
+                <Table>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell className="flex items-center font-medium">
+                        <Hash className="h-4 w-4 text-muted-foreground mr-2" />
+                        Block Hash
+                      </TableCell>
+                      <TableCell className="font-mono text-xs break-all">
+                        {block.hash}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="flex items-center font-medium">
+                        <User className="h-4 w-4 text-muted-foreground mr-2" />
+                        Proposer
+                      </TableCell>
+                      <TableCell>
+                        {block.proposerMoniker ? (
+                          <span className="font-medium">{block.proposerMoniker}</span>
+                        ) : (
+                          <span className="font-mono text-xs">{block.proposer}</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="flex items-center font-medium">
+                        <FileText className="h-4 w-4 text-muted-foreground mr-2" />
+                        Transactions
+                      </TableCell>
+                      <TableCell>{block.txs || 0}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell className="flex items-center font-medium">
+                        <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+                        Time
+                      </TableCell>
+                      <TableCell>{formatDate(block.timestamp)}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="transactions" className="py-4">
+            <Card>
+              <CardContent className="pt-6">
+                {block.txs > 0 ? (
+                  <div className="text-muted-foreground text-center py-4">
+                    Transaction data loading...
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground text-center py-4">
+                    No transactions in this block
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="raw" className="py-4">
+            <Card>
+              <CardContent className="pt-6">
+                <pre className="bg-muted p-4 rounded-md overflow-auto text-xs">
+                  {JSON.stringify(block, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );
