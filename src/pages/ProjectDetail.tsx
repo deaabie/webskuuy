@@ -198,17 +198,19 @@ const ProjectDetail = () => {
             </Card>
           </div>
           
-          <div>
-            <Card className="mb-6 border-0 shadow-md overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+          <div className="space-y-6">
+            {/* Project Info Card */}
+            <Card className="border-0 shadow-md overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4">
                 <CardTitle>Project Info</CardTitle>
               </CardHeader>
-              <CardContent className="bg-white dark:bg-gray-800">
+              <CardContent className="bg-white dark:bg-gray-800 p-6">
                 <p className="text-gray-600 dark:text-gray-300 mb-6">{project.description}</p>
                 
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Resources Section */}
                   <div>
-                    <h3 className="font-medium mb-2 text-purple-700 dark:text-purple-400">Resources</h3>
+                    <h3 className="font-medium text-purple-600 dark:text-purple-400 mb-3">Resources</h3>
                     <ProjectDetailsList
                       details={resources}
                       detailType="resource"
@@ -218,8 +220,9 @@ const ProjectDetail = () => {
                     />
                   </div>
                   
+                  {/* Community Section */}
                   <div>
-                    <h3 className="font-medium mb-2 text-purple-700 dark:text-purple-400">Community</h3>
+                    <h3 className="font-medium text-purple-600 dark:text-purple-400 mb-3">Community</h3>
                     <ProjectDetailsList
                       details={communityLinks}
                       detailType="community"
@@ -232,11 +235,12 @@ const ProjectDetail = () => {
               </CardContent>
             </Card>
             
+            {/* Requirements Card */}
             <Card className="border-0 shadow-md overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-4">
                 <CardTitle>Requirements</CardTitle>
               </CardHeader>
-              <CardContent className="bg-white dark:bg-gray-800">
+              <CardContent className="bg-white dark:bg-gray-800 p-6">
                 <ProjectDetailsList
                   details={requirements}
                   detailType="requirement"

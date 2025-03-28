@@ -118,11 +118,11 @@ const ProjectDetailsList: React.FC<ProjectDetailsListProps> = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {details.map((detail) => (
         <div key={detail.id} className={detailType === "requirement" 
-          ? "flex justify-between items-center"
-          : "flex items-center gap-2"
+          ? "flex justify-between items-center py-2"
+          : "flex items-center gap-2 py-2"
         }>
           {editingDetail === detail.id ? (
             // Edit mode
@@ -166,13 +166,13 @@ const ProjectDetailsList: React.FC<ProjectDetailsListProps> = ({
             <>
               {detailType === "requirement" ? (
                 <>
-                  <span className="text-gray-600 dark:text-gray-300">{detail.title}</span>
-                  <span className="font-medium">{detail.value}</span>
+                  <span className="text-gray-600 dark:text-gray-300 font-medium">{detail.title}</span>
+                  <span className="font-bold text-purple-700 dark:text-purple-400">{detail.value}</span>
                 </>
               ) : (
                 <a
                   href={detail.url || "#"}
-                  className="flex items-center gap-2 text-blue-600 hover:underline"
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
