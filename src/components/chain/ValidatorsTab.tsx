@@ -17,7 +17,6 @@ import {
   CalendarClock
 } from 'lucide-react';
 import { Validator } from '@/services/cosmosService';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface ValidatorsTabProps {
   validators: Validator[];
@@ -39,16 +38,6 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
     .filter(validator => validator.status === 'Active')
     .sort((a, b) => parseFloat(b.voting_power) - parseFloat(a.voting_power))
     .slice(0, 100);
-
-  // Helper function to get initials from moniker
-  const getInitials = (moniker: string): string => {
-    return moniker
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .substring(0, 2)
-      .toUpperCase();
-  };
 
   return (
     <div className="space-y-6">
@@ -73,25 +62,12 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
               {filteredAndSortedValidators.map((validator, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleValidatorClick(validator)}>
-                      <Avatar className="h-6 w-6">
-                        {validator.image ? (
-                          <AvatarImage 
-                            src={validator.image} 
-                            alt={validator.moniker} 
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ) : null}
-                        <AvatarFallback className="text-xs">
-                          {getInitials(validator.moniker)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-primary hover:underline">
-                        {validator.moniker}
-                      </span>
-                    </div>
+                    <span 
+                      className="cursor-pointer text-primary hover:underline"
+                      onClick={() => handleValidatorClick(validator)}
+                    >
+                      {validator.moniker}
+                    </span>
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{validator.address}</TableCell>
                   <TableCell>{formatNumber(validator.voting_power)}</TableCell>
@@ -115,25 +91,12 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
           {selectedValidator && (
             <>
               <SheetHeader className="mb-6">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    {selectedValidator.image ? (
-                      <AvatarImage 
-                        src={selectedValidator.image} 
-                        alt={selectedValidator.moniker}
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    ) : null}
-                    <AvatarFallback>
-                      {getInitials(selectedValidator.moniker)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <SheetTitle>{selectedValidator.moniker}</SheetTitle>
-                </div>
-                <SheetDescription>
+                <SheetTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-purple-500" />
                   Validator Details
+                </SheetTitle>
+                <SheetDescription>
+                  Information about {selectedValidator.moniker}
                 </SheetDescription>
               </SheetHeader>
               
