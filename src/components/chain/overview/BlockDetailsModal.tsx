@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Blocks, Hash, User, Clock } from 'lucide-react';
 import { Block, Validator, getValidators } from '@/services/cosmosService';
+import { formatDistanceToNow } from 'date-fns';
 
 interface BlockDetailsModalProps {
   isOpen: boolean;
@@ -19,7 +20,10 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   formatDate,
   apiUrl
 }) => {
-  const [proposerName, setProposerName] = useState<string>("");
+  const [proposerInfo, setProposerInfo] = useState<{
+    moniker: string;
+    image?: string;
+  } | null>(null);
   
   useEffect(() => {
     // Fetch validator info to get the moniker name
@@ -34,15 +38,22 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
         );
         
         if (proposerValidator) {
-          setProposerName(proposerValidator.moniker);
+          setProposerInfo({
+            moniker: proposerValidator.moniker,
+            image: proposerValidator.image
+          });
         } else {
           // If no matching validator is found, show a shortened address
-          setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+          setProposerInfo({
+            moniker: `${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`
+          });
         }
       } catch (error) {
         console.error("Error fetching proposer info:", error);
         // Fallback to shortened address format
-        setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+        setProposerInfo({
+          moniker: `${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`
+        });
       }
     };
     
@@ -52,6 +63,9 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   }, [block, isOpen, apiUrl]);
   
   if (!block) return null;
+  
+  // Calculate time ago
+  const timeAgo = formatDistanceToNow(new Date(block.timestamp), { addSuffix: true });
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -78,17 +92,32 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <User className="h-5 w-5 text-green-500" />
               <span className="font-semibold">Proposer:</span>
             </div>
-            <div>
-              {proposerName || (
-                <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
+            <div className="flex items-center gap-2">
+              {proposerInfo?.image && (
+                <img 
+                  src={proposerInfo.image} 
+                  alt={proposerInfo.moniker}
+                  className="w-6 h-6 rounded-full mr-2"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
               )}
+              <span className="font-medium">
+                {proposerInfo?.moniker || (
+                  <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
+                )}
+              </span>
             </div>
             
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-amber-500" />
               <span className="font-semibold">Time:</span>
             </div>
-            <div>{formatDate(block.timestamp)}</div>
+            <div>
+              <div>{formatDate(block.timestamp)}</div>
+              <div className="text-xs text-muted-foreground">{timeAgo}</div>
+            </div>
           </div>
           
           <div className="pt-2">
