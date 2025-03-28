@@ -22,12 +22,14 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
   // Take only the 10 most recent blocks
   const recentBlocks = blocks.slice(0, 10);
   const [proposers, setProposers] = useState<Record<string, {name: string}>>({});
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchValidators = async () => {
-      if (!apiUrl) return;
+      if (!apiUrl || recentBlocks.length === 0) return;
       
       try {
+        setLoading(true);
         const validators = await getValidators(apiUrl);
         const proposerMap: Record<string, {name: string}> = {};
         
@@ -51,6 +53,8 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
         setProposers(proposerMap);
       } catch (error) {
         console.error("Error fetching validators for proposer info:", error);
+      } finally {
+        setLoading(false);
       }
     };
     
@@ -94,8 +98,10 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
                   <TableCell>
-                    {proposers[block.proposer] ? (
-                      <span className="text-xs">{proposers[block.proposer].name}</span>
+                    {loading ? (
+                      <span className="text-xs">Loading...</span>
+                    ) : proposers[block.proposer] ? (
+                      <span className="text-xs font-medium">{proposers[block.proposer].name}</span>
                     ) : (
                       <span className="font-mono text-xs">{block.proposer.substring(0, 6)}...</span>
                     )}
