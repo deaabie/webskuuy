@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from '@/components/ui/badge';
 import { FileCode } from 'lucide-react';
 import { Transaction, getTransactions } from '@/services/cosmosService';
+import { toast } from '@/components/ui/use-toast';
 
 interface RecentTransactionsCardProps {
   transactions: Transaction[];
