@@ -23,6 +23,7 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
   const recentBlocks = blocks.slice(0, 10);
   const [proposers, setProposers] = useState<Record<string, {name: string}>>({});
   const [loading, setLoading] = useState(false);
+  const [validators, setValidators] = useState<Validator[]>([]);
 
   useEffect(() => {
     const fetchValidators = async () => {
@@ -30,17 +31,31 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
       
       try {
         setLoading(true);
-        const validators = await getValidators(apiUrl);
+        const validatorsData = await getValidators(apiUrl);
+        setValidators(validatorsData);
+        
         const proposerMap: Record<string, {name: string}> = {};
         
+        // Create a map of consensus addresses to validator info
+        const validatorMap: Record<string, Validator> = {};
+        validatorsData.forEach(validator => {
+          if (validator.consensus_address) {
+            validatorMap[validator.consensus_address.toLowerCase()] = validator;
+          }
+        });
+        
+        // Match proposers to validators
         recentBlocks.forEach(block => {
-          const validator = validators.find(v => 
-            v.address.toLowerCase() === block.proposer.toLowerCase()
-          );
+          const proposerAddress = block.proposer.toLowerCase();
+          const matchedValidator = validatorMap[proposerAddress] || 
+                                  validatorsData.find(v => 
+                                    v.consensus_address?.toLowerCase() === proposerAddress || 
+                                    v.address.toLowerCase() === proposerAddress
+                                  );
           
-          if (validator) {
+          if (matchedValidator) {
             proposerMap[block.proposer] = {
-              name: validator.moniker
+              name: matchedValidator.moniker
             };
           } else {
             // Default shortened address format
