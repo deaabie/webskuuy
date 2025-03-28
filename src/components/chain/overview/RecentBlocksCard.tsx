@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Blocks } from 'lucide-react';
-import { Block, Validator, getValidators } from '@/services/cosmosService';
+import { Block, Validator, getValidators } from '@/services/cosmos';
 
 interface RecentBlocksCardProps {
   blocks: Block[];
