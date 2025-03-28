@@ -136,7 +136,7 @@ const MAINNETS: Record<string, NetworkConfig> = {
     explorer: 'https://blastscan.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png'
   },
-  blast_mainnet: {
+  berachain_mainnet: {
     id: "berachain_mainnet",
     rpcUrl: 'https://rpc.berachain.com',
     chainId: 80094,
