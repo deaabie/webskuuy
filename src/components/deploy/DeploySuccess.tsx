@@ -57,7 +57,7 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
   };
 
   return (
-    <div className="flex flex-col items-center text-center space-y-6">
+    <div className="flex flex-col items-center text-center space-y-8 py-4">
       <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
         <CheckCircle2 className="h-14 w-14 text-primary" />
       </div>
@@ -69,15 +69,15 @@ const DeploySuccess = ({ txHash, network, contractAddress }: DeploySuccessProps)
         </p>
       </div>
       
-      <div className="bg-muted p-4 rounded-md w-full flex flex-col space-y-4">
-        <div className="space-y-1">
+      <div className="bg-muted/30 p-5 rounded-md w-full flex flex-col space-y-4 border border-border/30">
+        <div className="space-y-2">
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Contract Address:</span>
             <Button variant="ghost" size="sm" onClick={handleCopyAddress} className="h-6 px-2">
               {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>
           </div>
-          <p className="font-mono text-sm break-all">{contractAddress}</p>
+          <p className="font-mono text-sm break-all text-left bg-background/50 p-3 rounded border border-border/20">{contractAddress}</p>
         </div>
       </div>
       

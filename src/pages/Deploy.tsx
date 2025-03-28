@@ -5,14 +5,14 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const Deploy = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/90 text-foreground">
+    <div className="min-h-screen bg-background dark:bg-gray-950 text-foreground">
       <Helmet>
         <title>Skuuy.com | Deploy Smart Contract</title>
         <meta name="description" content="Deploy your own smart contract on various blockchain networks" />
       </Helmet>
       
-      <div className="container mx-auto px-4 py-8 md:py-16">
-        <div className="max-w-5xl mx-auto">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="max-w-6xl mx-auto">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 text-center text-primary">
             Deploy Your Smart Contract
           </h1>
@@ -28,51 +28,51 @@ const Deploy = () => {
             </CardContent>
           </Card>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-1 space-y-4">
-              <Card className="bg-primary/5 border-border h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4">
+              <Card className="bg-primary/5 border-border h-full dark:bg-gray-900">
                 <CardContent className="p-6 flex flex-col h-full">
-                  <h3 className="text-2xl font-semibold mb-4 text-primary">Why Deploy with Us?</h3>
-                  <ul className="space-y-4 flex-grow">
+                  <h3 className="text-2xl font-semibold mb-6 text-primary">Why Deploy with Us?</h3>
+                  <ul className="space-y-6 flex-grow">
                     <li className="flex items-start">
-                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-1">
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-0.5">
                         <span className="text-primary font-bold">1</span>
                       </div>
                       <div>
-                        <span className="font-medium text-lg">Multi-network Support</span>
-                        <p className="text-muted-foreground mt-1">Deploy on both mainnet and testnet networks</p>
+                        <span className="font-medium text-lg block mb-1">Multi-network Support</span>
+                        <p className="text-muted-foreground">Deploy on both mainnet and testnet networks</p>
                       </div>
                     </li>
                     <li className="flex items-start">
-                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-1">
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-0.5">
                         <span className="text-primary font-bold">2</span>
                       </div>
                       <div>
-                        <span className="font-medium text-lg">Simple Interface</span>
-                        <p className="text-muted-foreground mt-1">No coding experience required</p>
+                        <span className="font-medium text-lg block mb-1">Simple Interface</span>
+                        <p className="text-muted-foreground">No coding experience required</p>
                       </div>
                     </li>
                     <li className="flex items-start">
-                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-1">
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-0.5">
                         <span className="text-primary font-bold">3</span>
                       </div>
                       <div>
-                        <span className="font-medium text-lg">Secure Deployment</span>
-                        <p className="text-muted-foreground mt-1">Direct connection with your wallet</p>
+                        <span className="font-medium text-lg block mb-1">Secure Deployment</span>
+                        <p className="text-muted-foreground">Direct connection with your wallet</p>
                       </div>
                     </li>
                     <li className="flex items-start">
-                      <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-1">
+                      <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center mr-3 mt-0.5">
                         <span className="text-primary font-bold">4</span>
                       </div>
                       <div>
-                        <span className="font-medium text-lg">Multiple Contract Types</span>
-                        <p className="text-muted-foreground mt-1">Basic contracts and ERC20 tokens supported</p>
+                        <span className="font-medium text-lg block mb-1">Multiple Contract Types</span>
+                        <p className="text-muted-foreground">Basic contracts and ERC20 tokens supported</p>
                       </div>
                     </li>
                   </ul>
                   
-                  <div className="bg-muted/50 rounded-lg p-4 mt-6">
+                  <div className="bg-muted/50 rounded-lg p-4 mt-8">
                     <h4 className="font-semibold mb-2">For Testing</h4>
                     <p className="text-sm text-muted-foreground">
                       Make sure to have some test ETH in your wallet when deploying on testnets.
@@ -83,7 +83,7 @@ const Deploy = () => {
               </Card>
             </div>
             
-            <div className="md:col-span-2">
+            <div className="lg:col-span-8">
               <DeployContainer />
             </div>
           </div>

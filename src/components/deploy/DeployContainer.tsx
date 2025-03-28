@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
@@ -12,15 +11,6 @@ import DeploySuccess from './DeploySuccess';
 import { ExternalLink } from 'lucide-react';
 import { getContractByMode } from '../../utils/contractUtils';
 import { getNetworkById } from '@/config/deploy-config';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 
 const DeployContainer = () => {
   const [connected, setConnected] = useState(false);
@@ -202,69 +192,72 @@ const DeployContainer = () => {
   };
 
   return (
-    <Card className="w-full bg-primary/5 border-border">
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold text-primary">Deploy Your Smart Contract</CardTitle>
+    <Card className="w-full bg-card border-border dark:bg-gray-900">
+      <CardHeader className="border-b border-border/30 pb-4">
+        <CardTitle className="text-2xl font-bold text-primary">Deploy Your Smart Contract</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 p-6">
         {!deploySuccess ? (
           <>
-            <div className="space-y-4">
-              <div className="mb-6">
+            <div className="space-y-5">
+              <div className="mb-4">
                 <ConnectWalletButton onConnectionChange={handleWalletConnection} />
               </div>
               
               {connected && (
                 <>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h3 className="text-xl font-medium">Select Network</h3>
                     <NetworkSelector onNetworkChange={handleNetworkChange} />
                   </div>
                   
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-medium">Deployment Mode</h3>
+                  <div className="space-y-3 pt-2">
+                    <h3 className="text-xl font-medium">Contract Type</h3>
                     <RadioGroup 
                       defaultValue="basic" 
-                      className="flex space-x-4"
+                      className="grid grid-cols-2 gap-4"
                       onValueChange={setDeployMode}
                       value={deployMode}
                     >
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 border border-border/50 rounded-md p-4 hover:border-primary/50 transition-colors cursor-pointer">
                         <RadioGroupItem value="basic" id="basic" />
-                        <Label htmlFor="basic" className="text-lg">Counter Contract</Label>
+                        <Label htmlFor="basic" className="text-lg cursor-pointer">Counter Contract</Label>
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 border border-border/50 rounded-md p-4 hover:border-primary/50 transition-colors cursor-pointer">
                         <RadioGroupItem value="storage" id="storage" />
-                        <Label htmlFor="storage" className="text-lg">SimpleStorage Contract</Label>
+                        <Label htmlFor="storage" className="text-lg cursor-pointer">SimpleStorage Contract</Label>
                       </div>
                     </RadioGroup>
                   </div>
                   
-                  {deployMode === 'basic' ? (
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-medium">Counter Contract</h3>
-                      <p className="text-muted-foreground mb-4">
-                        This contract allows you to maintain a counter value that can be incremented and decremented.
-                        After deployment, you can call 'increment()' and 'decrement()' functions to update the counter.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-medium">SimpleStorage Contract</h3>
-                      <p className="text-muted-foreground mb-4">
-                        This contract allows you to store and retrieve a simple numeric value on the blockchain.
-                        After deployment, you can call 'set(uint256)' to store a value and 'get()' to retrieve it.
-                      </p>
-                    </div>
-                  )}
+                  <div className="space-y-2 pt-2">
+                    <h3 className="text-xl font-medium">Contract Details</h3>
+                    {deployMode === 'basic' ? (
+                      <div className="bg-muted/30 rounded-md p-4 border border-border/30">
+                        <h4 className="font-medium text-lg mb-2">Counter Contract</h4>
+                        <p className="text-muted-foreground">
+                          This contract allows you to maintain a counter value that can be incremented and decremented.
+                          After deployment, you can call 'increment()' and 'decrement()' functions to update the counter.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-muted/30 rounded-md p-4 border border-border/30">
+                        <h4 className="font-medium text-lg mb-2">SimpleStorage Contract</h4>
+                        <p className="text-muted-foreground">
+                          This contract allows you to store and retrieve a simple numeric value on the blockchain.
+                          After deployment, you can call 'set(uint256)' to store a value and 'get()' to retrieve it.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                   
                   <Button 
-                    className="w-full py-6 text-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold"
+                    className="w-full py-6 text-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold mt-4"
                     onClick={handleDeploy}
                     disabled={isDeploying}
                     variant="default"
                   >
-                    {isDeploying ? "DEPLOYING..." : "DEPLOY"}
+                    {isDeploying ? "DEPLOYING..." : "DEPLOY CONTRACT"}
                   </Button>
                   
                   <div className="mt-4 text-sm text-muted-foreground flex items-center justify-center">

@@ -120,13 +120,13 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
   return (
     <div>
       <Tabs defaultValue="testnet" className="w-full" onValueChange={setNetworkMode}>
-        <TabsList className="grid w-full grid-cols-3 mb-4">
-          <TabsTrigger value="testnet">Testnet</TabsTrigger>
-          <TabsTrigger value="mainnet">Mainnet</TabsTrigger>
-          <TabsTrigger value="custom">Custom</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50">
+          <TabsTrigger value="testnet" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">Testnet</TabsTrigger>
+          <TabsTrigger value="mainnet" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">Mainnet</TabsTrigger>
+          <TabsTrigger value="custom" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary">Custom</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="testnet" className="space-y-4">
+        <TabsContent value="testnet" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {TESTNETS.map((network) => (
               <Card
@@ -155,7 +155,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
           </div>
         </TabsContent>
         
-        <TabsContent value="mainnet" className="space-y-4">
+        <TabsContent value="mainnet" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {MAINNETS.map((network) => (
               <Card
@@ -184,7 +184,7 @@ const NetworkSelector = ({ onNetworkChange }: NetworkSelectionProps) => {
           </div>
         </TabsContent>
         
-        <TabsContent value="custom" className="space-y-4">
+        <TabsContent value="custom" className="space-y-4 mt-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {customNetworks.map((network) => (
               <Card

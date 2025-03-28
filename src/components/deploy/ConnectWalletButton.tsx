@@ -156,7 +156,7 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
     <div className="space-y-2">
       {!isConnected ? (
         <Button 
-          className="w-full py-6 text-lg font-semibold flex items-center justify-center"
+          className="w-full py-6 text-lg font-semibold flex items-center justify-center bg-primary/90 hover:bg-primary"
           onClick={connectWallet}
           disabled={isConnecting}
         >
@@ -165,7 +165,7 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
         </Button>
       ) : (
         <div className="space-y-2">
-          <div className="flex items-center justify-between bg-muted rounded-md px-4 py-3">
+          <div className="flex items-center justify-between bg-muted/50 rounded-md px-4 py-3 border border-border/30">
             <div className="flex items-center">
               <Wallet className="mr-2 h-5 w-5 text-primary" />
               <span className="text-sm font-medium">
@@ -176,6 +176,7 @@ const ConnectWalletButton = ({ onConnectionChange }: ConnectWalletButtonProps) =
               variant="secondary" 
               size="sm"
               onClick={disconnectWallet}
+              className="bg-muted hover:bg-muted/80"
             >
               Disconnect
             </Button>
