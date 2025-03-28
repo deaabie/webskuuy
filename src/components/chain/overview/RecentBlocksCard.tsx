@@ -5,7 +5,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Blocks } from 'lucide-react';
 import { Block, Validator, getValidators } from '@/services/cosmosService';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface RecentBlocksCardProps {
   blocks: Block[];
@@ -22,7 +21,7 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
 }) => {
   // Take only the 10 most recent blocks
   const recentBlocks = blocks.slice(0, 10);
-  const [proposers, setProposers] = useState<Record<string, {name: string, image?: string}>>({});
+  const [proposers, setProposers] = useState<Record<string, {name: string}>>({});
 
   useEffect(() => {
     const fetchValidators = async () => {
@@ -30,7 +29,7 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
       
       try {
         const validators = await getValidators(apiUrl);
-        const proposerMap: Record<string, {name: string, image?: string}> = {};
+        const proposerMap: Record<string, {name: string}> = {};
         
         recentBlocks.forEach(block => {
           const validator = validators.find(v => 
@@ -39,8 +38,7 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
           
           if (validator) {
             proposerMap[block.proposer] = {
-              name: validator.moniker,
-              image: validator.image
+              name: validator.moniker
             };
           } else {
             // Default shortened address format
@@ -60,15 +58,6 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
       fetchValidators();
     }
   }, [recentBlocks, apiUrl]);
-
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
 
   return (
     <Card>
@@ -105,23 +94,11 @@ const RecentBlocksCard: React.FC<RecentBlocksCardProps> = ({
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{block.hash}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      {proposers[block.proposer] && (
-                        <>
-                          <Avatar className="h-5 w-5 border border-border">
-                            {proposers[block.proposer].image ? (
-                              <AvatarImage src={proposers[block.proposer].image} alt={proposers[block.proposer].name} />
-                            ) : (
-                              <AvatarFallback>{getInitials(proposers[block.proposer].name)}</AvatarFallback>
-                            )}
-                          </Avatar>
-                          <span className="text-xs truncate max-w-[100px]">{proposers[block.proposer].name}</span>
-                        </>
-                      )}
-                      {!proposers[block.proposer] && (
-                        <span className="font-mono text-xs">{block.proposer.substring(0, 6)}...</span>
-                      )}
-                    </div>
+                    {proposers[block.proposer] ? (
+                      <span className="text-xs">{proposers[block.proposer].name}</span>
+                    ) : (
+                      <span className="font-mono text-xs">{block.proposer.substring(0, 6)}...</span>
+                    )}
                   </TableCell>
                   <TableCell>{block.txs}</TableCell>
                   <TableCell>{formatDate(block.timestamp)}</TableCell>

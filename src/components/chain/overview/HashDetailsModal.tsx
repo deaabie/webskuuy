@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Hash, Clock, LayoutGrid, Coins, FileText, MessageSquare, User } from 'lucide-react';
 import { Transaction, Validator, getValidators } from '@/services/cosmosService';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface HashDetailsModalProps {
   isOpen: boolean;
@@ -20,10 +19,7 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
   formatDate,
   apiUrl
 }) => {
-  const [senderInfo, setSenderInfo] = useState<{
-    name: string;
-    image?: string;
-  } | null>(null);
+  const [senderName, setSenderName] = useState<string | null>(null);
   
   useEffect(() => {
     // Fetch validator info to get the sender name if it's a validator
@@ -39,23 +35,16 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
         );
         
         if (senderValidator) {
-          setSenderInfo({
-            name: senderValidator.moniker,
-            image: senderValidator.image
-          });
+          setSenderName(senderValidator.moniker);
         } else {
           // If no matching validator is found, show a shortened address
-          setSenderInfo({
-            name: `${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`
-          });
+          setSenderName(`${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`);
         }
       } catch (error) {
         console.error("Error fetching sender info:", error);
         // Fallback to shortened address format
         if (transaction?.sender) {
-          setSenderInfo({
-            name: `${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`
-          });
+          setSenderName(`${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`);
         }
       }
     };
@@ -66,15 +55,6 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
   }, [transaction, isOpen, apiUrl]);
 
   if (!transaction) return null;
-
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -97,20 +77,8 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
                   <User className="h-5 w-5 text-indigo-500" />
                   <span className="font-semibold">Sender:</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {senderInfo && (
-                    <>
-                      <Avatar className="h-5 w-5 border border-border">
-                        {senderInfo.image ? (
-                          <AvatarImage src={senderInfo.image} alt={senderInfo.name} />
-                        ) : (
-                          <AvatarFallback>{getInitials(senderInfo.name)}</AvatarFallback>
-                        )}
-                      </Avatar>
-                      <span>{senderInfo.name}</span>
-                    </>
-                  )}
-                  {!senderInfo && (
+                <div>
+                  {senderName || (
                     <span className="font-mono text-xs break-all">{transaction.sender}</span>
                   )}
                 </div>

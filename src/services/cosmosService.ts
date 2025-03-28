@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 export interface ChainConfig {
@@ -45,6 +44,9 @@ export interface Validator {
   commission: string;
   status: string;
   uptime: string;
+  account_address?: string;
+  website?: string;
+  details?: string;
 }
 
 export interface Block {
@@ -239,6 +241,9 @@ export const getValidators = async (apiUrl: string): Promise<Validator[]> => {
       commission: (parseFloat(v.commission.commission_rates.rate) * 100).toFixed(2) + "%",
       status: v.status === 'BOND_STATUS_BONDED' ? 'Active' : 'Inactive',
       uptime: "100%", // This would require additional data
+      account_address: v.consensus_pubkey?.key ? v.consensus_pubkey.key : undefined,
+      website: v.description?.website || undefined,
+      details: v.description?.details || undefined
     }));
   } catch (error) {
     console.error('Error fetching validators:', error);
