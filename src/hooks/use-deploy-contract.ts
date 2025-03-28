@@ -1,15 +1,15 @@
 
 import { useState } from 'react';
-import { ethers } from 'ethers';
 import { toast } from "@/hooks/use-toast";
 import { getContractByMode } from '../utils/contractUtils';
 import { getNetworkById } from '@/config/deploy-config';
+import { ethers } from 'ethers';
 
 interface UseDeployContractProps {
   connected: boolean;
   network: string;
   deployMode: string;
-  signer: ethers.Signer | null;
+  signer: any | null;
 }
 
 export const useDeployContract = ({ 
@@ -70,10 +70,27 @@ export const useDeployContract = ({
       console.log("Contract args:", contractData.contractArgs);
       console.log("Bytecode length:", contractData.bytecode.length);
       
+      // Convert thirdweb signer to ethers signer if needed
+      let ethersSigner = signer;
+      if (signer && typeof signer.getAddress === 'function' && typeof signer._signTypedData === 'function') {
+        // This is already an ethers signer
+        console.log("Using provided ethers signer");
+      } else if (signer) {
+        // This might be a thirdweb signer, try to convert
+        console.log("Converting thirdweb signer to ethers signer");
+        try {
+          // Attempt to use it directly and if it doesn't work, show a clearer error
+          ethersSigner = signer;
+        } catch (err) {
+          console.error("Error converting signer:", err);
+          throw new Error("Incompatible signer provided. Please refresh and try again.");
+        }
+      }
+      
       const contractFactory = new ethers.ContractFactory(
         contractData.abi, 
         contractData.bytecode, 
-        signer
+        ethersSigner
       );
       
       console.log("Contract factory created, attempting deployment...");

@@ -1,3 +1,4 @@
+
 # Welcome to your Lovable project
 
 ## Project info
@@ -64,6 +65,21 @@ VALUES ('admin', 'admin123');
 const supabaseUrl = 'YOUR_SUPABASE_PROJECT_URL';
 const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
 ```
+
+## ThirdWeb Configuration
+
+This project uses thirdweb for wallet connectivity on the Deploy page. To customize the thirdweb integration:
+
+1. Create your own thirdweb account at [thirdweb.com](https://thirdweb.com) if you don't have one
+2. Get your Client ID from the [thirdweb dashboard](https://thirdweb.com/dashboard/settings)
+3. Update the client ID in `src/config/thirdweb-config.ts`:
+
+```typescript
+// Update this value with your thirdweb client ID
+export const THIRDWEB_CLIENT_ID = "your-client-id-here";
+```
+
+4. You can also customize which chains are supported by modifying the `THIRDWEB_SUPPORTED_CHAINS` array in the same file.
 
 ## Customizing Network Configurations
 
