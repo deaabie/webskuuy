@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Hash, Users, Clock, Activity } from 'lucide-react';
+import { Hash, Users, Clock, TrendingUp } from 'lucide-react';
 import { BlockchainStats } from '@/services/cosmosService';
 
 interface StatsCardsProps {
@@ -35,17 +35,17 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
     ? `${stats.blockTime.toFixed(1)}s` 
     : "0.0s";
   
-  // Determine the network activity based on block time
-  let networkActivity = "Moderate";
-  let activityColor = "text-yellow-500";
+  // Get inflation value
+  const inflation = stats?.inflation || "0%";
+  // Determine the inflation color based on value
+  let inflationColor = "text-yellow-500";
   
-  if (stats?.blockTime) {
-    if (stats.blockTime < 3) {
-      networkActivity = "High";
-      activityColor = "text-green-500";
-    } else if (stats.blockTime > 8) {
-      networkActivity = "Low";
-      activityColor = "text-red-500";
+  if (stats?.inflation) {
+    const inflationValue = parseFloat(stats.inflation);
+    if (inflationValue < 5) {
+      inflationColor = "text-green-500";
+    } else if (inflationValue > 15) {
+      inflationColor = "text-red-500";
     }
   }
 
@@ -68,11 +68,11 @@ const StatsCards: React.FC<StatsCardsProps> = ({ stats, formatNumber }) => {
         tooltip="Average time between blocks"
       />
       <StatCard 
-        title="Network Activity" 
-        value={networkActivity} 
-        icon={<Activity size={20} className={activityColor} />} 
-        tooltip="Network activity based on block time"
-        valueClassName={activityColor}
+        title="Inflation" 
+        value={inflation} 
+        icon={<TrendingUp size={20} className={inflationColor} />} 
+        tooltip="Annual inflation rate"
+        valueClassName={inflationColor}
       />
     </div>
   );
