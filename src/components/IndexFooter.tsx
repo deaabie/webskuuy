@@ -22,8 +22,8 @@ const IndexFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/tools" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
-                  Tools
+                <Link to="/deploy" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
+                  Deploy
                 </Link>
               </li>
             </ul>
@@ -39,13 +39,13 @@ const IndexFooter = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
-                  About
+                <Link to="/tools" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
+                  Tools
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
-                  Careers
+                <Link to="/about" className="text-gray-600 dark:text-gray-400 hover:text-purple-500 dark:hover:text-white transition">
+                  About
                 </Link>
               </li>
             </ul>
