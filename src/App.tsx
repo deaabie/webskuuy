@@ -1,53 +1,83 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { HelmetProvider } from 'react-helmet-async';
-import { ThirdwebProvider } from "@thirdweb-dev/react";
-import { THIRDWEB_CLIENT_ID, THIRDWEB_SUPPORTED_CHAINS } from './config/thirdweb-config';
+import { useEffect } from "react";
+import Index from "./pages/Index";
+import Admin from "./pages/Admin";
+import ProjectDetail from "./pages/ProjectDetail";
+import NotFound from "./pages/NotFound";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
+import Faq from "./pages/Faq";
+import Tools from "./pages/Tools";
+import Faucet from "./pages/Faucet";
+import CosmosExplorer from "./pages/CosmosExplorer";
+import ChainDashboard from "./pages/ChainDashboard";
+import Deploy from "./pages/Deploy";
+import Footer from "./components/Footer";
+import Header from "./components/Header";
 
-// Pages
-import Index from './pages/Index';
-import About from './pages/About';
-import Contact from './pages/Contact';
-import Faq from './pages/Faq';
-import Tools from './pages/Tools';
-import ProjectDetail from './pages/ProjectDetail';
-import NotFound from './pages/NotFound';
-import Admin from './pages/Admin';
-import Deploy from './pages/Deploy';
-import Faucet from './pages/Faucet';
-import CosmosExplorer from './pages/CosmosExplorer';
-import ChainDashboard from './pages/ChainDashboard';
+const queryClient = new QueryClient();
 
-// Styles
-import './App.css';
+// Component to conditionally render the footer based on route
+const AppContent = () => {
+  const location = useLocation();
+
+  // Set default dark mode on initial load
+  useEffect(() => {
+    // Check localStorage first
+    const savedDarkMode = localStorage.getItem("darkMode");
+    
+    if (savedDarkMode === null || savedDarkMode === "true") {
+      // Either no preference or explicitly set to true, apply dark mode
+      document.documentElement.classList.add("dark");
+    } else {
+      // Explicitly set to false, ensure dark mode is not applied
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <div className="flex-grow">
+        <Toaster />
+        <Sonner />
+        <Header />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/project/:slug" element={<ProjectDetail />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/faq" element={<Faq />} />
+          <Route path="/tools" element={<Tools />} />
+          <Route path="/faucet" element={<Faucet />} />
+          <Route path="/explorer" element={<CosmosExplorer />} />
+          <Route path="/explorer/:chainName" element={<ChainDashboard />} />
+          <Route path="/deploy" element={<Deploy />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        {location.pathname !== "/" && location.pathname !== "/deploy" && <Footer />}
+      </div>
+    </div>
+  );
+};
 
 const App = () => {
   return (
-    <ThirdwebProvider 
-      clientId={THIRDWEB_CLIENT_ID}
-      supportedChains={THIRDWEB_SUPPORTED_CHAINS}
-    >
+    <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/faq" element={<Faq />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/project/:id" element={<ProjectDetail />} />
-            <Route path="/admin/*" element={<Admin />} />
-            <Route path="/deploy" element={<Deploy />} />
-            <Route path="/faucet" element={<Faucet />} />
-            <Route path="/cosmos-explorer" element={<CosmosExplorer />} />
-            <Route path="/chain/:id" element={<ChainDashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </Router>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
       </HelmetProvider>
-    </ThirdwebProvider>
+    </QueryClientProvider>
   );
 };
 
