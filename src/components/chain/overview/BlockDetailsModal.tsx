@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Blocks, Hash, User, Clock } from 'lucide-react';
 import { Block, Validator, getValidators } from '@/services/cosmosService';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface BlockDetailsModalProps {
   isOpen: boolean;
@@ -19,7 +20,10 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   formatDate,
   apiUrl
 }) => {
-  const [proposerName, setProposerName] = useState<string>("");
+  const [proposerInfo, setProposerInfo] = useState<{
+    name: string;
+    image?: string;
+  } | null>(null);
   
   useEffect(() => {
     // Fetch validator info to get the moniker name
@@ -34,15 +38,22 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
         );
         
         if (proposerValidator) {
-          setProposerName(proposerValidator.moniker);
+          setProposerInfo({
+            name: proposerValidator.moniker,
+            image: proposerValidator.image
+          });
         } else {
           // If no matching validator is found, show a shortened address
-          setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+          setProposerInfo({
+            name: `${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`
+          });
         }
       } catch (error) {
         console.error("Error fetching proposer info:", error);
         // Fallback to shortened address format
-        setProposerName(`${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`);
+        setProposerInfo({
+          name: `${block.proposer.substring(0, 8)}...${block.proposer.substring(block.proposer.length - 8)}`
+        });
       }
     };
     
@@ -52,6 +63,15 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
   }, [block, isOpen, apiUrl]);
   
   if (!block) return null;
+
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -78,8 +98,20 @@ const BlockDetailsModal: React.FC<BlockDetailsModalProps> = ({
               <User className="h-5 w-5 text-green-500" />
               <span className="font-semibold">Proposer:</span>
             </div>
-            <div>
-              {proposerName || (
+            <div className="flex items-center gap-2">
+              {proposerInfo && (
+                <>
+                  <Avatar className="h-5 w-5 border border-border">
+                    {proposerInfo.image ? (
+                      <AvatarImage src={proposerInfo.image} alt={proposerInfo.name} />
+                    ) : (
+                      <AvatarFallback>{getInitials(proposerInfo.name)}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span>{proposerInfo.name}</span>
+                </>
+              )}
+              {!proposerInfo && (
                 <span className="font-mono text-xs">{block.proposer.substring(0, 8)}...{block.proposer.substring(block.proposer.length - 8)}</span>
               )}
             </div>

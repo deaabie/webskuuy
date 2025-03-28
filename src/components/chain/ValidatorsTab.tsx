@@ -14,9 +14,14 @@ import {
   Percent,
   Heart,
   Activity,
-  CalendarClock
+  CalendarClock,
+  Globe,
+  CircleUser,
+  FileText
 } from 'lucide-react';
 import { Validator } from '@/services/cosmosService';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 
 interface ValidatorsTabProps {
   validators: Validator[];
@@ -38,6 +43,15 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
     .filter(validator => validator.status === 'Active')
     .sort((a, b) => parseFloat(b.voting_power) - parseFloat(a.voting_power))
     .slice(0, 100);
+
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
 
   return (
     <div className="space-y-6">
@@ -62,12 +76,22 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
               {filteredAndSortedValidators.map((validator, index) => (
                 <TableRow key={index}>
                   <TableCell className="font-medium">
-                    <span 
-                      className="cursor-pointer text-primary hover:underline"
-                      onClick={() => handleValidatorClick(validator)}
-                    >
-                      {validator.moniker}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-8 w-8 border border-border">
+                        {validator.image ? (
+                          <AvatarImage src={validator.image} alt={validator.moniker} />
+                        ) : (
+                          <AvatarFallback>{getInitials(validator.moniker)}</AvatarFallback>
+                        )}
+                      </Avatar>
+                      <Button 
+                        variant="link"
+                        className="p-0 h-auto font-medium text-primary cursor-pointer"
+                        onClick={() => handleValidatorClick(validator)}
+                      >
+                        {validator.moniker}
+                      </Button>
+                    </div>
                   </TableCell>
                   <TableCell className="font-mono text-xs truncate max-w-[150px]">{validator.address}</TableCell>
                   <TableCell>{formatNumber(validator.voting_power)}</TableCell>
@@ -87,16 +111,24 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
       
       {/* Validator Detail Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="sm:max-w-md">
+        <SheetContent className="sm:max-w-md overflow-y-auto">
           {selectedValidator && (
             <>
               <SheetHeader className="mb-6">
-                <SheetTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5 text-purple-500" />
-                  Validator Details
-                </SheetTitle>
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 border border-border">
+                    {selectedValidator.image ? (
+                      <AvatarImage src={selectedValidator.image} alt={selectedValidator.moniker} />
+                    ) : (
+                      <AvatarFallback>{getInitials(selectedValidator.moniker)}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <SheetTitle className="flex items-center gap-2">
+                    {selectedValidator.moniker}
+                  </SheetTitle>
+                </div>
                 <SheetDescription>
-                  Information about {selectedValidator.moniker}
+                  Validator Information
                 </SheetDescription>
               </SheetHeader>
               
@@ -139,12 +171,45 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Hash className="h-4 w-4 text-blue-500" />
-                      <span className="font-medium">Address</span>
+                      <span className="font-medium">Validator Address</span>
                     </div>
                     <span className="font-mono text-xs truncate max-w-[200px]">{selectedValidator.address}</span>
                   </div>
-                  
+
                   <Separator />
+
+                  {selectedValidator.account_address && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CircleUser className="h-4 w-4 text-indigo-500" />
+                          <span className="font-medium">Account Address</span>
+                        </div>
+                        <span className="font-mono text-xs truncate max-w-[200px]">{selectedValidator.account_address}</span>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
+
+                  {selectedValidator.website && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-cyan-500" />
+                          <span className="font-medium">Website</span>
+                        </div>
+                        <a 
+                          href={selectedValidator.website} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-primary hover:underline truncate max-w-[200px]"
+                        >
+                          {selectedValidator.website}
+                        </a>
+                      </div>
+                      <Separator />
+                    </>
+                  )}
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -186,6 +251,19 @@ const ValidatorsTab: React.FC<ValidatorsTabProps> = ({ validators, formatNumber 
                     </div>
                     <span>{new Date().toLocaleString()}</span>
                   </div>
+
+                  {selectedValidator.details && (
+                    <>
+                      <Separator />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-amber-500" />
+                          <span className="font-medium">Details</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{selectedValidator.details}</p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </>

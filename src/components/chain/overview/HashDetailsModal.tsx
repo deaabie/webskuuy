@@ -1,23 +1,80 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Hash, Clock, LayoutGrid, Coins, FileText, MessageSquare } from 'lucide-react';
-import { Transaction } from '@/services/cosmosService';
+import { Hash, Clock, LayoutGrid, Coins, FileText, MessageSquare, User } from 'lucide-react';
+import { Transaction, Validator, getValidators } from '@/services/cosmosService';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface HashDetailsModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
   formatDate: (dateString: string) => string;
+  apiUrl?: string;
 }
 
 const HashDetailsModal: React.FC<HashDetailsModalProps> = ({ 
   isOpen, 
   onOpenChange, 
   transaction, 
-  formatDate
+  formatDate,
+  apiUrl
 }) => {
+  const [senderInfo, setSenderInfo] = useState<{
+    name: string;
+    image?: string;
+  } | null>(null);
+  
+  useEffect(() => {
+    // Fetch validator info to get the sender name if it's a validator
+    const fetchSenderInfo = async () => {
+      if (!transaction?.sender || !apiUrl) return;
+      
+      try {
+        const validators = await getValidators(apiUrl);
+        // Find if the sender matches a validator address or account address
+        const senderValidator = validators.find(v => 
+          (v.address.toLowerCase() === transaction.sender.toLowerCase()) || 
+          (v.account_address && v.account_address.toLowerCase() === transaction.sender.toLowerCase())
+        );
+        
+        if (senderValidator) {
+          setSenderInfo({
+            name: senderValidator.moniker,
+            image: senderValidator.image
+          });
+        } else {
+          // If no matching validator is found, show a shortened address
+          setSenderInfo({
+            name: `${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching sender info:", error);
+        // Fallback to shortened address format
+        if (transaction?.sender) {
+          setSenderInfo({
+            name: `${transaction.sender.substring(0, 8)}...${transaction.sender.substring(transaction.sender.length - 8)}`
+          });
+        }
+      }
+    };
+    
+    if (isOpen && transaction?.sender) {
+      fetchSenderInfo();
+    }
+  }, [transaction, isOpen, apiUrl]);
+
   if (!transaction) return null;
+
+  const getInitials = (name: string): string => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
   
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -33,6 +90,32 @@ const HashDetailsModal: React.FC<HashDetailsModalProps> = ({
               <span className="font-semibold">Hash:</span>
             </div>
             <div className="font-mono text-xs break-all">{transaction.hash}</div>
+            
+            {transaction.sender && (
+              <>
+                <div className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-indigo-500" />
+                  <span className="font-semibold">Sender:</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {senderInfo && (
+                    <>
+                      <Avatar className="h-5 w-5 border border-border">
+                        {senderInfo.image ? (
+                          <AvatarImage src={senderInfo.image} alt={senderInfo.name} />
+                        ) : (
+                          <AvatarFallback>{getInitials(senderInfo.name)}</AvatarFallback>
+                        )}
+                      </Avatar>
+                      <span>{senderInfo.name}</span>
+                    </>
+                  )}
+                  {!senderInfo && (
+                    <span className="font-mono text-xs break-all">{transaction.sender}</span>
+                  )}
+                </div>
+              </>
+            )}
             
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-5 w-5 text-purple-500" />
