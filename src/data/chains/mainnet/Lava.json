@@ -18,7 +18,7 @@
     "base": "ulava",
     "symbol": "LAVA",
     "exponent": "9",
-    "coingecko_id": "lava network",
+    "coingecko_id": "lava-network",
     "logo": "https://ping.pub/logos/lava.svg"
   }]
 }
