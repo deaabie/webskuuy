@@ -1,0 +1,24 @@
+
+{
+  "chain_name": "Lava",
+  "display_name": "Lava Network",
+  "chain_id": "lava-mainnet-1",
+  "api": [
+    {"provider": "lava.network", "address": "https://lava.rest.lava.build:443"}
+  ],
+  "rpc": [
+    {"provider": "lava.network", "address": "https://lava.tendermintrpc.lava.build:443"}
+  ],
+  "sdk_version": "5.2.0",
+  "coin_type": "118",
+  "min_tx_fee": "10000000000000000",
+  "addr_prefix": "lava@",
+  "logo": "https://ping.pub/logos/lava.svg",
+  "assets": [{
+    "base": "ulava",
+    "symbol": "LAVA",
+    "exponent": "9",
+    "coingecko_id": "lava",
+    "logo": "https://ping.pub/logos/lava.svg"
+  }]
+}
