@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -188,7 +187,6 @@ const ChainDashboard: React.FC = () => {
         }
         
         if (foundChain) {
-          // Ensure coingecko_id is properly set in assets
           if (foundChain.assets) {
             foundChain.assets = foundChain.assets.map(asset => ({
               ...asset,
@@ -228,13 +226,13 @@ const ChainDashboard: React.FC = () => {
 
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-      fetchBlockchainData(true); // Force refresh on initial load
+      fetchBlockchainData(true);
     }
   }, [chain, activeEndpoint, fetchBlockchainData]);
 
   useEffect(() => {
     if (chain && activeEndpoint.api && activeEndpoint.rpc) {
-      fetchBlockchainData(true); // Force refresh on tab change
+      fetchBlockchainData(true);
     }
   }, [activeTab, fetchBlockchainData]);
 
@@ -243,7 +241,7 @@ const ChainDashboard: React.FC = () => {
     
     console.log("Setting up data refresh interval");
     const interval = setInterval(() => {
-      fetchBlockchainData(); // Regular updates every 2 seconds
+      fetchBlockchainData();
     }, 2000);
     
     return () => {
@@ -321,6 +319,7 @@ const ChainDashboard: React.FC = () => {
               formatNumber={formatNumber} 
               formatDate={formatDate}
               apiUrl={activeEndpoint.api}
+              rpcUrl={activeEndpoint.rpc}
             />
           </TabsContent>
           
