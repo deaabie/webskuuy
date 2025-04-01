@@ -9,7 +9,6 @@ import BlockDetailsModal from './overview/BlockDetailsModal';
 import HashDetailsModal from './overview/HashDetailsModal';
 import AccountDetailsModal from './overview/AccountDetailsModal';
 import PriceChart from './overview/PriceChart';
-import PublicEndpointsCard from './overview/PublicEndpointsCard';
 import axios from 'axios';
 
 interface OverviewTabProps {
@@ -20,7 +19,6 @@ interface OverviewTabProps {
   formatNumber: (num: number | string) => string;
   formatDate: (dateString: string) => string;
   apiUrl?: string;
-  rpcUrl?: string;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ 
@@ -28,8 +26,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
   blocks, 
   transactions, 
   formatDate,
-  apiUrl,
-  rpcUrl
+  apiUrl
 }) => {
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
@@ -200,20 +197,13 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
-      {/* Price Chart appears before Recent Blocks */}
+      {/* Price Chart now appears before Recent Blocks */}
       {hasCoingeckoId && <PriceChart chain={chain} />}
       
       <RecentBlocksCard 
         blocks={blocks} 
         onBlockClick={handleBlockClick}
         formatDate={formatDate}
-      />
-      
-      {/* Add the Public Endpoints Card */}
-      <PublicEndpointsCard 
-        chain={chain} 
-        apiUrl={apiUrl} 
-        rpcUrl={rpcUrl}
       />
 
       <BlockDetailsModal
