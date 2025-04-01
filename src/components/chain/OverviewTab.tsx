@@ -197,14 +197,14 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         </div>
       </div>
 
+      {/* Price Chart now appears before Recent Blocks */}
+      {hasCoingeckoId && <PriceChart chain={chain} />}
+      
       <RecentBlocksCard 
         blocks={blocks} 
         onBlockClick={handleBlockClick}
         formatDate={formatDate}
       />
-      
-      {/* Add Price Chart if the chain has a coingecko id */}
-      {hasCoingeckoId && <PriceChart chain={chain} />}
 
       <BlockDetailsModal
         isOpen={isBlockModalOpen}

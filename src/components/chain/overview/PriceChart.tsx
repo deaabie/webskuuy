@@ -152,17 +152,17 @@ const PriceChart: React.FC<PriceChartProps> = ({ chain }) => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex justify-center items-center h-[300px]">
+          <div className="flex justify-center items-center h-[400px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
-          <div className="flex justify-center items-center h-[300px] text-muted-foreground">
+          <div className="flex justify-center items-center h-[400px] text-muted-foreground">
             {error}
           </div>
         ) : priceData.length > 0 ? (
-          <div className="h-[300px]">
+          <div className="h-[400px] w-full">
             <ChartContainer 
-              className="h-full"
+              className="h-full w-full"
               config={{
                 price: {
                   label: "Price",
@@ -227,7 +227,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ chain }) => {
             </ChartContainer>
           </div>
         ) : (
-          <div className="flex justify-center items-center h-[300px] text-muted-foreground">
+          <div className="flex justify-center items-center h-[400px] text-muted-foreground">
             No price data available
           </div>
         )}
