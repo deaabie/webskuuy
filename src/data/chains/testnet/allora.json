@@ -4,10 +4,10 @@
   "display_name": "allora",
   "chain_id": "allora-testnet-1",
   "api": [
-    {"provider": "ITRocket.net", "address": "https://allora-testnet-api.itrocket.net"}
+    {"provider": "polkachu.com", "address": "https://allora-testnet-api.polkachu.com"}
   ],
   "rpc": [
-    {"provider": "ITRocket.net", "address": "https://allora-testnet-rpc.itrocket.net"}
+    {"provider": "polkachu.com", "address": "https://allora-testnet-rpc.polkachu.com"}
   ],
   "sdk_version": "v0.9.0",
   "coin_type": "118",
