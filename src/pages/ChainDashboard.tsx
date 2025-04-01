@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -187,6 +188,14 @@ const ChainDashboard: React.FC = () => {
         }
         
         if (foundChain) {
+          // Ensure coingecko_id is properly set in assets
+          if (foundChain.assets) {
+            foundChain.assets = foundChain.assets.map(asset => ({
+              ...asset,
+              coingecko_id: asset.coingecko_id || ''
+            }));
+          }
+          
           setChain(foundChain);
           
           if (foundChain.api.length > 0 && foundChain.rpc.length > 0) {

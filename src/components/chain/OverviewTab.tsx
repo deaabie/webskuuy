@@ -8,6 +8,7 @@ import RecentBlocksCard from './overview/RecentBlocksCard';
 import BlockDetailsModal from './overview/BlockDetailsModal';
 import HashDetailsModal from './overview/HashDetailsModal';
 import AccountDetailsModal from './overview/AccountDetailsModal';
+import PriceChart from './overview/PriceChart';
 import axios from 'axios';
 
 interface OverviewTabProps {
@@ -165,6 +166,11 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
     setIsBlockModalOpen(true);
   };
 
+  // Check if any asset has a CoinGecko ID
+  const hasCoingeckoId = chain.assets?.some(asset => 
+    asset.coingecko_id && asset.coingecko_id.trim() !== ''
+  );
+
   return (
     <div className="space-y-6">
       <div className="w-full max-w-2xl mx-auto mb-6">
@@ -196,6 +202,9 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
         onBlockClick={handleBlockClick}
         formatDate={formatDate}
       />
+      
+      {/* Add Price Chart if the chain has a coingecko id */}
+      {hasCoingeckoId && <PriceChart chain={chain} />}
 
       <BlockDetailsModal
         isOpen={isBlockModalOpen}
