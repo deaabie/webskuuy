@@ -17,6 +17,15 @@ const DeployContainer = () => {
   const [walletAddress, setWalletAddress] = useState("");
   const [provider, setProvider] = useState<ethers.Provider | null>(null);
   const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  const [tokenName, setTokenName] = useState("MyToken");
+  const [tokenSymbol, setTokenSymbol] = useState("MTK");
+  const [tokenSupply, setTokenSupply] = useState("1000000");
+
+  const handleTokenDetailsChange = (name: string, symbol: string, supply: string) => {
+    setTokenName(name);
+    setTokenSymbol(symbol);
+    setTokenSupply(supply);
+  };
 
   const { 
     isDeploying, 
@@ -28,7 +37,12 @@ const DeployContainer = () => {
     connected, 
     network, 
     deployMode, 
-    signer 
+    signer,
+    tokenDetails: {
+      name: tokenName,
+      symbol: tokenSymbol,
+      supply: tokenSupply
+    }
   });
 
   const handleWalletConnection = (status: boolean, address: string, providerInstance: ethers.Provider | null, signerInstance: ethers.Signer | null) => {
@@ -67,7 +81,10 @@ const DeployContainer = () => {
                     setDeployMode={setDeployMode} 
                   />
                   
-                  <ContractDetails deployMode={deployMode} />
+                  <ContractDetails 
+                    deployMode={deployMode} 
+                    onTokenDetailsChange={handleTokenDetailsChange}
+                  />
                   
                   <DeployAction 
                     isDeploying={isDeploying} 

@@ -5,18 +5,26 @@ import { toast } from "@/hooks/use-toast";
 import { getContractByMode } from '../utils/contractUtils';
 import { getNetworkById } from '@/config/deploy-config';
 
+interface TokenDetails {
+  name: string;
+  symbol: string;
+  supply: string;
+}
+
 interface UseDeployContractProps {
   connected: boolean;
   network: string;
   deployMode: string;
   signer: ethers.Signer | null;
+  tokenDetails?: TokenDetails;
 }
 
 export const useDeployContract = ({ 
   connected, 
   network, 
   deployMode, 
-  signer 
+  signer,
+  tokenDetails = { name: "MyToken", symbol: "MTK", supply: "1000000" }
 }: UseDeployContractProps) => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
@@ -64,7 +72,7 @@ export const useDeployContract = ({
     });
 
     try {
-      const contractData = getContractByMode(deployMode);
+      const contractData = getContractByMode(deployMode, tokenDetails);
       
       console.log(`Deploying ${deployMode} contract`);
       console.log("Contract args:", contractData.contractArgs);
@@ -114,9 +122,18 @@ export const useDeployContract = ({
           setContractAddress(contractAddress);
           setDeploySuccess(true);
           
+          let successMessage = 'Your contract has been successfully deployed to the blockchain.';
+          if (deployMode === 'erc20') {
+            successMessage = `Your ${tokenDetails.name} (${tokenDetails.symbol}) token has been successfully deployed to the blockchain.`;
+          } else if (deployMode === 'basic') {
+            successMessage = 'Your Counter contract has been successfully deployed to the blockchain.';
+          } else if (deployMode === 'storage') {
+            successMessage = 'Your SimpleStorage contract has been successfully deployed to the blockchain.';
+          }
+          
           toast({
             title: "Smart contract deployed!",
-            description: `Your ${deployMode === 'basic' ? 'Counter' : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
+            description: successMessage,
           });
         } catch (timeoutError) {
           console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
@@ -136,7 +153,7 @@ export const useDeployContract = ({
           
           toast({
             title: "Smart contract deployed!",
-            description: `Your ${deployMode === 'basic' ? 'Counter' : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
+            description: `Your ${deployMode === 'basic' ? 'Counter' : deployMode === 'erc20' ? `${tokenDetails.name} (${tokenDetails.symbol}) token` : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
           });
         }
       } else {
