@@ -58,7 +58,8 @@ const ContractDetails = ({ deployMode, onTokenDetailsChange }: ContractDetailsPr
           <div className="bg-muted/30 rounded-md p-4 border border-border/30">
             <h4 className="font-medium text-lg mb-2">ERC20 Token Contract</h4>
             <p className="text-muted-foreground">
-              This contract creates an ERC20 standard token with customizable name, symbol, and supply.
+              This contract creates an ERC20 standard token with customizable name and symbol.
+              It will mint the entire token supply to your wallet address during deployment.
               After deployment, your token will be transferable and can be used in DeFi applications.
             </p>
           </div>

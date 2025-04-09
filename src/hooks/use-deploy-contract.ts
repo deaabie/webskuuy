@@ -86,8 +86,9 @@ export const useDeployContract = ({
       
       console.log("Contract factory created, attempting deployment...");
       
+      // Increase gas limit for more complex contracts like ERC20
       const deploymentOptions = {
-        gasLimit: 3000000,
+        gasLimit: deployMode === 'erc20' ? 5000000 : 3000000,
       };
       
       let contract;
