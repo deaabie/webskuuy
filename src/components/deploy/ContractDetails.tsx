@@ -43,6 +43,9 @@ const ContractDetails = ({ deployMode }: ContractDetailsProps) => {
               <li>Ownership control through Ownable pattern</li>
             </ul>
           </div>
+          <div className="mt-3 pt-3 border-t border-border/30 text-amber-600">
+            <p className="text-sm font-medium">Note: Testnet deployments might need higher gas limits due to contract complexity</p>
+          </div>
         </div>
       )}
       {deployMode === 'nft' && (
@@ -62,6 +65,9 @@ const ContractDetails = ({ deployMode }: ContractDetailsProps) => {
               <li>Metadata URI support for token content</li>
             </ul>
           </div>
+          <div className="mt-3 pt-3 border-t border-border/30 text-amber-600">
+            <p className="text-sm font-medium">Note: Testnet deployments might need higher gas limits due to contract complexity</p>
+          </div>
         </div>
       )}
       {deployMode === 'auction' && (
@@ -74,12 +80,15 @@ const ContractDetails = ({ deployMode }: ContractDetailsProps) => {
           <div className="mt-3 pt-3 border-t border-border/30">
             <h5 className="font-medium">Contract Features:</h5>
             <ul className="list-disc list-inside space-y-1 mt-2 text-sm text-muted-foreground">
-              <li>Time-based auction mechanism</li>
-              <li>Minimum bid increment requirements</li>
+              <li>Starting bid: 0.01 ETH</li>
+              <li>Auction duration: 1 hour</li>
               <li>Automatic refunds for outbid participants</li>
               <li>Owner controls auction start/end</li>
               <li>Secure escrow of auction funds</li>
             </ul>
+          </div>
+          <div className="mt-3 pt-3 border-t border-border/30 text-amber-600">
+            <p className="text-sm font-medium">Note: Testnet deployments might need higher gas limits due to contract complexity</p>
           </div>
         </div>
       )}
@@ -93,12 +102,15 @@ const ContractDetails = ({ deployMode }: ContractDetailsProps) => {
           <div className="mt-3 pt-3 border-t border-border/30">
             <h5 className="font-medium">Contract Features:</h5>
             <ul className="list-disc list-inside space-y-1 mt-2 text-sm text-muted-foreground">
-              <li>Campaign funding goal</li>
-              <li>Time-limited fundraising period</li>
+              <li>Funding goal: 0.1 ETH</li>
+              <li>Time-limited fundraising period: 24 hours</li>
               <li>Automatic fund release upon goal achievement</li>
               <li>Contributor refunds if goal not met</li>
               <li>Campaign status tracking</li>
             </ul>
+          </div>
+          <div className="mt-3 pt-3 border-t border-border/30 text-amber-600">
+            <p className="text-sm font-medium">Note: Testnet deployments might need higher gas limits due to contract complexity</p>
           </div>
         </div>
       )}

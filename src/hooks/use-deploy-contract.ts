@@ -58,6 +58,8 @@ export const useDeployContract = ({
     }
 
     setIsDeploying(true);
+    resetDeployment();
+    
     toast({
       title: "Deployment started",
       description: "Please confirm the transaction in your wallet.",
@@ -70,6 +72,7 @@ export const useDeployContract = ({
       console.log("Contract args:", contractData.contractArgs);
       console.log("Bytecode length:", contractData.bytecode.length);
       
+      // Create contract factory with higher gas limit for complex contracts
       const contractFactory = new ethers.ContractFactory(
         contractData.abi, 
         contractData.bytecode, 
@@ -78,8 +81,13 @@ export const useDeployContract = ({
       
       console.log("Contract factory created, attempting deployment...");
       
+      // Adjust gas limit based on contract type
+      const gasLimit = ['token', 'nft', 'auction', 'crowdfund'].includes(deployMode) 
+        ? 5000000  // Higher gas limit for complex contracts
+        : 3000000; // Default gas limit
+      
       const deploymentOptions = {
-        gasLimit: 3000000,
+        gasLimit: gasLimit,
       };
       
       let contract;
@@ -133,25 +141,30 @@ export const useDeployContract = ({
             description: "Your transaction is still being processed. This may take a few minutes. Check your wallet for updates.",
           });
           
-          await contract.waitForDeployment();
-          
-          const contractAddress = await contract.getAddress();
-          console.log("Contract successfully deployed at address:", contractAddress);
-          
-          setContractAddress(contractAddress);
-          setDeploySuccess(true);
-          
-          toast({
-            title: "Smart contract deployed!",
-            description: `Your ${
-              deployMode === 'basic' ? 'Counter' : 
-              deployMode === 'storage' ? 'SimpleStorage' :
-              deployMode === 'token' ? 'ERC20 Token' :
-              deployMode === 'nft' ? 'ERC721 NFT' :
-              deployMode === 'auction' ? 'Auction' :
-              'Crowdfunding'
-            } contract has been successfully deployed to the blockchain.`,
-          });
+          try {
+            await contract.waitForDeployment();
+            
+            const contractAddress = await contract.getAddress();
+            console.log("Contract successfully deployed at address:", contractAddress);
+            
+            setContractAddress(contractAddress);
+            setDeploySuccess(true);
+            
+            toast({
+              title: "Smart contract deployed!",
+              description: `Your ${
+                deployMode === 'basic' ? 'Counter' : 
+                deployMode === 'storage' ? 'SimpleStorage' :
+                deployMode === 'token' ? 'ERC20 Token' :
+                deployMode === 'nft' ? 'ERC721 NFT' :
+                deployMode === 'auction' ? 'Auction' :
+                'Crowdfunding'
+              } contract has been successfully deployed to the blockchain.`,
+            });
+          } catch (error) {
+            console.error("Failed to wait for deployment after timeout:", error);
+            throw error;
+          }
         }
       } else {
         throw new Error("No deployment transaction found");
@@ -168,6 +181,8 @@ export const useDeployContract = ({
           errorMessage = "Insufficient funds to deploy the contract. Please add more ETH to your wallet.";
         } else if (error.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet. Please try again.";
+        } else if (error.message.includes("execution reverted")) {
+          errorMessage = "Transaction execution reverted. The contract may have issues or gas limit might be too low.";
         } else if (error.message.length > 100) {
           errorMessage = error.message.substring(0, 100) + "...";
         } else {
