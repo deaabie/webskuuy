@@ -116,7 +116,14 @@ export const useDeployContract = ({
           
           toast({
             title: "Smart contract deployed!",
-            description: `Your ${deployMode === 'basic' ? 'Counter' : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
+            description: `Your ${
+              deployMode === 'basic' ? 'Counter' : 
+              deployMode === 'storage' ? 'SimpleStorage' :
+              deployMode === 'token' ? 'ERC20 Token' :
+              deployMode === 'nft' ? 'ERC721 NFT' :
+              deployMode === 'auction' ? 'Auction' :
+              'Crowdfunding'
+            } contract has been successfully deployed to the blockchain.`,
           });
         } catch (timeoutError) {
           console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
@@ -136,7 +143,14 @@ export const useDeployContract = ({
           
           toast({
             title: "Smart contract deployed!",
-            description: `Your ${deployMode === 'basic' ? 'Counter' : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
+            description: `Your ${
+              deployMode === 'basic' ? 'Counter' : 
+              deployMode === 'storage' ? 'SimpleStorage' :
+              deployMode === 'token' ? 'ERC20 Token' :
+              deployMode === 'nft' ? 'ERC721 NFT' :
+              deployMode === 'auction' ? 'Auction' :
+              'Crowdfunding'
+            } contract has been successfully deployed to the blockchain.`,
           });
         }
       } else {
