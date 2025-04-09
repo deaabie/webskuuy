@@ -43,6 +43,24 @@ const ContractDetails = ({ deployMode }: ContractDetailsProps) => {
           </p>
         </div>
       )}
+      {deployMode === 'auction' && (
+        <div className="bg-muted/30 rounded-md p-4 border border-border/30">
+          <h4 className="font-medium text-lg mb-2">Auction Contract</h4>
+          <p className="text-muted-foreground">
+            Deploy an auction contract that allows users to bid on items with a time limit.
+            Includes functions for placing bids, ending auctions, and claiming items after winning.
+          </p>
+        </div>
+      )}
+      {deployMode === 'crowdfund' && (
+        <div className="bg-muted/30 rounded-md p-4 border border-border/30">
+          <h4 className="font-medium text-lg mb-2">Crowdfunding Contract</h4>
+          <p className="text-muted-foreground">
+            Create a crowdfunding campaign where contributors can pledge funds toward a goal.
+            Includes functionality for campaign deadlines, fund collection, and refunds if goals aren't met.
+          </p>
+        </div>
+      )}
     </div>
   );
 };

@@ -33,6 +33,14 @@ const ContractTypeSelector = ({ deployMode, setDeployMode }: ContractTypeSelecto
           <RadioGroupItem value="nft" id="nft" />
           <Label htmlFor="nft" className="text-lg cursor-pointer">ERC721 NFT</Label>
         </div>
+        <div className="flex items-center space-x-2 border border-border/50 rounded-md p-4 hover:border-primary/50 transition-colors cursor-pointer">
+          <RadioGroupItem value="auction" id="auction" />
+          <Label htmlFor="auction" className="text-lg cursor-pointer">Auction Contract</Label>
+        </div>
+        <div className="flex items-center space-x-2 border border-border/50 rounded-md p-4 hover:border-primary/50 transition-colors cursor-pointer">
+          <RadioGroupItem value="crowdfund" id="crowdfund" />
+          <Label htmlFor="crowdfund" className="text-lg cursor-pointer">Crowdfunding Contract</Label>
+        </div>
       </RadioGroup>
     </div>
   );
