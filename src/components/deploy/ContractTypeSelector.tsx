@@ -25,6 +25,14 @@ const ContractTypeSelector = ({ deployMode, setDeployMode }: ContractTypeSelecto
           <RadioGroupItem value="storage" id="storage" />
           <Label htmlFor="storage" className="text-lg cursor-pointer">SimpleStorage Contract</Label>
         </div>
+        <div className="flex items-center space-x-2 border border-border/50 rounded-md p-4 hover:border-primary/50 transition-colors cursor-pointer">
+          <RadioGroupItem value="token" id="token" />
+          <Label htmlFor="token" className="text-lg cursor-pointer">ERC20 Token</Label>
+        </div>
+        <div className="flex items-center space-x-2 border border-border/50 rounded-md p-4 hover:border-primary/50 transition-colors cursor-pointer">
+          <RadioGroupItem value="nft" id="nft" />
+          <Label htmlFor="nft" className="text-lg cursor-pointer">ERC721 NFT</Label>
+        </div>
       </RadioGroup>
     </div>
   );
