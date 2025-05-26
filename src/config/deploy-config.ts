@@ -81,6 +81,33 @@ const TESTNETS: Record<string, NetworkConfig> = {
     symbol: 'BERA',
     explorer: 'https://bepolia.beratrail.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png'
+  },
+  Plume_testnet: {
+    id: "Plume_testnet",
+    rpcUrl: 'https://testnet-rpc.plumenetwork.xyz',
+    chainId: 98867,
+    name: 'Plume Testnet',
+    symbol: 'PLUME',
+    explorer: 'https://testnet-explorer.plume.org/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/pETH-icon.png'
+  },
+  Xrpl_testnet: {
+    id: "Xrpl_testnet",
+    rpcUrl: 'https://rpc.testnet.xrplevm.org',
+    chainId: 1449000,
+    name: 'XRPL EVM',
+    symbol: 'XRP',
+    explorer: 'https://explorer.testnet.xrplevm.org/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/XRPLevm.png'
+  },
+  Rome_protocol: {
+    id: "Rome_protocol",
+    rpcUrl: 'https://rome.testnet.romeprotocol.xyz',
+    chainId: 200018,
+    name: 'ROME EVM',
+    symbol: 'ROME',
+    explorer: 'https://rome.testnet.romeprotocol.xyz:1000/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/rome.png'
   }
 };
 
