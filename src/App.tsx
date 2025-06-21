@@ -18,6 +18,7 @@ import Faucet from "./pages/Faucet";
 import CosmosExplorer from "./pages/CosmosExplorer";
 import ChainDashboard from "./pages/ChainDashboard";
 import Deploy from "./pages/Deploy";
+import PricePrediction from "./pages/PricePrediction";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 
@@ -59,6 +60,7 @@ const AppContent = () => {
           <Route path="/explorer" element={<CosmosExplorer />} />
           <Route path="/explorer/:chainName" element={<ChainDashboard />} />
           <Route path="/deploy" element={<Deploy />} />
+          <Route path="/price-prediction" element={<PricePrediction />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {location.pathname !== "/" && location.pathname !== "/deploy" && <Footer />}
