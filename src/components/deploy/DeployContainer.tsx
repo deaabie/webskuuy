@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
-import { ethers } from 'ethers';
+import { useAccount, useWalletClient, useChainId } from 'wagmi';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import ConnectWalletButton from './ConnectWalletButton';
+import RainbowConnectButton from './RainbowConnectButton';
 import NetworkSelector from './NetworkSelector';
 import DeploySuccess from './DeploySuccess';
 import ContractTypeSelector from './ContractTypeSelector';
@@ -11,12 +11,12 @@ import DeployAction from './DeployAction';
 import { useDeployContract } from '../../hooks/use-deploy-contract';
 
 const DeployContainer = () => {
-  const [connected, setConnected] = useState(false);
+  const { address, isConnected } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const chainId = useChainId();
+  
   const [network, setNetwork] = useState("");
   const [deployMode, setDeployMode] = useState("basic");
-  const [walletAddress, setWalletAddress] = useState("");
-  const [provider, setProvider] = useState<ethers.Provider | null>(null);
-  const [signer, setSigner] = useState<ethers.Signer | null>(null);
   const [tokenName, setTokenName] = useState("MyToken");
   const [tokenSymbol, setTokenSymbol] = useState("MTK");
   const [tokenSupply, setTokenSupply] = useState("1000000");
@@ -34,23 +34,16 @@ const DeployContainer = () => {
     contractAddress, 
     handleDeploy 
   } = useDeployContract({ 
-    connected, 
+    connected: isConnected, 
     network, 
     deployMode, 
-    signer,
+    walletClient,
     tokenDetails: {
       name: tokenName,
       symbol: tokenSymbol,
       supply: tokenSupply
     }
   });
-
-  const handleWalletConnection = (status: boolean, address: string, providerInstance: ethers.Provider | null, signerInstance: ethers.Signer | null) => {
-    setConnected(status);
-    setWalletAddress(address);
-    setProvider(providerInstance);
-    setSigner(signerInstance);
-  };
 
   const handleNetworkChange = (networkId: string) => {
     setNetwork(networkId);
@@ -66,10 +59,10 @@ const DeployContainer = () => {
           <>
             <div className="space-y-5">
               <div className="mb-4">
-                <ConnectWalletButton onConnectionChange={handleWalletConnection} />
+                <RainbowConnectButton />
               </div>
               
-              {connected && (
+              {isConnected && (
                 <>
                   <div className="space-y-3">
                     <h3 className="text-xl font-medium">Select Network</h3>

@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { ethers } from 'ethers';
+import { createWalletClient, custom, type WalletClient } from 'viem';
 import { toast } from "@/hooks/use-toast";
 import { getContractByMode } from '../utils/contractUtils';
 import { getNetworkById } from '@/config/deploy-config';
@@ -15,7 +15,7 @@ interface UseDeployContractProps {
   connected: boolean;
   network: string;
   deployMode: string;
-  signer: ethers.Signer | null;
+  walletClient: WalletClient | undefined;
   tokenDetails?: TokenDetails;
 }
 
@@ -23,7 +23,7 @@ export const useDeployContract = ({
   connected, 
   network, 
   deployMode, 
-  signer,
+  walletClient,
   tokenDetails = { name: "MyToken", symbol: "MTK", supply: "1000000" }
 }: UseDeployContractProps) => {
   const [isDeploying, setIsDeploying] = useState(false);
@@ -56,11 +56,11 @@ export const useDeployContract = ({
       return;
     }
 
-    if (!signer) {
+    if (!walletClient) {
       toast({
         variant: "destructive",
-        title: "Signer not available",
-        description: "Unable to get the signer from your wallet",
+        title: "Wallet client not available",
+        description: "Unable to get the wallet client",
       });
       return;
     }
@@ -72,6 +72,13 @@ export const useDeployContract = ({
     });
 
     try {
+      // Convert walletClient to ethers signer for compatibility with existing deployment logic
+      const { ethers } = await import('ethers');
+      
+      // Create a custom provider using the wallet client
+      const provider = new ethers.BrowserProvider(walletClient.transport);
+      const signer = await provider.getSigner();
+      
       const contractData = getContractByMode(deployMode, tokenDetails);
       
       console.log(`Deploying ${deployMode} contract`);
