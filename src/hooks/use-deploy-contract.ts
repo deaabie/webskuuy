@@ -60,7 +60,7 @@ export const useDeployContract = ({
       toast({
         variant: "destructive",
         title: "Wallet client not available",
-        description: "Unable to get the wallet client",
+        description: "Unable to get the wallet client. Please try reconnecting your wallet.",
       });
       return;
     }
@@ -72,104 +72,106 @@ export const useDeployContract = ({
     });
 
     try {
-      // Convert walletClient to ethers signer for compatibility with existing deployment logic
+      console.log("Using wallet client for deployment");
+      console.log("Wallet client account:", walletClient.account);
+      console.log("Wallet client chain:", walletClient.chain);
+      
+      // Use the connected wallet client with ethers
       const { ethers } = await import('ethers');
       
-      // Get the ethereum provider from window object which is EIP-1193 compatible
-      if (typeof window !== 'undefined' && window.ethereum) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
+      // Create a provider using the wallet client's transport
+      const provider = new ethers.BrowserProvider(walletClient.transport);
+      const signer = await provider.getSigner();
+      
+      console.log("Signer address:", await signer.getAddress());
+      
+      const contractData = getContractByMode(deployMode, tokenDetails);
+      
+      console.log(`Deploying ${deployMode} contract`);
+      console.log("Contract args:", contractData.contractArgs);
+      console.log("Bytecode length:", contractData.bytecode.length);
+      
+      const contractFactory = new ethers.ContractFactory(
+        contractData.abi, 
+        contractData.bytecode, 
+        signer
+      );
+      
+      console.log("Contract factory created, attempting deployment...");
+      
+      // Increase gas limit for more complex contracts like ERC20
+      const deploymentOptions = {
+        gasLimit: deployMode === 'erc20' ? 5000000 : 3000000,
+      };
+      
+      let contract;
+      if (contractData.contractArgs && contractData.contractArgs.length > 0) {
+        console.log("Deploying with args:", contractData.contractArgs);
+        contract = await contractFactory.deploy(...contractData.contractArgs, deploymentOptions);
+      } else {
+        console.log("Deploying without args");
+        contract = await contractFactory.deploy(deploymentOptions);
+      }
+      
+      console.log("Contract deployment transaction created");
+      
+      const deploymentTransaction = contract.deploymentTransaction();
+      if (deploymentTransaction) {
+        const txHashResult = deploymentTransaction.hash;
+        console.log("Contract deployment transaction hash:", txHashResult);
+        setTxHash(txHashResult);
         
-        const contractData = getContractByMode(deployMode, tokenDetails);
+        console.log("Waiting for contract deployment to complete...");
         
-        console.log(`Deploying ${deployMode} contract`);
-        console.log("Contract args:", contractData.contractArgs);
-        console.log("Bytecode length:", contractData.bytecode.length);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Transaction confirmation timeout")), 180000);
+        });
         
-        const contractFactory = new ethers.ContractFactory(
-          contractData.abi, 
-          contractData.bytecode, 
-          signer
-        );
-        
-        console.log("Contract factory created, attempting deployment...");
-        
-        // Increase gas limit for more complex contracts like ERC20
-        const deploymentOptions = {
-          gasLimit: deployMode === 'erc20' ? 5000000 : 3000000,
-        };
-        
-        let contract;
-        if (contractData.contractArgs && contractData.contractArgs.length > 0) {
-          console.log("Deploying with args:", contractData.contractArgs);
-          contract = await contractFactory.deploy(...contractData.contractArgs, deploymentOptions);
-        } else {
-          console.log("Deploying without args");
-          contract = await contractFactory.deploy(deploymentOptions);
-        }
-        
-        console.log("Contract deployment transaction created");
-        
-        const deploymentTransaction = contract.deploymentTransaction();
-        if (deploymentTransaction) {
-          const txHash = deploymentTransaction.hash;
-          console.log("Contract deployment transaction hash:", txHash);
-          setTxHash(txHash);
+        try {
+          await Promise.race([contract.waitForDeployment(), timeoutPromise]);
           
-          console.log("Waiting for contract deployment to complete...");
+          const contractAddressResult = await contract.getAddress();
+          console.log("Contract successfully deployed at address:", contractAddressResult);
           
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error("Transaction confirmation timeout")), 180000);
+          setContractAddress(contractAddressResult);
+          setDeploySuccess(true);
+          
+          let successMessage = 'Your contract has been successfully deployed to the blockchain.';
+          if (deployMode === 'erc20') {
+            successMessage = `Your ${tokenDetails.name} (${tokenDetails.symbol}) token has been successfully deployed to the blockchain.`;
+          } else if (deployMode === 'basic') {
+            successMessage = 'Your Counter contract has been successfully deployed to the blockchain.';
+          } else if (deployMode === 'storage') {
+            successMessage = 'Your SimpleStorage contract has been successfully deployed to the blockchain.';
+          }
+          
+          toast({
+            title: "Smart contract deployed!",
+            description: successMessage,
+          });
+        } catch (timeoutError) {
+          console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
+          
+          toast({
+            title: "Deployment in progress",
+            description: "Your transaction is still being processed. This may take a few minutes. Check your wallet for updates.",
           });
           
-          try {
-            await Promise.race([contract.waitForDeployment(), timeoutPromise]);
-            
-            const contractAddress = await contract.getAddress();
-            console.log("Contract successfully deployed at address:", contractAddress);
-            
-            setContractAddress(contractAddress);
-            setDeploySuccess(true);
-            
-            let successMessage = 'Your contract has been successfully deployed to the blockchain.';
-            if (deployMode === 'erc20') {
-              successMessage = `Your ${tokenDetails.name} (${tokenDetails.symbol}) token has been successfully deployed to the blockchain.`;
-            } else if (deployMode === 'basic') {
-              successMessage = 'Your Counter contract has been successfully deployed to the blockchain.';
-            } else if (deployMode === 'storage') {
-              successMessage = 'Your SimpleStorage contract has been successfully deployed to the blockchain.';
-            }
-            
-            toast({
-              title: "Smart contract deployed!",
-              description: successMessage,
-            });
-          } catch (timeoutError) {
-            console.warn("Transaction confirmation is taking longer than expected:", timeoutError);
-            
-            toast({
-              title: "Deployment in progress",
-              description: "Your transaction is still being processed. This may take a few minutes. Check your wallet for updates.",
-            });
-            
-            await contract.waitForDeployment();
-            
-            const contractAddress = await contract.getAddress();
-            console.log("Contract successfully deployed at address:", contractAddress);
-            
-            setContractAddress(contractAddress);
-            setDeploySuccess(true);
-            
-            toast({
-              title: "Smart contract deployed!",
-              description: `Your ${deployMode === 'basic' ? 'Counter' : deployMode === 'erc20' ? `${tokenDetails.name} (${tokenDetails.symbol}) token` : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
-            });
-          }
-        } else {
-          throw new Error("No deployment transaction found");
+          await contract.waitForDeployment();
+          
+          const contractAddressResult = await contract.getAddress();
+          console.log("Contract successfully deployed at address:", contractAddressResult);
+          
+          setContractAddress(contractAddressResult);
+          setDeploySuccess(true);
+          
+          toast({
+            title: "Smart contract deployed!",
+            description: `Your ${deployMode === 'basic' ? 'Counter' : deployMode === 'erc20' ? `${tokenDetails.name} (${tokenDetails.symbol}) token` : 'SimpleStorage'} contract has been successfully deployed to the blockchain.`,
+          });
         }
       } else {
-        throw new Error("No ethereum provider found. Please make sure you have a wallet extension installed.");
+        throw new Error("No deployment transaction found");
       }
     } catch (error: any) {
       console.error("Deployment error:", error);

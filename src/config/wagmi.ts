@@ -34,7 +34,7 @@ const ethereumHolesky = defineChain({
 });
 
 const monadTestnet = defineChain({
-  id: 10143,
+  id: 41144,
   name: 'Monad Testnet',
   nativeCurrency: {
     decimals: 18,
@@ -70,7 +70,7 @@ const blastSepolia = defineChain({
 });
 
 const citreaTestnet = defineChain({
-  id: 17000,
+  id: 5115,
   name: 'Citrea Testnet',
   nativeCurrency: {
     decimals: 8,
@@ -88,7 +88,7 @@ const citreaTestnet = defineChain({
 });
 
 const berachainTestnet = defineChain({
-  id: 80069,
+  id: 80084,
   name: 'Berachain Bepolia',
   nativeCurrency: {
     decimals: 18,
@@ -124,7 +124,7 @@ const blastMainnet = defineChain({
 });
 
 const berachainMainnet = defineChain({
-  id: 80094,
+  id: 80085,
   name: 'Berachain',
   nativeCurrency: {
     decimals: 18,
