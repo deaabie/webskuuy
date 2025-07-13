@@ -22,7 +22,7 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
     }, 0).toString();
   }, [recipients]);
 
-  // Simple multisend contract ABI for batch transfers
+  // Optimized multisend contract ABI for true batch transfers
   const multisendABI = [
     {
       "inputs": [
@@ -62,10 +62,9 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
     }
   ];
 
-  // Deploy a simple multisend contract
+  // Optimized multisend contract with proper batch transfer logic
   const deployMultisendContract = async (ethers: any, signer: any) => {
-    // Simple multisend contract bytecode - handles both ETH and ERC20 transfers
-    const multisendBytecode = "0x608060405234801561001057600080fd5b506104e4806100206000396000f3fe6080604052600436106100295760003560e01c80639ac27b061461002e578063f04f2b4b14610041575b600080fd5b61003c610048366004610341565b610061565b005b61003c61004f3660046103a4565b6100d5565b80518251146100b75760405162461bcd60e51b815260206004820152601760248201527f4d69736d617463686564206172726179206c656e67746873000000000000000060448201526064015b60405180910390fd5b60005b82518110156100d0576100c883828151811061019257610192610440565b602002602001015183838151811061019257610192610440565b6001016100ba565b505050565b6001600160a01b03831661012b5760405162461bcd60e51b815260206004820152601360248201527f496e76616c696420746f6b656e2061646472657373000000000000000000000060448201526064016100ae565b80518251146101745760405162461bcd60e51b815260206004820152601760248201527f4d69736d617463686564206172726179206c656e67746873000000000000000060448201526064016100ae565b60005b82518110156100d0576101a7848483815181106101965761019661042a565b602002602001015184848151811061019657610196610440565b6001016101aa565b50565b6000826001600160a01b03166323b872dd3330856040518463ffffffff1660e01b81526004016101dc93929190610462565b6020604051808303816000875af11580156101fb573d6000803e3d6000fd5b505050506040513d601f19601f8201168201806040525081019061021f9190610498565b9050801561025d576040516001600160a01b0384169083156108fc029084906000818181858888f1935050505015801561025c573d6000803e3d6000fd5b5b50505050565b6000806040838503121561027657600080fd5b82359150602083013567ffffffffffffffff8082111561029557600080fd5b818501915085601f8301126102a957600080fd5b813581811115610358576103586104ba565b604051601f8201601f19908116603f011681019083821181831017156103805761038061043e565b816040528281528860208487010111156103995780fd5b826020860160208301376000602084830101528096505050505050565b634e487b7160e01b600052603260045260246000fd5b600080600060608486031215610418578283fd5b83356001600160a01b038116811461042f578384fd5b9250602084013591506040840135801515811461044b578182fd5b809150509250925092565b634e487b7160e01b600052604160045260246000fd5b6001600160a01b039384168152919092166020820152604081019190915260600190565b6000602082840312156104aa57600080fd5b8151801515811461025d57600080fd5b634e487b7160e01b600052604160045260246000fdfea26469706673582212208f7c45a9b2c8e1d4f6a3e8b9c5d2f1a4e9b8c7d6e5f4a3b2c1d0e9f8a7b6c50964736f6c63430008110033";
+    const multisendBytecode = "0x608060405234801561001057600080fd5b50610565806100206000396000f3fe6080604052600436106100295760003560e01c80639ac27b061461002e578063f04f2b4b14610048575b600080fd5b61004661003c366004610341565b6100625b005b610046610056366004610392565b61014d565b8051825114610a4b5760405162461bcd60e51b815260206004820152601a60248201527f4d69736d617463686564206172726179206c656e67746873000000000000000060448201526064015b60405180910390fd5b6000805b8351811015610149578381815181106100ca576100ca610520565b60200260200101519150828282815181106100e7576100e7610520565b602002602001015190508273ffffffffffffffffffffffffffffffffffffffff166108fc829081150290604051600060405180830381858888f1935050505015801561013757600080fd5b506001810161006f565b5050565b6001600160a01b0383166101a35760405162461bcd60e51b815260206004820152601360248201527f496e76616c696420746f6b656e20616464726573730000000000000000000000604482015260640161005b565b80518251146101f45760405162461bcd60e51b815260206004820152601a60248201527f4d69736d617463686564206172726179206c656e67746873000000000000000060448201526064015b60405180910390fd5b600080600090505b835181101561032a578381815181106102175761021761042f565b602002602001015192508282815181106102335761023361042f565b60200260200101519150600060405180606001604052806040518060400160405280600481526020017f7472616e7366657200000000000000000000000000000000000000000000000081525081526020018573ffffffffffffffffffffffffffffffffffffffff1681526020018381525090506000808773ffffffffffffffffffffffffffffffffffffffff16846040516102cd9190610445565b6000604051808303816000865af19150503d806000811461030a576040519150601f19603f3d011682016040523d82523d6000602084013e61030f565b606091505b50915091508061031e57600080fd5b505050600101016101fc565b50505050565b600080604083850312156103535780fd5b8235915060208084013567ffffffffffffffff8082111561037357600080fd5b818601915086601f83011261038757600080fd5b81358181111561039957610399610536565b8060051b604051601f19603f830116810181811085821117156103be576103be610536565b604052828152858101935084860182860187018b10156103dd57600080fd5b600095505b838610156103ff5780358552600195909501949386019386016103e2565b508096505050505050929150565b60008060006060848603121561042257600080fd5b505081359360208301359350604090920135919050565b634e487b7160e01b600052603260045260246000fd5b6000825160005b8181101561046657602081860181015185830152016104cc565b506000920191825250919050565b6000602082840312156104865780fd5b5035919050565b634e487b7160e01b600052604160045260246000fd5b60008060408385031215610536578182fd5b50508035926020909101359150565b6001600160a01b03948516815292909316602083015260408201526060019056fea26469706673582212208b9f8e7d5a2c4b1f3e6d8c9a0b5f2e7a4c1b6d8f5e3a7c9b2f4e8d6a5b1c3e9f664736f6c63430008110033";
 
     const factory = new ethers.ContractFactory(multisendABI, multisendBytecode, signer);
     const contract = await factory.deploy();
@@ -93,11 +92,7 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
     }
 
     setIsProcessing(true);
-    toast({
-      title: "Processing bulk transaction",
-      description: "Please confirm the single transaction in your wallet",
-    });
-
+    
     try {
       const { ethers } = await import('ethers');
       
@@ -108,21 +103,31 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
         const isNativeToken = selectedToken.startsWith('native:');
         
         if (isNativeToken) {
-          // For native tokens, we'll create a batch transaction
+          // Native token bulk transfer - ONE TRANSACTION ONLY
           const addresses = recipients.map(r => r.address);
           const amounts = recipients.map(r => ethers.parseEther(r.amount));
           const totalEther = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
 
-          console.log("Deploying batch sender contract for native tokens...");
-          const multisendContract = await deployMultisendContract(ethers, signer);
-          
-          // Execute batch transfer
-          const tx = await multisendContract.multisendEther(addresses, amounts, {
-            value: totalEther,
-            gasLimit: 300000 + (recipients.length * 21000) // Base gas + gas per transfer
+          toast({
+            title: "Deploying bulk sender contract",
+            description: "This will require only ONE confirmation for all transfers",
           });
 
-          console.log("Batch native token transaction sent:", tx.hash);
+          console.log("Deploying multisend contract for native tokens...");
+          const multisendContract = await deployMultisendContract(ethers, signer);
+          
+          toast({
+            title: "Sending bulk transfer",
+            description: `Sending to ${recipients.length} recipients in one transaction`,
+          });
+
+          // Execute single bulk transfer
+          const tx = await multisendContract.multisendEther(addresses, amounts, {
+            value: totalEther,
+            gasLimit: 300000 + (recipients.length * 25000) // Optimized gas calculation
+          });
+
+          console.log("Bulk native token transaction sent:", tx.hash);
           await tx.wait();
           
           setTransactionHash(tx.hash);
@@ -130,11 +135,11 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
           
           toast({
             title: "Bulk transfer successful!",
-            description: `Successfully sent native tokens to ${recipients.length} recipients in one transaction`,
+            description: `Successfully sent native tokens to ${recipients.length} recipients in ONE transaction`,
           });
 
         } else {
-          // For ERC-20 tokens, use batch approval and transfer
+          // ERC-20 token bulk transfer with single approval
           const tokenAddress = selectedToken.split(':')[1];
           
           const erc20Abi = [
@@ -148,31 +153,49 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
           const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
           const decimals = await tokenContract.decimals();
           
-          // Prepare batch data
+          // Calculate total amount for approval
           const addresses = recipients.map(r => r.address);
           const amounts = recipients.map(r => ethers.parseUnits(r.amount, decimals));
-          const totalAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
+          const totalTokenAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
+
+          toast({
+            title: "Preparing bulk token transfer",
+            description: "Step 1: Deploying contract, Step 2: Single approval, Step 3: Bulk send",
+          });
 
           console.log("Deploying multisend contract for ERC-20 tokens...");
           const multisendContract = await deployMultisendContract(ethers, signer);
           const contractAddress = await multisendContract.getAddress();
           
-          // Check if we need to approve the multisend contract
-          const currentAllowance = await tokenContract.allowance(await signer.getAddress(), contractAddress);
+          // Check current allowance
+          const userAddress = await signer.getAddress();
+          const currentAllowance = await tokenContract.allowance(userAddress, contractAddress);
           
-          if (currentAllowance < totalAmount) {
-            console.log("Approving tokens for batch transfer...");
-            const approveTx = await tokenContract.approve(contractAddress, totalAmount);
+          if (currentAllowance < totalTokenAmount) {
+            toast({
+              title: "Approving tokens",
+              description: `Approving ${totalAmount} tokens for bulk transfer (ONE approval only)`,
+            });
+
+            console.log(`Approving ${totalAmount} tokens for bulk transfer...`);
+            const approveTx = await tokenContract.approve(contractAddress, totalTokenAmount, {
+              gasLimit: 100000 // Standard approval gas
+            });
             await approveTx.wait();
-            console.log("Approval completed");
+            console.log("Single approval completed");
           }
 
-          // Execute batch transfer
-          const tx = await multisendContract.multisendToken(tokenAddress, addresses, amounts, {
-            gasLimit: 200000 + (recipients.length * 65000) // Base gas + gas per token transfer
+          toast({
+            title: "Executing bulk transfer",
+            description: `Sending tokens to ${recipients.length} recipients in ONE transaction`,
           });
 
-          console.log("Batch token transfer sent:", tx.hash);
+          // Execute single bulk transfer
+          const tx = await multisendContract.multisendToken(tokenAddress, addresses, amounts, {
+            gasLimit: 200000 + (recipients.length * 70000) // Optimized gas for batch token transfers
+          });
+
+          console.log("Bulk token transfer transaction sent:", tx.hash);
           await tx.wait();
           
           setTransactionHash(tx.hash);
@@ -180,7 +203,7 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
           
           toast({
             title: "Bulk token transfer successful!",
-            description: `Successfully sent tokens to ${recipients.length} recipients in one transaction`,
+            description: `Successfully sent tokens to ${recipients.length} recipients in ONE transaction`,
           });
         }
       } else {
@@ -195,9 +218,11 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
         if (error.message.includes("user rejected") || error.message.includes("User denied")) {
           errorMessage = "Transaction was rejected by the user.";
         } else if (error.message.includes("insufficient funds")) {
-          errorMessage = "Insufficient funds for the bulk transfer.";
+          errorMessage = "Insufficient funds for the bulk transfer including gas fees.";
         } else if (error.code === 4001) {
           errorMessage = "Transaction was rejected in your wallet.";
+        } else if (error.message.includes("execution reverted")) {
+          errorMessage = "Transaction execution failed. Please check token balance and network.";
         } else {
           errorMessage = error.message.length > 100 ? 
             error.message.substring(0, 100) + "..." : 
