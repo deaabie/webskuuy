@@ -22,6 +22,7 @@ import Faucet from "./pages/Faucet";
 import CosmosExplorer from "./pages/CosmosExplorer";
 import ChainDashboard from "./pages/ChainDashboard";
 import Deploy from "./pages/Deploy";
+import Multisender from "./pages/Multisender";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
 
@@ -63,9 +64,10 @@ const AppContent = () => {
           <Route path="/explorer" element={<CosmosExplorer />} />
           <Route path="/explorer/:chainName" element={<ChainDashboard />} />
           <Route path="/deploy" element={<Deploy />} />
+          <Route path="/multisender" element={<Multisender />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        {location.pathname !== "/" && location.pathname !== "/deploy" && <Footer />}
+        {location.pathname !== "/" && location.pathname !== "/deploy" && location.pathname !== "/multisender" && <Footer />}
       </div>
     </div>
   );
