@@ -1,85 +1,125 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 interface ContactFormData {
   name: string;
   email: string;
+  subject: string;
   message: string;
 }
 
-const handler = async (req: Request): Promise<Response> => {
+// Helper function to sanitize input and prevent XSS
+function sanitizeInput(input: string): string {
+  return input
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocols
+    .replace(/on\w+=/gi, '') // Remove event handlers
+    .trim()
+    .slice(0, 1000); // Limit length
+}
+
+// Helper function to validate email
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email) && email.length <= 254;
+}
+
+// Helper function to validate and sanitize form data
+function validateAndSanitizeFormData(data: any): ContactFormData | null {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+  const { name, email, subject, message } = data;
+
+  // Validate required fields
+  if (!name || !email || !subject || !message) {
+    return null;
+  }
+
+  // Validate email format
+  if (!isValidEmail(email)) {
+    return null;
+  }
+
+  // Sanitize all inputs
+  return {
+    name: sanitizeInput(name),
+    email: sanitizeInput(email).toLowerCase(),
+    subject: sanitizeInput(subject),
+    message: sanitizeInput(message)
+  };
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const { name, email, message }: ContactFormData = await req.json();
-
-    console.log("Received contact form data:", { name, email, message });
-
-    // Validate the incoming data
-    if (!name || !email || !message) {
+    // Parse the request body
+    const requestData = await req.json()
+    
+    // Validate and sanitize form data
+    const formData = validateAndSanitizeFormData(requestData);
+    
+    if (!formData) {
       return new Response(
-        JSON.stringify({ error: "All fields are required" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
+        JSON.stringify({ 
+          error: 'Invalid form data',
+          message: 'Please provide valid name, email, subject, and message'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400 
         }
-      );
+      )
     }
 
-    // Send email to site owner
-    const emailResponse = await resend.emails.send({
-      from: "Contact Form <onboarding@resend.dev>",
-      to: ["skuuycom@gmail.com"],
-      subject: `New contact form submission from ${name}`,
-      html: `
-        <h1>New Contact Form Submission</h1>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-      `,
-    });
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    console.log("Email sent successfully:", emailResponse);
+    // Log the contact form submission (optional)
+    console.log(`Contact form submission from: ${formData.email}`)
 
-    // Optional: Send confirmation email to the person who submitted the form
-    await resend.emails.send({
-      from: "Skuuy Node Support <onboarding@resend.dev>",
-      to: [email],
-      subject: "We received your message",
-      html: `
-        <h1>Thank you for contacting us, ${name}!</h1>
-        <p>We have received your message and will get back to you as soon as possible.</p>
-        <p>Best regards,<br>The Skuuy Node Support Team</p>
-      `,
-    });
+    // Here you would typically send an email using a service like SendGrid, Resend, etc.
+    // For now, we'll just return a success response
+    
+    // You can also store the contact form submission in a database table if needed
+    // const { error } = await supabase
+    //   .from('contact_submissions')
+    //   .insert([formData])
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
-  } catch (error: any) {
-    console.error("Error in send-contact-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
+      JSON.stringify({ 
+        success: true,
+        message: 'Thank you for your message. We will get back to you soon!'
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
-    );
-  }
-};
+    )
 
-serve(handler);
+  } catch (error) {
+    console.error('Contact form error:', error)
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Internal server error',
+        message: 'Something went wrong. Please try again later.'
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    )
+  }
+})

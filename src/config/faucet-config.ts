@@ -1,11 +1,6 @@
 
 import { NetworkConfig } from "@/components/faucet/types";
 
-// IMPORTANT: This is for DEMO purposes only
-// In a real application, NEVER store private keys in the frontend code
-// Use environment variables or a secure key management service
-export const FAUCET_PRIVATE_KEY = "802c18efdad3bf8eddb070847774db4c841d914ac8e04f79707f33ed781daecd";
-
 // Amount to send for each claim (in ether)
 export const CLAIM_AMOUNT = "0.001";
 

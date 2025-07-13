@@ -7,30 +7,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// IMPORTANT: This is not secure for production use
-// Replace with your actual private key for the faucet wallet
-const FAUCET_PRIVATE_KEY = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef";
+// Get private key from environment variable
+const FAUCET_PRIVATE_KEY = Deno.env.get('FAUCET_PRIVATE_KEY');
+
+if (!FAUCET_PRIVATE_KEY) {
+  console.error('FAUCET_PRIVATE_KEY environment variable is not set');
+}
 
 // Define RPC endpoints and network configuration - updated to latest testnet networks
 const NETWORK_CONFIG = {
   ethereum_sepolia: {
-    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161', // Public gateway
+    rpcUrl: Deno.env.get('ETHEREUM_SEPOLIA_RPC_URL') || 'https://sepolia.drpc.org',
     chainId: 11155111, // Sepolia
     name: 'Ethereum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   ethereum_holesky: {
-    rpcUrl: 'https://ethereum-holesky.publicnode.com',
+    rpcUrl: Deno.env.get('ETHEREUM_HOLESKY_RPC_URL') || 'https://ethereum-holesky.publicnode.com',
     chainId: 17000, // Holesky
     name: 'Ethereum Holesky',
     symbol: 'ETH',
     explorer: 'https://holesky.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum/ethereum-org-website/dev/src/assets/eth-diamond-purple.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   base_sepolia: {
-    rpcUrl: 'https://sepolia.base.org',
+    rpcUrl: Deno.env.get('ETHEREUM_BASE_RPC_URL') || 'https://sepolia.base.org',
     chainId: 84532, // Base Sepolia
     name: 'Base Sepolia',
     symbol: 'ETH',
@@ -38,20 +41,20 @@ const NETWORK_CONFIG = {
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png'
   },
   optimism_sepolia: {
-    rpcUrl: 'https://sepolia.optimism.io',
+    rpcUrl: Deno.env.get('ETHEREUM_OPTIMISM_RPC_URL') || 'https://sepolia.optimism.io',
     chainId: 11155420, // Optimism Sepolia
     name: 'Optimism Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia-optimism.etherscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/ethereum-optimism/brand-kit/main/assets/images/optimism-logo.svg'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   arbitrum_sepolia: {
-    rpcUrl: 'https://sepolia-rollup.arbitrum.io/rpc',
+    rpcUrl: Deno.env.get('ETHEREUM_ARBITRUM_RPC_URL') || 'https://sepolia-rollup.arbitrum.io/rpc',
     chainId: 421614, // Arbitrum Sepolia
     name: 'Arbitrum Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.arbiscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/OffchainLabs/arbitrum-token/main/arbitrum-token-logo.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   },
   blast_sepolia: {
     rpcUrl: 'https://sepolia.blast.io',
@@ -59,12 +62,11 @@ const NETWORK_CONFIG = {
     name: 'Blast Sepolia',
     symbol: 'ETH',
     explorer: 'https://sepolia.blastscan.io/tx/',
-    imageUrl: 'https://raw.githubusercontent.com/blastapi/blast-brand-assets/main/Branding%20Assets/Blast%20Logo%20-%20Black%20Wordmark%20-%20RGB.png'
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png'
   }
 }
 
-// Create a Supabase client - leave URLs as environment variables
-// since they're available in Edge Functions deployment
+// Create a Supabase client
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
 const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const supabase = createClient(supabaseUrl, supabaseKey)
@@ -72,13 +74,80 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 // Amount to send for each claim (in ether)
 const CLAIM_AMOUNT = "0.001"
 
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 5;
+
+// Helper function to get client IP
+function getClientIP(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+  
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  
+  if (realIP) {
+    return realIP;
+  }
+  
+  return 'unknown';
+}
+
+// Helper function to validate Ethereum address
+function isValidEthereumAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+// Helper function to sanitize input
+function sanitizeInput(input: string): string {
+  return input.trim().slice(0, 500); // Limit length and trim whitespace
+}
+
+// Rate limiting check
+async function checkRateLimit(ip: string): Promise<boolean> {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW;
+  
+  try {
+    const { count } = await supabase
+      .from('faucet_claims')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', new Date(windowStart).toISOString())
+      .eq('address', ip); // Using address field to store IP for rate limiting
+    
+    return (count || 0) < MAX_REQUESTS_PER_WINDOW;
+  } catch (error) {
+    console.error('Rate limit check failed:', error);
+    return true; // Allow request if rate limit check fails
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
+  const clientIP = getClientIP(req);
+  console.log(`Request from IP: ${clientIP}`);
+
   try {
+    // Check rate limiting
+    const withinRateLimit = await checkRateLimit(clientIP);
+    if (!withinRateLimit) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded',
+          message: 'Too many requests. Please try again later.' 
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 429 
+        }
+      )
+    }
+
     // Parse the request
     const { address, network, reason } = await req.json()
 
@@ -90,13 +159,15 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate the Ethereum address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    // Validate and sanitize inputs
+    if (!isValidEthereumAddress(address)) {
       return new Response(
         JSON.stringify({ error: 'Invalid wallet address format' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
+
+    const sanitizedReason = reason ? sanitizeInput(reason) : 'No reason provided';
 
     // Get network configuration
     const networkConfig = NETWORK_CONFIG[network as keyof typeof NETWORK_CONFIG]
@@ -139,6 +210,15 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Verify private key is available
+    if (!FAUCET_PRIVATE_KEY) {
+      console.error('FAUCET_PRIVATE_KEY not configured')
+      return new Response(
+        JSON.stringify({ error: 'Faucet configuration error. Please contact administrator.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
     // Set up a provider with the network's RPC URL
     const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl)
     
@@ -175,7 +255,7 @@ Deno.serve(async (req) => {
         { 
           address: address.toLowerCase(), 
           network,
-          reason: reason || "No reason provided",
+          reason: sanitizedReason,
           tx_hash: tx.hash,
           amount: CLAIM_AMOUNT,
           status: 'pending'

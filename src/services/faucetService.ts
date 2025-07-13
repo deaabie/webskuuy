@@ -1,11 +1,11 @@
 
 import { ethers } from "ethers";
-import { CLAIM_AMOUNT, FAUCET_PRIVATE_KEY, NETWORK_CONFIG } from "@/config/faucet-config";
+import { CLAIM_AMOUNT, NETWORK_CONFIG } from "@/config/faucet-config";
 import { TransactionDetails } from "@/components/faucet/types";
+import { supabase } from "@/integrations/supabase/client";
 
 // Local storage keys
 const FAUCET_CLAIMS_KEY = "faucet_claims";
-const FAUCET_LOG_FILE = "faucet_logs.txt";
 
 // Ethereum mainnet provider
 const MAINNET_RPC_URL = "https://eth.llamarpc.com";
@@ -137,7 +137,7 @@ export const faucetService = {
     }
   },
 
-  // Send transaction and record claim
+  // Send transaction and record claim - now uses Supabase Edge Function
   sendTransaction: async (to: string, networkId: string, reason?: string, ipAddress?: string): Promise<TransactionDetails> => {
     try {
       // First check if user has enough mainnet balance
@@ -151,36 +151,32 @@ export const faucetService = {
         throw new Error("Invalid network selected");
       }
 
-      // Create provider with the selected network
-      const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
-      
-      // Create wallet with private key
-      const wallet = new ethers.Wallet(FAUCET_PRIVATE_KEY, provider);
-      
-      // Check wallet balance
-      const balance = await provider.getBalance(wallet.address);
-      const claimAmountBn = ethers.parseEther(CLAIM_AMOUNT);
-      
-      if (balance < claimAmountBn) {
-        throw new Error(`Insufficient funds in faucet wallet for ${networkConfig.name}`);
-      }
-
-      // Send transaction
-      console.log(`Sending ${CLAIM_AMOUNT} ${networkConfig.symbol} to ${to} on ${networkConfig.name}`);
-      
-      const tx = await wallet.sendTransaction({
-        to: to,
-        value: claimAmountBn,
+      // Use Supabase Edge Function instead of direct transaction
+      const { data, error } = await supabase.functions.invoke('send-tokens', {
+        body: {
+          address: to,
+          network: networkId,
+          reason: reason || "No reason provided"
+        }
       });
 
-      console.log(`Transaction sent: ${tx.hash}`);
+      if (error) {
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Failed to process transaction");
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.message || "Transaction failed");
+      }
+
+      console.log(`Transaction sent via edge function: ${data.txHash}`);
       
-      // Record the claim locally
+      // Record the claim locally for backward compatibility
       const claimRecord: ClaimRecord = {
         address: to.toLowerCase(),
         network: networkId,
-        txHash: tx.hash,
-        amount: CLAIM_AMOUNT,
+        txHash: data.txHash,
+        amount: data.amount,
         timestamp: Date.now(),
         reason: reason || "No reason provided",
         status: 'pending',
@@ -189,22 +185,12 @@ export const faucetService = {
       
       saveClaim(claimRecord);
 
-      // Wait for transaction receipt in background
-      tx.wait().then(receipt => {
-        // Update transaction status
-        console.log(`Transaction confirmed: ${tx.hash}`);
-        updateClaimStatus(tx.hash, 'completed');
-      }).catch(error => {
-        console.error('Error waiting for transaction:', error);
-        updateClaimStatus(tx.hash, 'failed');
-      });
-
       return {
-        txHash: tx.hash,
-        amount: CLAIM_AMOUNT,
-        network: networkConfig.name,
-        symbol: networkConfig.symbol,
-        explorerUrl: networkConfig.explorer + tx.hash
+        txHash: data.txHash,
+        amount: data.amount,
+        network: data.network,
+        symbol: data.symbol,
+        explorerUrl: data.explorerUrl
       };
     } catch (error) {
       console.error("Transaction error:", error);
