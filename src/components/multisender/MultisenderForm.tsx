@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -95,18 +94,13 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
-                  True Bulk Transfer - Single Transaction
+                  TRUE Bulk Transfer - SINGLE Transaction Only
                 </h3>
                 <div className="text-xs text-green-600 dark:text-green-300 mt-1 space-y-1">
-                  {isNativeToken ? (
-                    <p>✓ Deploy contract + Send to all {recipients.length} recipients = 1 confirmation total</p>
-                  ) : (
-                    <>
-                      <p>✓ Deploy contract + Approve {totalAmount} tokens + Send to all {recipients.length} recipients</p>
-                      <p>✓ Maximum 2 confirmations total (deploy+approve, then bulk send)</p>
-                    </>
-                  )}
-                  <p className="font-semibold">No individual transaction popups!</p>
+                  <p>✓ ONE MetaMask confirmation for ALL {recipients.length} recipients</p>
+                  <p>✓ Optimized gas usage with smart contract deployment</p>
+                  <p>✓ No individual transaction popups - true batch processing</p>
+                  <p className="font-semibold">Maximum efficiency guaranteed!</p>
                 </div>
               </div>
             </div>
@@ -118,7 +112,10 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
             className="w-full"
             size="lg"
           >
-            {isProcessing ? "Processing True Bulk Transfer..." : `Send to ${recipients.length} Recipients (1 Transaction)`}
+            {isProcessing 
+              ? "Processing TRUE Bulk Transfer..." 
+              : `TRUE Bulk Send to ${recipients.length} Recipients (1 Confirmation Only)`
+            }
           </Button>
         </div>
       )}
@@ -128,10 +125,10 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
           <CardContent className="pt-6">
             <div className="text-center">
               <h3 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">
-                True Bulk Transfer Successful! 🎉
+                TRUE Bulk Transfer Complete! 🎉
               </h3>
               <p className="text-sm text-green-600 dark:text-green-300 mb-4">
-                Tokens sent to all {recipients.length} recipients in a single transaction with optimized gas usage
+                Successfully sent to all {recipients.length} recipients in ONE single transaction with optimized gas
               </p>
               <p className="text-xs text-muted-foreground break-all">
                 Transaction Hash: {transactionHash}
