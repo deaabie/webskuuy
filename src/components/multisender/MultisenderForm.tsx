@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,13 +95,13 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
               </div>
               <div>
                 <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
-                  TRUE Bulk Transfer - SINGLE Transaction Only
+                  TRUE Bulk Transfer - Contract Deployment Method
                 </h3>
                 <div className="text-xs text-green-600 dark:text-green-300 mt-1 space-y-1">
-                  <p>✓ ONE MetaMask confirmation for ALL {recipients.length} recipients</p>
-                  <p>✓ Optimized gas usage with smart contract deployment</p>
-                  <p>✓ No individual transaction popups - true batch processing</p>
-                  <p className="font-semibold">Maximum efficiency guaranteed!</p>
+                  <p>✓ {isNativeToken ? 'ONE' : 'MAX 2'} MetaMask confirmation{isNativeToken ? '' : 's'} for ALL {recipients.length} recipients</p>
+                  <p>✓ Deploys optimized smart contract for bulk processing</p>
+                  <p>✓ {isNativeToken ? 'Single transaction' : 'Approve + bulk send'} - no individual transfers</p>
+                  <p className="font-semibold">Guaranteed single transaction bulk transfer!</p>
                 </div>
               </div>
             </div>
@@ -114,7 +115,7 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
           >
             {isProcessing 
               ? "Processing TRUE Bulk Transfer..." 
-              : `TRUE Bulk Send to ${recipients.length} Recipients (1 Confirmation Only)`
+              : `Deploy & Send to ${recipients.length} Recipients (TRUE BULK)`
             }
           </Button>
         </div>
@@ -128,11 +129,21 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
                 TRUE Bulk Transfer Complete! 🎉
               </h3>
               <p className="text-sm text-green-600 dark:text-green-300 mb-4">
-                Successfully sent to all {recipients.length} recipients in ONE single transaction with optimized gas
+                Successfully sent to all {recipients.length} recipients using smart contract bulk transfer
               </p>
               <p className="text-xs text-muted-foreground break-all">
                 Transaction Hash: {transactionHash}
               </p>
+              <Button
+                className="mt-4"
+                onClick={() => {
+                  setIsSuccess(false);
+                  setTransactionHash("");
+                  setRecipients([]);
+                }}
+              >
+                Send Another Bulk Transfer
+              </Button>
             </div>
           </CardContent>
         </Card>

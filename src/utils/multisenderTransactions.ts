@@ -15,29 +15,33 @@ export const executeNativeBulkTransfer = async (
 ): Promise<TransactionResult> => {
   try {
     console.log("Starting native token bulk transfer...");
+    console.log("Recipients:", recipients.length);
     
     const addresses = recipients.map(r => r.address);
-    const amounts = recipients.map(r => ethers.parseEther(r.amount));
+    const amounts = recipients.map(r => ethers.parseEther(r.amount.toString()));
     const totalEther = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
 
-    // Deploy and execute in one step
+    console.log("Total ETH needed:", ethers.formatEther(totalEther));
+
+    // Deploy multisender contract
     const multisenderContract = await deployMultisenderContract(signer);
     
-    console.log("Executing bulk native transfer...");
+    console.log("Executing native bulk transfer...");
     const tx = await multisenderContract.multisendEther(addresses, amounts, {
       value: totalEther,
-      gasLimit: 300000 + (recipients.length * 30000)
+      gasLimit: 500000 + (recipients.length * 50000)
     });
 
-    console.log("Bulk native transfer transaction sent:", tx.hash);
-    await tx.wait();
+    console.log("Native bulk transfer submitted:", tx.hash);
+    const receipt = await tx.wait();
+    console.log("Native bulk transfer confirmed:", receipt.transactionHash);
     
     return {
       success: true,
-      hash: tx.hash
+      hash: receipt.transactionHash
     };
   } catch (error: any) {
-    console.error("Native bulk transfer error:", error);
+    console.error("Native bulk transfer failed:", error);
     return {
       success: false,
       error: error.message || "Native bulk transfer failed"
@@ -52,6 +56,8 @@ export const executeTokenBulkTransfer = async (
 ): Promise<TransactionResult> => {
   try {
     console.log("Starting ERC-20 bulk transfer...");
+    console.log("Token address:", tokenAddress);
+    console.log("Recipients:", recipients.length);
     
     const erc20Abi = [
       "function decimals() view returns (uint8)",
@@ -61,41 +67,54 @@ export const executeTokenBulkTransfer = async (
     ];
     
     const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+    
+    // Get token decimals
     const decimals = await tokenContract.decimals();
+    console.log("Token decimals:", decimals);
     
     const addresses = recipients.map(r => r.address);
-    const amounts = recipients.map(r => ethers.parseUnits(r.amount, decimals));
+    const amounts = recipients.map(r => ethers.parseUnits(r.amount.toString(), decimals));
     const totalTokenAmount = amounts.reduce((sum, amount) => sum + amount, BigInt(0));
 
-    // Deploy contract first
+    console.log("Total tokens needed:", ethers.formatUnits(totalTokenAmount, decimals));
+
+    // Deploy multisender contract
     const multisenderContract = await deployMultisenderContract(signer);
     const contractAddress = await multisenderContract.getAddress();
     
-    // Check and approve if needed
+    // Check current allowance
     const userAddress = await signer.getAddress();
     const currentAllowance = await tokenContract.allowance(userAddress, contractAddress);
     
+    console.log("Current allowance:", ethers.formatUnits(currentAllowance, decimals));
+    console.log("Required amount:", ethers.formatUnits(totalTokenAmount, decimals));
+
+    // Approve tokens if needed
     if (currentAllowance < totalTokenAmount) {
-      console.log("Approving tokens for bulk transfer...");
-      const approveTx = await tokenContract.approve(contractAddress, totalTokenAmount);
+      console.log("Approving tokens...");
+      const approveTx = await tokenContract.approve(contractAddress, totalTokenAmount, {
+        gasLimit: 100000
+      });
+      console.log("Approval submitted:", approveTx.hash);
       await approveTx.wait();
-      console.log("Token approval completed");
+      console.log("Token approval confirmed");
     }
 
-    console.log("Executing bulk token transfer...");
+    console.log("Executing token bulk transfer...");
     const tx = await multisenderContract.multisendToken(tokenAddress, addresses, amounts, {
-      gasLimit: 200000 + (recipients.length * 80000)
+      gasLimit: 300000 + (recipients.length * 100000)
     });
 
-    console.log("Bulk token transfer transaction sent:", tx.hash);
-    await tx.wait();
+    console.log("Token bulk transfer submitted:", tx.hash);
+    const receipt = await tx.wait();
+    console.log("Token bulk transfer confirmed:", receipt.transactionHash);
     
     return {
       success: true,
-      hash: tx.hash
+      hash: receipt.transactionHash
     };
   } catch (error: any) {
-    console.error("Token bulk transfer error:", error);
+    console.error("Token bulk transfer failed:", error);
     return {
       success: false,
       error: error.message || "Token bulk transfer failed"

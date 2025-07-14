@@ -43,8 +43,14 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
     }
 
     setIsProcessing(true);
+    setTransactionHash("");
+    setIsSuccess(false);
     
     try {
+      console.log("Starting bulk transfer process...");
+      console.log("Selected token:", selectedToken);
+      console.log("Recipients count:", recipients.length);
+      
       const { ethers } = await import('ethers');
       
       if (typeof window !== 'undefined' && window.ethereum) {
@@ -54,15 +60,17 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
         const isNativeToken = selectedToken.startsWith('native:');
         
         toast({
-          title: "Preparing true bulk transfer",
-          description: `One transaction for all ${recipients.length} recipients`,
+          title: "Preparing TRUE bulk transfer",
+          description: `Deploying contract for ${recipients.length} recipients`,
         });
 
         let result;
         
         if (isNativeToken) {
+          console.log("Executing native token bulk transfer...");
           result = await executeNativeBulkTransfer(signer, recipients);
         } else {
+          console.log("Executing ERC-20 token bulk transfer...");
           const tokenAddress = selectedToken.split(':')[1];
           result = await executeTokenBulkTransfer(signer, recipients, tokenAddress);
         }
@@ -72,8 +80,8 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
           setIsSuccess(true);
           
           toast({
-            title: "True bulk transfer successful! 🎉",
-            description: `Successfully sent ${isNativeToken ? 'native tokens' : 'tokens'} to ${recipients.length} recipients in ONE transaction`,
+            title: "TRUE bulk transfer successful! 🎉",
+            description: `Successfully sent to ${recipients.length} recipients in a single transaction`,
           });
         } else {
           throw new Error(result.error || "Bulk transfer failed");
@@ -84,7 +92,7 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
     } catch (error: any) {
       console.error("Bulk transfer error:", error);
       
-      let errorMessage = "True bulk transfer failed. Please try again.";
+      let errorMessage = "Bulk transfer failed. Please try again.";
       
       if (error.message) {
         if (error.message.includes("user rejected") || error.message.includes("User denied")) {
@@ -102,7 +110,7 @@ export const useMultisender = ({ network, selectedToken, recipients }: UseMultis
       
       toast({
         variant: "destructive",
-        title: "True bulk transfer failed",
+        title: "Bulk transfer failed",
         description: errorMessage,
       });
     } finally {
