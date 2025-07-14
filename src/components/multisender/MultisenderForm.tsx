@@ -8,6 +8,8 @@ import CsvInput from './CsvInput';
 import TransactionSummary from './TransactionSummary';
 import { Button } from "@/components/ui/button";
 import { useMultisenderTransfer } from '@/hooks/useMultisenderTransfer';
+import { useAccount, useChainId } from 'wagmi';
+import { getNetworkById } from '@/config/deploy-config';
 
 interface MultisenderFormProps {
   network: string;
@@ -23,6 +25,11 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
   const [recipients, setRecipients] = useState<RecipientData[]>([]);
   const [inputMode, setInputMode] = useState("manual");
 
+  const { isConnected } = useAccount();
+  const chainId = useChainId();
+  const networkConfig = getNetworkById(network);
+  const isCorrectNetwork = network ? parseInt(network) === chainId : true;
+
   const {
     isProcessing,
     handleSendTokens,
@@ -35,23 +42,55 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
     setRecipients(newRecipients);
   };
 
-  const canProceed = network && selectedToken && recipients.length > 0 && recipients.every(r => r.address && r.amount);
+  const canProceed = network && selectedToken && recipients.length > 0 && recipients.every(r => r.address && r.amount) && isConnected && isCorrectNetwork;
   const isNativeToken = selectedToken.startsWith('native:');
 
   const handleReset = () => {
     setRecipients([]);
-    // Note: Don't reset isSuccess and transactionHash here as they're managed by the hook
   };
 
   return (
     <div className="space-y-6">
+      {!isConnected && (
+        <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+                Wallet Not Connected
+              </h3>
+              <p className="text-sm text-yellow-600 dark:text-yellow-300">
+                Please connect your wallet using the button above to continue with the multisender.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {isConnected && !isCorrectNetwork && networkConfig && (
+        <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
+                Wrong Network
+              </h3>
+              <p className="text-sm text-red-600 dark:text-red-300 mb-2">
+                Please switch to <strong>{networkConfig.name}</strong> (Chain ID: {networkConfig.chainId})
+              </p>
+              <p className="text-xs text-red-500 dark:text-red-400">
+                Current network: Chain ID {chainId}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <TokenSelector
         network={network}
         selectedToken={selectedToken}
         onTokenSelect={setSelectedToken}
       />
 
-      {selectedToken && (
+      {selectedToken && isConnected && isCorrectNetwork && (
         <Card>
           <CardHeader>
             <CardTitle>Add Recipients</CardTitle>
@@ -80,7 +119,7 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
         </Card>
       )}
 
-      {recipients.length > 0 && (
+      {recipients.length > 0 && isConnected && isCorrectNetwork && (
         <TransactionSummary
           recipients={recipients}
           selectedToken={selectedToken}
@@ -106,7 +145,7 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
                   <p>• {isNativeToken ? 'Native token transfers' : 'ERC-20 token transfers'}</p>
                   <p>• {recipients.length} individual transaction{recipients.length > 1 ? 's' : ''} will be sent</p>
                   <p>• Each transaction requires gas fees</p>
-                  <p className="font-semibold">Standard multi-send approach</p>
+                  <p className="font-semibold">Using your connected wallet provider</p>
                 </div>
               </div>
             </div>

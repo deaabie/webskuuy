@@ -1,9 +1,9 @@
 
 import { useState, useMemo } from 'react';
-import { useWalletClient, useAccount } from 'wagmi';
+import { useWalletClient, useAccount, usePublicClient } from 'wagmi';
 import { toast } from "@/hooks/use-toast";
 import { RecipientData } from '@/components/multisender/MultisenderForm';
-import { ethers } from 'ethers';
+import { parseEther, parseUnits, formatEther, formatUnits } from 'viem';
 
 interface UseMultisenderTransferProps {
   network: string;
@@ -13,7 +13,8 @@ interface UseMultisenderTransferProps {
 
 export const useMultisenderTransfer = ({ network, selectedToken, recipients }: UseMultisenderTransferProps) => {
   const { data: walletClient } = useWalletClient();
-  const { address } = useAccount();
+  const publicClient = usePublicClient();
+  const { address, chainId } = useAccount();
   const [isProcessing, setIsProcessing] = useState(false);
   const [transactionHash, setTransactionHash] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
@@ -25,7 +26,7 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
   }, [recipients]);
 
   const handleSendTokens = async () => {
-    if (!walletClient || !address) {
+    if (!walletClient || !address || !publicClient) {
       toast({
         variant: "destructive",
         title: "Wallet not connected",
@@ -43,25 +44,29 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
       return;
     }
 
+    // Check if we're on the correct network
+    const networkChainId = parseInt(network);
+    if (chainId !== networkChainId) {
+      toast({
+        variant: "destructive",
+        title: "Wrong network",
+        description: `Please switch to the correct network (Chain ID: ${networkChainId})`,
+      });
+      return;
+    }
+
     setIsProcessing(true);
     setTransactionHash("");
     setIsSuccess(false);
 
     try {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
+      const isNativeToken = selectedToken.startsWith('native:');
 
-        const isNativeToken = selectedToken.startsWith('native:');
-
-        if (isNativeToken) {
-          // Handle native token bulk transfer
-          await handleNativeBulkTransfer(signer);
-        } else {
-          // Handle ERC-20 token bulk transfer
-          const tokenAddress = selectedToken.split(':')[1];
-          await handleTokenBulkTransfer(signer, tokenAddress);
-        }
+      if (isNativeToken) {
+        await handleNativeBulkTransfer();
+      } else {
+        const tokenAddress = selectedToken.split(':')[1];
+        await handleTokenBulkTransfer(tokenAddress as `0x${string}`);
       }
     } catch (error: any) {
       console.error("Bulk transfer error:", error);
@@ -92,10 +97,11 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
     }
   };
 
-  const handleNativeBulkTransfer = async (signer: any) => {
-    console.log("Starting native token bulk transfer...");
+  const handleNativeBulkTransfer = async () => {
+    if (!walletClient || !address) return;
     
-    // Calculate total amount needed
+    console.log("Starting native token bulk transfer using connected wallet...");
+    
     const totalEther = recipients.reduce((sum, recipient) => {
       return sum + parseFloat(recipient.amount);
     }, 0);
@@ -105,28 +111,29 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
       description: `Preparing to send ${totalEther} tokens to ${recipients.length} recipients`,
     });
 
-    // Send individual transactions for native tokens (this is the standard way)
     const txHashes = [];
     
     for (let i = 0; i < recipients.length; i++) {
       const recipient = recipients[i];
       console.log(`Sending ${recipient.amount} to ${recipient.address}`);
       
-      const tx = await signer.sendTransaction({
-        to: recipient.address,
-        value: ethers.parseEther(recipient.amount),
-        gasLimit: 21000
+      const hash = await walletClient.sendTransaction({
+        to: recipient.address as `0x${string}`,
+        value: parseEther(recipient.amount),
+        gas: 21000n
       });
       
-      console.log(`Transaction ${i + 1}/${recipients.length} sent:`, tx.hash);
-      txHashes.push(tx.hash);
+      console.log(`Transaction ${i + 1}/${recipients.length} sent:`, hash);
+      txHashes.push(hash);
       
       // Wait for confirmation
-      await tx.wait();
-      console.log(`Transaction ${i + 1}/${recipients.length} confirmed`);
+      if (publicClient) {
+        await publicClient.waitForTransactionReceipt({ hash });
+        console.log(`Transaction ${i + 1}/${recipients.length} confirmed`);
+      }
     }
 
-    setTransactionHash(txHashes[0]); // Show first transaction hash
+    setTransactionHash(txHashes[0]);
     setIsSuccess(true);
     
     toast({
@@ -135,64 +142,96 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
     });
   };
 
-  const handleTokenBulkTransfer = async (signer: any, tokenAddress: string) => {
-    console.log("Starting ERC-20 bulk transfer...");
+  const handleTokenBulkTransfer = async (tokenAddress: `0x${string}`) => {
+    if (!walletClient || !address || !publicClient) return;
+    
+    console.log("Starting ERC-20 bulk transfer using connected wallet...");
     
     const erc20Abi = [
-      "function decimals() view returns (uint8)",
-      "function balanceOf(address owner) view returns (uint256)",
-      "function approve(address spender, uint256 amount) returns (bool)",
-      "function transfer(address to, uint256 amount) returns (bool)",
-      "function allowance(address owner, address spender) view returns (uint256)"
-    ];
-    
-    const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
-    const userAddress = await signer.getAddress();
+      {
+        name: 'decimals',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [],
+        outputs: [{ name: '', type: 'uint8' }],
+      },
+      {
+        name: 'balanceOf',
+        type: 'function',
+        stateMutability: 'view',
+        inputs: [{ name: 'owner', type: 'address' }],
+        outputs: [{ name: '', type: 'uint256' }],
+      },
+      {
+        name: 'transfer',
+        type: 'function',
+        stateMutability: 'nonpayable',
+        inputs: [
+          { name: 'to', type: 'address' },
+          { name: 'amount', type: 'uint256' }
+        ],
+        outputs: [{ name: '', type: 'bool' }],
+      },
+    ] as const;
     
     // Get token decimals
-    const decimals = await tokenContract.decimals();
+    const decimals = await publicClient.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: 'decimals',
+    });
+    
     console.log("Token decimals:", decimals);
     
     // Calculate total amount needed
     const totalTokenAmount = recipients.reduce((sum, recipient) => {
-      return sum + ethers.parseUnits(recipient.amount.toString(), decimals);
-    }, BigInt(0));
+      return sum + parseUnits(recipient.amount.toString(), decimals);
+    }, 0n);
 
-    console.log("Total tokens needed:", ethers.formatUnits(totalTokenAmount, decimals));
+    console.log("Total tokens needed:", formatUnits(totalTokenAmount, decimals));
 
     // Check balance
-    const balance = await tokenContract.balanceOf(userAddress);
+    const balance = await publicClient.readContract({
+      address: tokenAddress,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: [address],
+    });
+
     if (balance < totalTokenAmount) {
       throw new Error("Insufficient token balance");
     }
 
     toast({
       title: "Processing ERC-20 bulk transfer",
-      description: `Sending ${ethers.formatUnits(totalTokenAmount, decimals)} tokens to ${recipients.length} recipients`,
+      description: `Sending ${formatUnits(totalTokenAmount, decimals)} tokens to ${recipients.length} recipients`,
     });
 
-    // Send individual transactions for ERC-20 tokens
     const txHashes = [];
     
     for (let i = 0; i < recipients.length; i++) {
       const recipient = recipients[i];
-      const amount = ethers.parseUnits(recipient.amount.toString(), decimals);
+      const amount = parseUnits(recipient.amount.toString(), decimals);
       
       console.log(`Sending ${recipient.amount} tokens to ${recipient.address}`);
       
-      const tx = await tokenContract.transfer(recipient.address, amount, {
-        gasLimit: 65000
+      const hash = await walletClient.writeContract({
+        address: tokenAddress,
+        abi: erc20Abi,
+        functionName: 'transfer',
+        args: [recipient.address as `0x${string}`, amount],
+        gas: 65000n
       });
       
-      console.log(`Transaction ${i + 1}/${recipients.length} sent:`, tx.hash);
-      txHashes.push(tx.hash);
+      console.log(`Transaction ${i + 1}/${recipients.length} sent:`, hash);
+      txHashes.push(hash);
       
       // Wait for confirmation
-      await tx.wait();
+      await publicClient.waitForTransactionReceipt({ hash });
       console.log(`Transaction ${i + 1}/${recipients.length} confirmed`);
     }
 
-    setTransactionHash(txHashes[0]); // Show first transaction hash
+    setTransactionHash(txHashes[0]);
     setIsSuccess(true);
     
     toast({
