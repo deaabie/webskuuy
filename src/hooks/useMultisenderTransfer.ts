@@ -87,7 +87,7 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
   };
 
   const handleNativeBulkTransfer = async () => {
-    if (!walletClient || !address) return;
+    if (!walletClient || !address || !publicClient) return;
     
     console.log("Starting native token bulk transfer using connected wallet...");
     
