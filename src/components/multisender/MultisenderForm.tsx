@@ -29,7 +29,17 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
   const networkConfig = getNetworkById(network);
-  const isCorrectNetwork = network ? parseInt(network) === chainId : true;
+  
+  // More robust network comparison
+  const isCorrectNetwork = network && networkConfig ? networkConfig.chainId === chainId : true;
+
+  console.log("Network debugging:", {
+    selectedNetwork: network,
+    networkConfig,
+    expectedChainId: networkConfig?.chainId,
+    currentChainId: chainId,
+    isCorrectNetwork
+  });
 
   const {
     isProcessing,
@@ -45,6 +55,7 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
 
   const handleSwitchNetwork = () => {
     if (networkConfig && switchChain) {
+      console.log("Attempting to switch to network:", networkConfig.chainId);
       switchChain({ chainId: networkConfig.chainId });
     }
   };
