@@ -47,8 +47,8 @@ const TESTNETS: Record<string, NetworkConfig> = {
   monad_testnet: {
     id: "monad_testnet",
     rpcUrl: 'https://testnet-rpc.monad.xyz',
-    chainId: 10143,
-    name: 'Monad ',
+    chainId: 41144,
+    name: 'Monad Testnet',
     symbol: 'MON',
     explorer: 'https://testnet.monadexplorer.com/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/monad.png'
@@ -67,8 +67,8 @@ const TESTNETS: Record<string, NetworkConfig> = {
   citrea_testnet: {
     id: "citrea_testnet",
     rpcUrl: 'https://rpc.testnet.citrea.xyz',
-    chainId: 17000,
-    name: 'Citrea ',
+    chainId: 5115,
+    name: 'Citrea Testnet',
     symbol: 'cBTC',
     explorer: 'https://explorer.testnet.citrea.xyz/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png'
@@ -76,7 +76,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
   berachain_testnet: {
     id: "berachain_testnet",
     rpcUrl: 'https://bepolia.rpc.berachain.com',
-    chainId: 80069,
+    chainId: 80084,
     name: 'Berachain Bepolia',
     symbol: 'BERA',
     explorer: 'https://bepolia.beratrail.io/tx/',

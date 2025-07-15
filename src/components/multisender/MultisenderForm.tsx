@@ -8,7 +8,7 @@ import CsvInput from './CsvInput';
 import TransactionSummary from './TransactionSummary';
 import { Button } from "@/components/ui/button";
 import { useMultisenderTransfer } from '@/hooks/useMultisenderTransfer';
-import { useAccount, useChainId } from 'wagmi';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { getNetworkById } from '@/config/deploy-config';
 
 interface MultisenderFormProps {
@@ -27,6 +27,7 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
 
   const { isConnected } = useAccount();
   const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const networkConfig = getNetworkById(network);
   const isCorrectNetwork = network ? parseInt(network) === chainId : true;
 
@@ -40,6 +41,12 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
 
   const handleRecipientsChange = (newRecipients: RecipientData[]) => {
     setRecipients(newRecipients);
+  };
+
+  const handleSwitchNetwork = () => {
+    if (networkConfig && switchChain) {
+      switchChain({ chainId: networkConfig.chainId });
+    }
   };
 
   const canProceed = network && selectedToken && recipients.length > 0 && recipients.every(r => r.address && r.amount) && isConnected && isCorrectNetwork;
@@ -73,12 +80,19 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
               <h3 className="text-lg font-semibold text-red-800 dark:text-red-200 mb-2">
                 Wrong Network
               </h3>
-              <p className="text-sm text-red-600 dark:text-red-300 mb-2">
+              <p className="text-sm text-red-600 dark:text-red-300 mb-4">
                 Please switch to <strong>{networkConfig.name}</strong> (Chain ID: {networkConfig.chainId})
               </p>
-              <p className="text-xs text-red-500 dark:text-red-400">
+              <p className="text-xs text-red-500 dark:text-red-400 mb-4">
                 Current network: Chain ID {chainId}
               </p>
+              <Button
+                onClick={handleSwitchNetwork}
+                variant="destructive"
+                size="sm"
+              >
+                Switch to {networkConfig.name}
+              </Button>
             </div>
           </CardContent>
         </Card>
