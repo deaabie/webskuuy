@@ -47,8 +47,8 @@ const TESTNETS: Record<string, NetworkConfig> = {
   monad_testnet: {
     id: "monad_testnet",
     rpcUrl: 'https://testnet-rpc.monad.xyz',
-    chainId: 41144,
-    name: 'Monad Testnet',
+    chainId: 10143,
+    name: 'Monad ',
     symbol: 'MON',
     explorer: 'https://testnet.monadexplorer.com/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/monad.png'
@@ -67,8 +67,8 @@ const TESTNETS: Record<string, NetworkConfig> = {
   citrea_testnet: {
     id: "citrea_testnet",
     rpcUrl: 'https://rpc.testnet.citrea.xyz',
-    chainId: 5115,
-    name: 'Citrea Testnet',
+    chainId: 17000,
+    name: 'Citrea ',
     symbol: 'cBTC',
     explorer: 'https://explorer.testnet.citrea.xyz/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png'
@@ -76,11 +76,47 @@ const TESTNETS: Record<string, NetworkConfig> = {
   berachain_testnet: {
     id: "berachain_testnet",
     rpcUrl: 'https://bepolia.rpc.berachain.com',
-    chainId: 80084,
+    chainId: 80069,
     name: 'Berachain Bepolia',
     symbol: 'BERA',
     explorer: 'https://bepolia.beratrail.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png'
+  },
+  Plume_testnet: {
+    id: "Plume_testnet",
+    rpcUrl: 'https://testnet-rpc.plumenetwork.xyz',
+    chainId: 98867,
+    name: 'Plume Testnet',
+    symbol: 'PLUME',
+    explorer: 'https://testnet-explorer.plume.org/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/pETH-icon.png'
+  },
+  Xrpl_testnet: {
+    id: "Xrpl_testnet",
+    rpcUrl: 'https://rpc.testnet.xrplevm.org',
+    chainId: 1449000,
+    name: 'XRPL EVM',
+    symbol: 'XRP',
+    explorer: 'https://explorer.testnet.xrplevm.org/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/XRPLevm.png'
+  },
+  Rome_protocol: {
+    id: "Rome_protocol",
+    rpcUrl: 'https://rome.testnet.romeprotocol.xyz',
+    chainId: 200018,
+    name: 'ROME EVM',
+    symbol: 'ROME',
+    explorer: 'https://rome.testnet.romeprotocol.xyz:1000/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/rome.png'
+  },
+  Nexus: {
+    id: "Nexus",
+    rpcUrl: 'rpc.nexus.xyz/http',
+    chainId: 393,
+    name: 'NEXUS',
+    symbol: 'NEX',
+    explorer: 'https://nexus-new.explorer.caldera.xyz/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/nexus_logo-only%404x.png'
   }
 };
 
@@ -136,7 +172,16 @@ const MAINNETS: Record<string, NetworkConfig> = {
     explorer: 'https://blastscan.io/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png'
   },
-  berachain_mainnet: {
+  plume_mainnet: {
+    id: "plume_mainnet",
+    rpcUrl: 'https://rpc.plume.org',
+    chainId: 98866,
+    name: 'PLUME',
+    symbol: 'PLUME',
+    explorer: 'https://explorer.plume.org/tx/',
+    imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/pETH-icon.png'
+  },
+ berachain_mainnet: {
     id: "berachain_mainnet",
     rpcUrl: 'https://rpc.berachain.com',
     chainId: 80094,
