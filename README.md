@@ -1,183 +1,257 @@
-# Welcome to your Lovable project
 
-## Project info
+# 🚀 Skuuy Deploy - Multi-Chain Deployment Platform
 
-**URL**: https://lovable.dev/projects/591701b0-a550-4cc2-8b31-b8d8f54e6b8b
+A comprehensive platform for deploying smart contracts across multiple blockchain networks with built-in faucet, multisender, and explorer features.
 
-## Quick Start Guide
+## 📋 Table of Contents
 
-### Step 1: Clone and Setup
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Environment Setup](#-environment-setup)
+- [Supported Networks](#-supported-networks)
+- [Project Structure](#-project-structure)
+- [Usage Guide](#-usage-guide)
+- [Contributing](#-contributing)
 
-```sh
+## ✨ Features
+
+- **Multi-Chain Contract Deployment** - Deploy smart contracts across 20+ blockchain networks
+- **Built-in Faucet** - Get testnet tokens for development
+- **Multisender Tool** - Send tokens to multiple addresses in bulk
+- **Chain Explorer** - Explore blockchain data and transactions
+- **Network Management** - Add custom networks easily
+- **Admin Panel** - Manage projects and installation guides
+
+## ⚡ Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Git
+
+### 1. Clone & Install
+
+```bash
 # Clone the repository
 git clone <YOUR_GIT_URL>
-
-# Navigate to project directory
 cd <YOUR_PROJECT_NAME>
 
 # Install dependencies
-npm i
+npm install
 
 # Start development server
 npm run dev
 ```
 
-### Step 2: Supabase Setup
+The application will be available at `http://localhost:5173`
 
-This project uses Supabase for backend functionality. Follow these steps to set up your Supabase project:
+## 🔧 Environment Setup
 
-1. Create a Supabase account at [supabase.com](https://supabase.com) if you don't have one
-2. Create a new Supabase project
-3. Once your project is created, go to Project Settings -> API to find your project URL and anon key
-4. Create the required database tables by running these SQL commands in the Supabase SQL editor:
+### Supabase Configuration
 
-```sql
--- Create admin_users table
-CREATE TABLE admin_users (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    username TEXT NOT NULL,
-    password TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT now()
-);
+1. **Create Supabase Project**
+   - Visit [supabase.com](https://supabase.com) and create an account
+   - Create a new project
+   - Wait for the project to be ready (2-3 minutes)
 
--- Create projects table
-CREATE TABLE projects (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
-    categories TEXT[] DEFAULT '{}',
-    logo TEXT,
-    status TEXT DEFAULT 'upcoming',
-    installation_guide TEXT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
+2. **Get Project Credentials**
+   - Go to Settings → API
+   - Copy your Project URL and anon key
 
--- Create default admin user (username: admin, password: admin123)
-INSERT INTO admin_users (username, password)
-VALUES ('admin', 'admin123');
+3. **Update Configuration**
+   
+   Edit `src/integrations/supabase/client.ts`:
+   ```typescript
+   const supabaseUrl = 'YOUR_PROJECT_URL_HERE';
+   const supabaseKey = 'YOUR_ANON_KEY_HERE';
+   ```
+
+4. **Setup Database**
+   
+   Go to SQL Editor in your Supabase dashboard and run:
+   ```sql
+   -- Create admin_users table
+   CREATE TABLE admin_users (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       username TEXT NOT NULL,
+       password TEXT NOT NULL,
+       created_at TIMESTAMPTZ DEFAULT now()
+   );
+
+   -- Create projects table
+   CREATE TABLE projects (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       name TEXT NOT NULL,
+       description TEXT,
+       categories TEXT[] DEFAULT '{}',
+       logo TEXT,
+       status TEXT DEFAULT 'upcoming',
+       installation_guide TEXT,
+       created_at TIMESTAMPTZ DEFAULT now(),
+       updated_at TIMESTAMPTZ DEFAULT now()
+   );
+
+   -- Create default admin user
+   INSERT INTO admin_users (username, password)
+   VALUES ('admin', 'admin123');
+   ```
+
+## 🌐 Supported Networks
+
+### Testnets
+- **Ethereum**: Sepolia, Holesky
+- **Layer 2**: Base Sepolia, Optimism Sepolia, Blast Sepolia
+- **Alternative Chains**: 
+  - Monad Testnet
+  - Citrea Testnet (Bitcoin L2)
+  - Berachain Bepolia
+  - Plume Testnet
+  - XRPL EVM Testnet
+  - Rome Protocol
+  - Nexus
+
+### Mainnets
+- **Ethereum Mainnet**
+- **Layer 2**: Optimism, Arbitrum, Base, Blast
+- **Sidechains**: Polygon
+- **Alternative**: Plume, Berachain
+
+## 📁 Project Structure
+
+```
+src/
+├── components/          # React components
+│   ├── deploy/         # Contract deployment
+│   ├── faucet/         # Testnet faucet
+│   ├── multisender/    # Bulk token sender
+│   └── ui/             # Reusable UI components
+├── config/             # Network and app configuration
+├── hooks/              # Custom React hooks
+├── pages/              # Page components
+├── services/           # API services
+└── integrations/       # Third-party integrations
 ```
 
-5. In your project, update the Supabase configuration in `src/integrations/supabase/client.ts` with your project's URL and anon key:
+## 📖 Usage Guide
+
+### 1. Deploy Contracts
+
+1. Navigate to `/deploy`
+2. Connect your wallet using RainbowKit
+3. Select target network (testnet/mainnet/custom)
+4. Choose contract type (ERC20, ERC721, etc.)
+5. Fill in contract parameters
+6. Deploy and verify
+
+### 2. Use Faucet
+
+1. Go to `/faucet`
+2. Select testnet
+3. Enter your wallet address
+4. Provide reason for request
+5. Claim testnet tokens
+
+### 3. Multisender
+
+1. Visit `/multisender`
+2. Connect wallet and select network
+3. Choose token (native or ERC20)
+4. Add recipients (manual or CSV)
+5. Review and send bulk transactions
+
+### 4. Add Custom Networks
+
+1. Go to Deploy page
+2. Click "Custom" tab
+3. Click "Add Network" card
+4. Fill network details:
+   - Name and ID
+   - Chain ID and RPC URL
+   - Native token symbol
+   - Block explorer URL
+
+### 5. Admin Panel
+
+Access at `/admin` with default credentials:
+- **Username**: `admin`
+- **Password**: `admin123`
+
+**⚠️ Change these credentials in production!**
+
+## 🔗 Network Configuration
+
+### Adding New Networks
+
+Edit `src/config/deploy-config.ts`:
 
 ```typescript
-const supabaseUrl = 'YOUR_SUPABASE_PROJECT_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
-```
-
-## Customizing Network Configurations
-
-### Deploy Page Configuration
-
-The Deploy page uses a dedicated configuration file to define blockchain networks. You can easily customize networks by modifying the `src/config/deploy-config.ts` file.
-
-#### Adding or Modifying Networks
-
-To add or modify a network, edit the `DEPLOY_NETWORK_CONFIG` object in `src/config/deploy-config.ts`:
-
-```typescript
-export const DEPLOY_NETWORK_CONFIG: Record<string, NetworkConfig> = {
-  // Example of adding a new network
-  "my_network": {
-    id: "my_network",               // Unique identifier
-    rpcUrl: 'https://rpc.example.com', // RPC endpoint
-    chainId: 12345,                 // Numeric chain ID
-    name: 'My Network',             // Display name
-    symbol: 'MYC',                  // Currency symbol
-    explorer: 'https://explorer.example.com/tx/', // Explorer URL (include /tx/)
-    imageUrl: 'https://raw.githubusercontent.com/username/repo/main/network-logo.png' // Logo URL (preferably from GitHub raw)
-  },
-  // Existing networks...
+const newNetwork = {
+  id: "network_id",
+  rpcUrl: 'https://rpc-url.com',
+  chainId: 12345,
+  name: 'Network Name',
+  symbol: 'TOKEN',
+  explorer: 'https://explorer.com/tx/',
+  imageUrl: 'https://logo-url.png'
 };
 ```
 
-#### Network Image URLs
+Also add to `src/config/wagmi.ts` for wallet integration.
 
-For network logos, we recommend using GitHub raw URLs for reliable hosting:
+## 🛠 Development
 
-1. Upload your network logo image to a GitHub repository
-2. Navigate to the image in the repository
-3. Click on "Raw" to get the direct image URL
-4. Use this URL in the `imageUrl` field
+### Available Scripts
 
-The URL should follow the format: `https://raw.githubusercontent.com/username/repo/branch/path/to/image.png`
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+```
 
-#### Custom Networks
+### Tech Stack
 
-Users can also add custom networks through the UI. These are stored in the browser's localStorage and will persist between sessions.
+- **Frontend**: React 18 + TypeScript + Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Blockchain**: wagmi + viem + RainbowKit
+- **Backend**: Supabase (Database + Auth)
+- **State**: TanStack Query
 
-## Project Structure
+## 🚀 Deployment
 
-- `/src` - Source code
-  - `/components` - React components
-  - `/pages` - Page components
-  - `/services` - API and service functions
-  - `/hooks` - Custom React hooks
-  - `/types` - TypeScript type definitions
-  - `/integrations` - Third-party integrations (Supabase)
-  - `/config` - Configuration files for different app sections
+### Option 1: Lovable Platform
+1. Open [Lovable Project](https://lovable.dev/projects/591701b0-a550-4cc2-8b31-b8d8f54e6b8b)
+2. Click Share → Publish
 
-## Built With
+### Option 2: Netlify
+1. Build the project: `npm run build`
+2. Deploy `dist` folder to Netlify
+3. Set environment variables if needed
 
-This project uses modern web technologies:
+### Option 3: Custom Hosting
+1. Run `npm run build`
+2. Upload `dist` folder to your hosting provider
+3. Configure redirects for SPA routing
 
-- Vite - Fast build tool and dev server
-- TypeScript - Type-safe JavaScript
-- React - UI framework
-- shadcn-ui - Beautiful UI components
-- Tailwind CSS - Utility-first CSS framework
-- Supabase - Backend as a Service (BaaS)
+## 📚 Additional Resources
 
-## How to Edit This Project
+- [Markdown Guide](MARKDOWN_GUIDE.md) - Writing installation guides
+- [Installation Tips](INSTALLATION_GUIDE_TIPS.md) - Best practices
+- [Templates](INSTALLATION_GUIDE_TEMPLATES.md) - Guide templates
 
-### Option 1: Use Lovable (Recommended)
+## 🆘 Support
 
-Visit the [Lovable Project](https://lovable.dev/projects/591701b0-a550-4cc2-8b31-b8d8f54e6b8b) and start prompting. Changes made via Lovable will be committed automatically.
+- [Lovable Documentation](https://docs.lovable.dev/)
+- [Discord Community](https://discord.gg/lovable)
+- [YouTube Tutorials](https://www.youtube.com/@lovabledev)
 
-### Option 2: Use Your IDE
+## 🔐 Security Notes
 
-Work locally using your preferred IDE. Changes pushed to the repo will be reflected in Lovable.
+1. **Change default admin credentials** in production
+2. **Use environment variables** for sensitive data
+3. **Enable RLS policies** in Supabase for data security
+4. **Verify smart contracts** before deployment
 
-### Option 3: Edit in GitHub
+---
 
-Edit files directly on GitHub:
-1. Navigate to the file
-2. Click the "Edit" button (pencil icon)
-3. Make changes and commit
-
-### Option 4: Use GitHub Codespaces
-
-1. Go to the main repository page
-2. Click "Code" -> "Codespaces"
-3. Click "New codespace"
-
-## Deployment
-
-### Option 1: Using Lovable
-Open [Lovable](https://lovable.dev/projects/591701b0-a550-4cc2-8b31-b8d8f54e6b8b) and click Share -> Publish.
-
-### Option 2: Custom Domain
-While we don't support custom domains directly, you can deploy to Netlify. Visit our docs for details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
-
-## Admin Panel
-
-The project includes an admin panel at `/admin`. Default credentials:
-- Username: admin
-- Password: admin123
-
-Be sure to change these credentials in production!
-
-## Creating Installation Guides
-
-For guidance on creating effective installation guides using Markdown in the admin panel, check out:
-- [MARKDOWN_GUIDE.md](MARKDOWN_GUIDE.md) - Complete guide to writing installation guides
-- [INSTALLATION_GUIDE_TIPS.md](INSTALLATION_GUIDE_TIPS.md) - Tips and best practices
-- [INSTALLATION_GUIDE_TEMPLATES.md](INSTALLATION_GUIDE_TEMPLATES.md) - Templates for different blockchain types
-
-The admin panel also includes a built-in Markdown help guide that can be accessed when editing a project.
-
-## Need Help?
-
-- Check the [Lovable Documentation](https://docs.lovable.dev/)
-- Join our [Discord Community](https://discord.gg/lovable)
-- Watch tutorials on our [YouTube Channel](https://www.youtube.com/@lovabledev)
+**Ready to deploy? Start with `npm install && npm run dev` and visit `http://localhost:5173`**

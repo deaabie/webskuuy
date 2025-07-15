@@ -34,8 +34,8 @@ const ethereumHolesky = defineChain({
 });
 
 const monadTestnet = defineChain({
-  id: 41144,
-  name: 'Monad Testnet',
+  id: 10143,
+  name: 'Monad',
   nativeCurrency: {
     decimals: 18,
     name: 'Monad',
@@ -70,8 +70,8 @@ const blastSepolia = defineChain({
 });
 
 const citreaTestnet = defineChain({
-  id: 5115,
-  name: 'Citrea Testnet',
+  id: 17000,
+  name: 'Citrea',
   nativeCurrency: {
     decimals: 8,
     name: 'Citrea Bitcoin',
@@ -88,7 +88,7 @@ const citreaTestnet = defineChain({
 });
 
 const berachainTestnet = defineChain({
-  id: 80084,
+  id: 80069,
   name: 'Berachain Bepolia',
   nativeCurrency: {
     decimals: 18,
@@ -102,6 +102,78 @@ const berachainTestnet = defineChain({
   },
   blockExplorers: {
     default: { name: 'Beratrail', url: 'https://bepolia.beratrail.io' },
+  },
+});
+
+const plumeTestnet = defineChain({
+  id: 98867,
+  name: 'Plume Testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Plume',
+    symbol: 'PLUME',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet-rpc.plumenetwork.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Plume Explorer', url: 'https://testnet-explorer.plume.org' },
+  },
+});
+
+const xrplTestnet = defineChain({
+  id: 1449000,
+  name: 'XRPL EVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'XRP',
+    symbol: 'XRP',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.testnet.xrplevm.org'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'XRPL Explorer', url: 'https://explorer.testnet.xrplevm.org' },
+  },
+});
+
+const romeProtocol = defineChain({
+  id: 200018,
+  name: 'ROME EVM',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Rome',
+    symbol: 'ROME',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rome.testnet.romeprotocol.xyz'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Rome Explorer', url: 'https://rome.testnet.romeprotocol.xyz:1000' },
+  },
+});
+
+const nexus = defineChain({
+  id: 393,
+  name: 'NEXUS',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Nexus',
+    symbol: 'NEX',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.nexus.xyz/http'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Nexus Explorer', url: 'https://nexus-new.explorer.caldera.xyz' },
   },
 });
 
@@ -123,9 +195,27 @@ const blastMainnet = defineChain({
   },
 });
 
+const plumeMainnet = defineChain({
+  id: 98866,
+  name: 'PLUME',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'Plume',
+    symbol: 'PLUME',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.plume.org'],
+    },
+  },
+  blockExplorers: {
+    default: { name: 'Plume Explorer', url: 'https://explorer.plume.org' },
+  },
+});
+
 const berachainMainnet = defineChain({
-  id: 80085,
-  name: 'Berachain',
+  id: 80094,
+  name: 'BERA',
   nativeCurrency: {
     decimals: 18,
     name: 'Bera',
@@ -152,6 +242,7 @@ export const config = getDefaultConfig({
     arbitrum,
     base,
     blastMainnet,
+    plumeMainnet,
     berachainMainnet,
     
     // Testnets
@@ -165,6 +256,10 @@ export const config = getDefaultConfig({
     blastSepolia,
     citreaTestnet,
     berachainTestnet,
+    plumeTestnet,
+    xrplTestnet,
+    romeProtocol,
+    nexus,
   ],
   ssr: false,
 });
