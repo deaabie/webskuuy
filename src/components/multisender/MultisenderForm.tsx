@@ -30,15 +30,18 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
   const { switchChain } = useSwitchChain();
   const networkConfig = getNetworkById(network);
   
-  // More robust network comparison
-  const isCorrectNetwork = network && networkConfig ? networkConfig.chainId === chainId : true;
+  // Robust network comparison - ensure we have valid network config and chainId
+  const isCorrectNetwork = network && networkConfig && chainId ? 
+    networkConfig.chainId === chainId : 
+    false;
 
   console.log("Network debugging:", {
     selectedNetwork: network,
     networkConfig,
     expectedChainId: networkConfig?.chainId,
     currentChainId: chainId,
-    isCorrectNetwork
+    isCorrectNetwork,
+    isConnected
   });
 
   const {
@@ -60,7 +63,8 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
     }
   };
 
-  const canProceed = network && selectedToken && recipients.length > 0 && recipients.every(r => r.address && r.amount) && isConnected && isCorrectNetwork;
+  const canProceed = network && selectedToken && recipients.length > 0 && 
+    recipients.every(r => r.address && r.amount) && isConnected && isCorrectNetwork;
   const isNativeToken = selectedToken.startsWith('native:');
 
   const handleReset = () => {
@@ -95,7 +99,7 @@ const MultisenderForm = ({ network }: MultisenderFormProps) => {
                 Please switch to <strong>{networkConfig.name}</strong> (Chain ID: {networkConfig.chainId})
               </p>
               <p className="text-xs text-red-500 dark:text-red-400 mb-4">
-                Current network: Chain ID {chainId}
+                Current network: Chain ID {chainId || 'Not connected'}
               </p>
               <Button
                 onClick={handleSwitchNetwork}

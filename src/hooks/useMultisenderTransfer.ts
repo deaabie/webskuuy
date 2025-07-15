@@ -44,17 +44,6 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
       return;
     }
 
-    // Check if we're on the correct network
-    const networkChainId = parseInt(network);
-    if (chainId !== networkChainId) {
-      toast({
-        variant: "destructive",
-        title: "Wrong network",
-        description: `Please switch to the correct network (Chain ID: ${networkChainId})`,
-      });
-      return;
-    }
-
     setIsProcessing(true);
     setTransactionHash("");
     setIsSuccess(false);
@@ -119,7 +108,8 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
       
       const hash = await walletClient.sendTransaction({
         to: recipient.address as `0x${string}`,
-        value: parseEther(recipient.amount)
+        value: parseEther(recipient.amount),
+        chain: walletClient.chain
       });
       
       console.log(`Transaction ${i + 1}/${recipients.length} sent:`, hash);
@@ -218,7 +208,8 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
         address: tokenAddress,
         abi: erc20Abi,
         functionName: 'transfer',
-        args: [recipient.address as `0x${string}`, amount]
+        args: [recipient.address as `0x${string}`, amount],
+        chain: walletClient.chain
       });
       
       console.log(`Transaction ${i + 1}/${recipients.length} sent:`, hash);
