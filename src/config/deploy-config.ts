@@ -93,7 +93,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
   },
   Xrpl_testnet: {
     id: "Xrpl_testnet",
-    rpcUrl: 'https://rpc.testnet.xrplevm.org',
+    rpcUrl: 'https://rpc.xrplevm.org',
     chainId: 1440000,
     name: 'XRPL EVM',
     symbol: 'XRP',
@@ -102,20 +102,20 @@ const TESTNETS: Record<string, NetworkConfig> = {
   },
   Rome_protocol: {
     id: "Rome_protocol",
-    rpcUrl: 'https://rome.testnet.romeprotocol.xyz',
-    chainId: 200018,
+    rpcUrl: 'https://martius-i.testnet.romeprotocol.xyz',
+    chainId: 121214,
     name: 'ROME EVM',
-    symbol: 'ROME',
-    explorer: 'https://rome.testnet.romeprotocol.xyz:1000/tx/',
+    symbol: 'RSOL',
+    explorer: 'https://romescout-martius-i.testnet.romeprotocol.xyz/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/rome.png'
   },
   Nexus: {
     id: "Nexus",
-    rpcUrl: 'https://rpc.nexus.xyz/http',
-    chainId: 393,
+    rpcUrl: 'https://testnet3.rpc.nexus.xyz',
+    chainId: 3940,
     name: 'NEXUS',
     symbol: 'NEX',
-    explorer: 'https://nexus-new.explorer.caldera.xyz/tx/',
+    explorer: 'https://testnet3.explorer.nexus.xyz/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/nexus_logo-only%404x.png'
   }
 };
