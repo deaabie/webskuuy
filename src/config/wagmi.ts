@@ -130,8 +130,8 @@ const plumeTestnet = defineChain({
 });
 
 const xrplTestnet = defineChain({
-  id: 1440000,
-  name: 'XRPL EVM',
+  id: 1449000,
+  name: 'XRPL Sidechain',
   nativeCurrency: {
     decimals: 18,
     name: 'XRP',
@@ -139,7 +139,7 @@ const xrplTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.xrplevm.org'],
+      http: ['https://rpc.testnet.xrplevm.org'],
     },
   },
   blockExplorers: {
