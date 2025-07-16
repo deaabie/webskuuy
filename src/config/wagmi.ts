@@ -143,7 +143,7 @@ const xrplTestnet = defineChain({
     },
   },
   blockExplorers: {
-    default: { name: 'XRPL Explorer', url: 'https://explorer.testnet.xrplevm.org/tx/' },
+    default: { name: 'XRPL Explorer', url: 'https://explorer.testnet.xrplevm.org' },
   },
   iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/XRPLevm.png',
 });
