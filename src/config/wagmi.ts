@@ -31,6 +31,7 @@ const ethereumHolesky = defineChain({
   blockExplorers: {
     default: { name: 'Holesky Explorer', url: 'https://holesky.etherscan.io' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png',
 });
 
 const monadTestnet = defineChain({
@@ -49,6 +50,7 @@ const monadTestnet = defineChain({
   blockExplorers: {
     default: { name: 'Monad Explorer', url: 'https://testnet.monadexplorer.com' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/monad.png',
 });
 
 const blastSepolia = defineChain({
@@ -67,6 +69,7 @@ const blastSepolia = defineChain({
   blockExplorers: {
     default: { name: 'Blast Sepolia Explorer', url: 'https://sepolia.blastscan.io' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png',
 });
 
 const citreaTestnet = defineChain({
@@ -85,6 +88,7 @@ const citreaTestnet = defineChain({
   blockExplorers: {
     default: { name: 'Citrea Explorer', url: 'https://explorer.testnet.citrea.xyz' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png',
 });
 
 const berachainTestnet = defineChain({
@@ -103,6 +107,7 @@ const berachainTestnet = defineChain({
   blockExplorers: {
     default: { name: 'Beratrail', url: 'https://bepolia.beratrail.io' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png',
 });
 
 const plumeTestnet = defineChain({
@@ -121,6 +126,7 @@ const plumeTestnet = defineChain({
   blockExplorers: {
     default: { name: 'Plume Explorer', url: 'https://testnet-explorer.plume.org' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/pETH-icon.png',
 });
 
 const xrplTestnet = defineChain({
@@ -139,6 +145,7 @@ const xrplTestnet = defineChain({
   blockExplorers: {
     default: { name: 'XRPL Explorer', url: 'https://explorer.testnet.xrplevm.org' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/XRPLevm.png',
 });
 
 const romeProtocol = defineChain({
@@ -157,6 +164,7 @@ const romeProtocol = defineChain({
   blockExplorers: {
     default: { name: 'Rome Explorer', url: 'https://rome.testnet.romeprotocol.xyz:1000' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/rome.png',
 });
 
 const nexus = defineChain({
@@ -175,6 +183,7 @@ const nexus = defineChain({
   blockExplorers: {
     default: { name: 'Nexus Explorer', url: 'https://nexus-new.explorer.caldera.xyz' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/nexus_logo-only%404x.png',
 });
 
 const blastMainnet = defineChain({
@@ -193,6 +202,7 @@ const blastMainnet = defineChain({
   blockExplorers: {
     default: { name: 'Blast Explorer', url: 'https://blastscan.io' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/blast.png',
 });
 
 const plumeMainnet = defineChain({
@@ -211,6 +221,7 @@ const plumeMainnet = defineChain({
   blockExplorers: {
     default: { name: 'Plume Explorer', url: 'https://explorer.plume.org' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/pETH-icon.png',
 });
 
 const berachainMainnet = defineChain({
@@ -229,29 +240,81 @@ const berachainMainnet = defineChain({
   blockExplorers: {
     default: { name: 'Berascan', url: 'https://berascan.com' },
   },
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/berachain.png',
 });
+
+// Add iconUrl to existing chains to ensure images show up
+const enhancedMainnet = {
+  ...mainnet,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png',
+};
+
+const enhancedPolygon = {
+  ...polygon,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/polygon.png',
+};
+
+const enhancedOptimism = {
+  ...optimism,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/optimism-ethereum-op-logo.png',
+};
+
+const enhancedArbitrum = {
+  ...arbitrum,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/arbitrum-arb-logo.png',
+};
+
+const enhancedBase = {
+  ...base,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png',
+};
+
+const enhancedSepolia = {
+  ...sepolia,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/Ethereum.png',
+};
+
+const enhancedPolygonAmoy = {
+  ...polygonAmoy,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/polygon.png',
+};
+
+const enhancedOptimismSepolia = {
+  ...optimismSepolia,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/optimism-ethereum-op-logo.png',
+};
+
+const enhancedArbitrumSepolia = {
+  ...arbitrumSepolia,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/arbitrum-arb-logo.png',
+};
+
+const enhancedBaseSepolia = {
+  ...baseSepolia,
+  iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/base.png',
+};
 
 export const config = getDefaultConfig({
   appName: 'Skuuy Deploy',
   projectId: '42b8f4a9400c7fc2a971e0d728c89600',
   chains: [
     // Mainnets
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    base,
+    enhancedMainnet,
+    enhancedPolygon,
+    enhancedOptimism,
+    enhancedArbitrum,
+    enhancedBase,
     blastMainnet,
     plumeMainnet,
     berachainMainnet,
     
     // Testnets
-    sepolia,
+    enhancedSepolia,
     ethereumHolesky,
-    polygonAmoy,
-    optimismSepolia,
-    arbitrumSepolia,
-    baseSepolia,
+    enhancedPolygonAmoy,
+    enhancedOptimismSepolia,
+    enhancedArbitrumSepolia,
+    enhancedBaseSepolia,
     monadTestnet,
     blastSepolia,
     citreaTestnet,
