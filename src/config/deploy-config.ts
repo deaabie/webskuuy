@@ -93,9 +93,9 @@ const TESTNETS: Record<string, NetworkConfig> = {
   },
   Xrpl_testnet: {
     id: "Xrpl_testnet",
-    rpcUrl: 'https://rpc.xrplevm.org',
-    chainId: 1440000,
-    name: 'XRPL EVM',
+    rpcUrl: 'https://rpc.testnet.xrplevm.org',
+    chainId: 1449000,
+    name: 'XRPL Sidechain',
     symbol: 'XRP',
     explorer: 'https://explorer.testnet.xrplevm.org/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/XRPLevm.png'
