@@ -139,7 +139,7 @@ const xrplTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.testnet.xrplevm.org'],
+      http: ['https://rpc.xrplevm.org'],
     },
   },
   blockExplorers: {
@@ -154,11 +154,11 @@ const romeProtocol = defineChain({
   nativeCurrency: {
     decimals: 18,
     name: 'Rome',
-    symbol: 'ROME',
+    symbol: 'RSOL',
   },
   rpcUrls: {
     default: {
-      http: ['https://rome.testnet.romeprotocol.xyz'],
+      http: ['https://martius-i.testnet.romeprotocol.xyz'],
     },
   },
   blockExplorers: {
@@ -168,7 +168,7 @@ const romeProtocol = defineChain({
 });
 
 const nexus = defineChain({
-  id: 393,
+  id: 3940,
   name: 'NEXUS',
   nativeCurrency: {
     decimals: 18,
@@ -177,7 +177,7 @@ const nexus = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.nexus.xyz/http'],
+      http: ['https://testnet3.rpc.nexus.xyz'],
     },
   },
   blockExplorers: {
