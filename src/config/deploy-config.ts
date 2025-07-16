@@ -48,7 +48,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
     id: "monad_testnet",
     rpcUrl: 'https://testnet-rpc.monad.xyz',
     chainId: 10143,
-    name: 'Monad ',
+    name: 'Monad',
     symbol: 'MON',
     explorer: 'https://testnet.monadexplorer.com/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/monad.png'
@@ -67,8 +67,8 @@ const TESTNETS: Record<string, NetworkConfig> = {
   citrea_testnet: {
     id: "citrea_testnet",
     rpcUrl: 'https://rpc.testnet.citrea.xyz',
-    chainId: 17000,
-    name: 'Citrea ',
+    chainId: 5115,
+    name: 'Citrea',
     symbol: 'cBTC',
     explorer: 'https://explorer.testnet.citrea.xyz/tx/',
     imageUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/citrea.png'
@@ -94,7 +94,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
   Xrpl_testnet: {
     id: "Xrpl_testnet",
     rpcUrl: 'https://rpc.testnet.xrplevm.org',
-    chainId: 1449000,
+    chainId: 1440000,
     name: 'XRPL EVM',
     symbol: 'XRP',
     explorer: 'https://explorer.testnet.xrplevm.org/tx/',
@@ -111,7 +111,7 @@ const TESTNETS: Record<string, NetworkConfig> = {
   },
   Nexus: {
     id: "Nexus",
-    rpcUrl: 'rpc.nexus.xyz/http',
+    rpcUrl: 'https://rpc.nexus.xyz/http',
     chainId: 393,
     name: 'NEXUS',
     symbol: 'NEX',
