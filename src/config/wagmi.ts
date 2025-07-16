@@ -149,7 +149,7 @@ const xrplTestnet = defineChain({
 });
 
 const romeProtocol = defineChain({
-  id: 200018,
+  id: 121214,
   name: 'ROME EVM',
   nativeCurrency: {
     decimals: 18,
@@ -162,7 +162,7 @@ const romeProtocol = defineChain({
     },
   },
   blockExplorers: {
-    default: { name: 'Rome Explorer', url: 'https://rome.testnet.romeprotocol.xyz:1000' },
+    default: { name: 'Rome Explorer', url: 'https://romescout-martius-i.testnet.romeprotocol.xyz' },
   },
   iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/rome.png',
 });
@@ -181,7 +181,7 @@ const nexus = defineChain({
     },
   },
   blockExplorers: {
-    default: { name: 'Nexus Explorer', url: 'https://nexus-new.explorer.caldera.xyz' },
+    default: { name: 'Nexus Explorer', url: 'https://testnet3.explorer.nexus.xyz' },
   },
   iconUrl: 'https://raw.githubusercontent.com/deaabie/images/refs/heads/main/nexus_logo-only%404x.png',
 });
