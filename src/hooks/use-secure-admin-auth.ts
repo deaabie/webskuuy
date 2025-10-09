@@ -1,222 +1,180 @@
-
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { hashPassword, verifyPassword, generateSessionToken, isValidSessionToken } from "@/utils/auth";
-
-// Rate limiting for login attempts
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
 interface LoginAttempt {
   count: number;
   lastAttempt: number;
 }
 
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+
 export const useSecureAdminAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  // Get login attempts from localStorage
   const getLoginAttempts = (): LoginAttempt => {
-    try {
-      const stored = localStorage.getItem('admin-login-attempts');
-      return stored ? JSON.parse(stored) : { count: 0, lastAttempt: 0 };
-    } catch {
-      return { count: 0, lastAttempt: 0 };
-    }
+    const stored = localStorage.getItem("admin-login-attempts");
+    if (!stored) return { count: 0, lastAttempt: 0 };
+    return JSON.parse(stored);
   };
 
-  // Update login attempts
   const updateLoginAttempts = (attempts: LoginAttempt) => {
-    localStorage.setItem('admin-login-attempts', JSON.stringify(attempts));
+    localStorage.setItem("admin-login-attempts", JSON.stringify(attempts));
   };
 
-  // Check if account is locked
   const isAccountLocked = (): boolean => {
     const attempts = getLoginAttempts();
     if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
       const timeSinceLastAttempt = Date.now() - attempts.lastAttempt;
-      return timeSinceLastAttempt < LOCKOUT_DURATION;
+      if (timeSinceLastAttempt < LOCKOUT_DURATION) {
+        return true;
+      } else {
+        // Reset attempts after lockout period
+        updateLoginAttempts({ count: 0, lastAttempt: 0 });
+        return false;
+      }
     }
     return false;
   };
 
-  // Validate session token
-  const validateSession = async (token: string): Promise<boolean> => {
-    if (!isValidSessionToken(token)) {
-      return false;
-    }
-
-    try {
-      // Check if session exists in database (you would need to create an admin_sessions table)
-      // For now, we'll use a simpler approach with localStorage validation
-      const storedSession = localStorage.getItem('admin-session-token');
-      const sessionExpiry = localStorage.getItem('admin-session-expiry');
-      
-      if (storedSession === token && sessionExpiry) {
-        const expiryTime = parseInt(sessionExpiry);
-        return Date.now() < expiryTime;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error("Session validation error:", error);
-      return false;
-    }
+  const validateSession = (token: string): boolean => {
+    const storedToken = localStorage.getItem("admin-session-token");
+    return storedToken === token && token.length > 0;
   };
 
-  // Check admin authentication
   const checkAdminAuth = async () => {
     const token = localStorage.getItem("admin-session-token");
-    if (token && await validateSession(token)) {
-      setIsAuthenticated(true);
+    
+    if (token && validateSession(token)) {
       setSessionToken(token);
+      setIsAuthenticated(true);
     } else {
       setIsAuthenticated(false);
       setSessionToken(null);
-      // Clear invalid session data
       localStorage.removeItem("admin-session-token");
-      localStorage.removeItem("admin-session-expiry");
       localStorage.removeItem("admin-username");
     }
+    
     setIsLoading(false);
   };
 
-  // Handle successful login
-  const handleLoginSuccess = (username: string) => {
-    // Generate secure session token
-    const token = generateSessionToken();
-    const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
-    
-    // Store session data
+  const handleLoginSuccess = (username: string, token: string) => {
     localStorage.setItem("admin-session-token", token);
-    localStorage.setItem("admin-session-expiry", expiryTime.toString());
     localStorage.setItem("admin-username", username);
+    localStorage.setItem("admin-login-attempts", JSON.stringify({ count: 0, lastAttempt: 0 }));
     
-    // Clear login attempts
-    localStorage.removeItem('admin-login-attempts');
-    
-    setIsAuthenticated(true);
     setSessionToken(token);
+    setIsAuthenticated(true);
   };
 
-  // Secure login function
   const secureLogin = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    // Check if account is locked
     if (isAccountLocked()) {
-      const attempts = getLoginAttempts();
-      const timeLeft = Math.ceil((LOCKOUT_DURATION - (Date.now() - attempts.lastAttempt)) / 60000);
       return { 
         success: false, 
-        error: `Account temporarily locked. Try again in ${timeLeft} minutes.` 
+        error: "Account is locked due to too many failed attempts. Please try again later." 
       };
     }
 
+    if (!username || !password) {
+      return { success: false, error: "Username and password are required" };
+    }
+
+    if (username.length > 50 || password.length > 100) {
+      return { success: false, error: "Invalid input length" };
+    }
+
     try {
-      // Input validation
-      if (!username?.trim() || !password?.trim()) {
-        return { success: false, error: "Please enter both username and password" };
-      }
+      // Call edge function for authentication
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: { 
+          action: 'login',
+          username, 
+          password 
+        }
+      });
 
-      if (username.length > 50 || password.length > 100) {
-        return { success: false, error: "Invalid credentials" };
-      }
-
-      // Get admin user from database
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('username', username.trim())
-        .maybeSingle();
-      
       if (error) {
-        console.error("Database error during login:", error);
-        throw error;
+        console.error("Edge function error:", error);
+        throw new Error("Authentication service error");
       }
-      
-      // Verify credentials
-      if (data && await verifyPassword(password.trim(), data.password)) {
-        handleLoginSuccess(username);
+
+      if (data.success) {
+        handleLoginSuccess(username, data.sessionToken);
         return { success: true };
       } else {
-        // Update failed login attempts
+        // Increment failed login attempts
         const attempts = getLoginAttempts();
         const newAttempts = {
           count: attempts.count + 1,
           lastAttempt: Date.now()
         };
         updateLoginAttempts(newAttempts);
-        
+
         return { 
           success: false, 
-          error: "Invalid username or password" 
+          error: data.error || "Invalid username or password" 
         };
       }
     } catch (error) {
       console.error("Login error:", error);
       return { 
         success: false, 
-        error: "An error occurred during login" 
+        error: error instanceof Error ? error.message : "An error occurred during login" 
       };
     }
   };
 
-  // Admin logout
   const handleLogout = () => {
-    // Clear all session data
     localStorage.removeItem("admin-session-token");
-    localStorage.removeItem("admin-session-expiry");
     localStorage.removeItem("admin-username");
-    
     setIsAuthenticated(false);
     setSessionToken(null);
-    
-    toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully",
-    });
   };
 
-  // Create admin with hashed password
   const createAdmin = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    if (!username || !password) {
+      return { success: false, error: "Username and password are required" };
+    }
+
+    if (username.length < 3 || username.length > 50) {
+      return { success: false, error: "Username must be between 3 and 50 characters" };
+    }
+
+    if (password.length < 8 || password.length > 100) {
+      return { success: false, error: "Password must be between 8 and 100 characters" };
+    }
+
     try {
-      if (!username?.trim() || !password?.trim()) {
-        return { success: false, error: "Username and password are required" };
-      }
+      // Call edge function to create admin
+      const { data, error } = await supabase.functions.invoke('admin-auth', {
+        body: { 
+          action: 'create',
+          username, 
+          password 
+        }
+      });
 
-      if (username.length < 3 || password.length < 6) {
-        return { success: false, error: "Username must be at least 3 characters and password at least 6 characters" };
-      }
-
-      const hashedPassword = await hashPassword(password.trim());
-      
-      const { data, error } = await supabase
-        .from('admin_users')
-        .insert({
-          username: username.trim(),
-          password: hashedPassword
-        })
-        .select()
-        .single();
-        
       if (error) {
-        throw error;
+        console.error("Edge function error:", error);
+        throw new Error("Failed to create admin user");
       }
-      
-      return { success: true };
+
+      if (data.success) {
+        return { success: true };
+      } else {
+        return { success: false, error: data.error || "Failed to create admin" };
+      }
     } catch (error) {
-      console.error("Error creating admin:", error);
+      console.error("Create admin error:", error);
       return { 
         success: false, 
-        error: "Failed to create admin user" 
+        error: error instanceof Error ? error.message : "Failed to create admin user" 
       };
     }
   };
 
-  // Check auth status on component mount
   useEffect(() => {
     checkAdminAuth();
   }, []);

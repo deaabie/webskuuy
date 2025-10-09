@@ -24,16 +24,20 @@ const SecureAdminLogin = ({ onLoginSuccess }: SecureAdminLoginProps) => {
   // Check if any admin users exist
   useEffect(() => {
     const checkAdminUsers = async () => {
-      const { count, error } = await supabase
-        .from('admin_users')
-        .select('*', { count: 'exact', head: true });
-      
-      if (error) {
+      try {
+        const { data, error } = await supabase.functions.invoke('admin-auth', {
+          body: { action: 'check-exists' }
+        });
+        
+        if (error) {
+          console.error("Error checking admin users:", error);
+          return;
+        }
+        
+        setAdminExists(data.exists || false);
+      } catch (error) {
         console.error("Error checking admin users:", error);
-        return;
       }
-      
-      setAdminExists(count !== null && count > 0);
     };
     
     checkAdminUsers();
