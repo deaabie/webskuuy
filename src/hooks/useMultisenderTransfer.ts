@@ -109,7 +109,7 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
       const hash = await walletClient.sendTransaction({
         to: recipient.address as `0x${string}`,
         value: parseEther(recipient.amount)
-      });
+      } as any);
       
       console.log(`Transaction ${i + 1}/${recipients.length} sent:`, hash);
       txHashes.push(hash);
@@ -208,7 +208,7 @@ export const useMultisenderTransfer = ({ network, selectedToken, recipients }: U
         abi: erc20Abi,
         functionName: 'transfer',
         args: [recipient.address as `0x${string}`, amount]
-      });
+      } as any);
       
       console.log(`Transaction ${i + 1}/${recipients.length} sent:`, hash);
       txHashes.push(hash);
