@@ -19,7 +19,7 @@ const SecureAdminLogin = ({ onLoginSuccess }: SecureAdminLoginProps) => {
   const [loginLoading, setLoginLoading] = useState(false);
   const [adminExists, setAdminExists] = useState(true);
   const { toast } = useToast();
-  const { secureLogin, createAdmin, isAccountLocked } = useSecureAdminAuth();
+  const { secureLogin, createAdmin, isAccountLocked, clearLoginAttempts } = useSecureAdminAuth();
 
   // Check if any admin users exist
   useEffect(() => {
@@ -168,8 +168,23 @@ const SecureAdminLogin = ({ onLoginSuccess }: SecureAdminLoginProps) => {
               />
             </div>
             {isAccountLocked && (
-              <div className="text-sm text-red-600 bg-red-50 p-3 rounded">
-                Too many failed login attempts. Please wait before trying again.
+              <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded space-y-2">
+                <p>Too many failed login attempts. Please wait 15 minutes before trying again.</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => {
+                    clearLoginAttempts();
+                    toast({
+                      title: "Account Unlocked",
+                      description: "You can now try logging in again",
+                    });
+                    window.location.reload();
+                  }}
+                >
+                  Unlock Account Now
+                </Button>
               </div>
             )}
           </div>

@@ -39,9 +39,20 @@ export const useSecureAdminAuth = () => {
     const attempts = getLoginAttempts();
     if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
       const timeSinceLastAttempt = Date.now() - attempts.lastAttempt;
-      return timeSinceLastAttempt < LOCKOUT_DURATION;
+      if (timeSinceLastAttempt < LOCKOUT_DURATION) {
+        return true;
+      } else {
+        // Auto-unlock after lockout duration
+        clearLoginAttempts();
+        return false;
+      }
     }
     return false;
+  };
+
+  // Clear login attempts (for unlocking)
+  const clearLoginAttempts = () => {
+    localStorage.removeItem('admin-login-attempts');
   };
 
   // Validate session token
@@ -228,6 +239,7 @@ export const useSecureAdminAuth = () => {
     secureLogin,
     handleLogout,
     createAdmin,
-    isAccountLocked: isAccountLocked()
+    isAccountLocked: isAccountLocked(),
+    clearLoginAttempts
   };
 };
