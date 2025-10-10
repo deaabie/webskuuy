@@ -9,13 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { useProject, useProjectBySlug } from "@/hooks/use-projects";
 import { useProjectDetailsByType } from "@/hooks/use-project-details";
 import ProjectDetailsList from "@/components/project/ProjectDetailsList";
-import { useAdminAuth } from "@/hooks/use-admin-auth";
+import { useSecureAdminAuth } from "@/hooks/use-secure-admin-auth";
 
 const ProjectDetail = () => {
   const { slug } = useParams<{ slug: string }>();
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
-  const { isAdminLoggedIn } = useAdminAuth();
+  const { isAuthenticated: isAdminLoggedIn } = useSecureAdminAuth();
   
   // Use the React Query hook to fetch project data by slug
   const { 
