@@ -4,56 +4,11 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { hashPassword, verifyPassword, generateSessionToken, isValidSessionToken } from "@/utils/auth";
 
-// Rate limiting for login attempts
-const MAX_LOGIN_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-
-interface LoginAttempt {
-  count: number;
-  lastAttempt: number;
-}
-
 export const useSecureAdminAuth = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const { toast } = useToast();
-
-  // Get login attempts from localStorage
-  const getLoginAttempts = (): LoginAttempt => {
-    try {
-      const stored = localStorage.getItem('admin-login-attempts');
-      return stored ? JSON.parse(stored) : { count: 0, lastAttempt: 0 };
-    } catch {
-      return { count: 0, lastAttempt: 0 };
-    }
-  };
-
-  // Update login attempts
-  const updateLoginAttempts = (attempts: LoginAttempt) => {
-    localStorage.setItem('admin-login-attempts', JSON.stringify(attempts));
-  };
-
-  // Check if account is locked
-  const isAccountLocked = (): boolean => {
-    const attempts = getLoginAttempts();
-    if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
-      const timeSinceLastAttempt = Date.now() - attempts.lastAttempt;
-      if (timeSinceLastAttempt < LOCKOUT_DURATION) {
-        return true;
-      } else {
-        // Auto-unlock after lockout duration
-        clearLoginAttempts();
-        return false;
-      }
-    }
-    return false;
-  };
-
-  // Clear login attempts (for unlocking)
-  const clearLoginAttempts = () => {
-    localStorage.removeItem('admin-login-attempts');
-  };
 
   // Validate session token
   const validateSession = async (token: string): Promise<boolean> => {
@@ -107,25 +62,12 @@ export const useSecureAdminAuth = () => {
     localStorage.setItem("admin-session-expiry", expiryTime.toString());
     localStorage.setItem("admin-username", username);
     
-    // Clear login attempts
-    localStorage.removeItem('admin-login-attempts');
-    
     setIsAuthenticated(true);
     setSessionToken(token);
   };
 
   // Secure login function
   const secureLogin = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    // Check if account is locked
-    if (isAccountLocked()) {
-      const attempts = getLoginAttempts();
-      const timeLeft = Math.ceil((LOCKOUT_DURATION - (Date.now() - attempts.lastAttempt)) / 60000);
-      return { 
-        success: false, 
-        error: `Account temporarily locked. Try again in ${timeLeft} minutes.` 
-      };
-    }
-
     try {
       // Input validation
       if (!username?.trim() || !password?.trim()) {
@@ -137,7 +79,6 @@ export const useSecureAdminAuth = () => {
       }
 
       // Get admin user from database
-      console.log("Attempting login for username:", username.trim());
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -149,37 +90,20 @@ export const useSecureAdminAuth = () => {
         throw error;
       }
       
-      console.log("User data retrieved:", data ? "User found" : "No user found");
-      
       // Verify credentials
       if (data) {
-        console.log("Verifying password...");
         const passwordMatch = await verifyPassword(password.trim(), data.password);
-        console.log("Password verification result:", passwordMatch);
         
         if (passwordMatch) {
-          console.log("Login successful");
           handleLoginSuccess(username);
           return { success: true };
         }
       }
       
-      // Login failed
-      console.log("Login failed - invalid credentials");
-      {
-        // Update failed login attempts
-        const attempts = getLoginAttempts();
-        const newAttempts = {
-          count: attempts.count + 1,
-          lastAttempt: Date.now()
-        };
-        updateLoginAttempts(newAttempts);
-        
-        return { 
-          success: false, 
-          error: "Invalid username or password" 
-        };
-      }
+      return { 
+        success: false, 
+        error: "Invalid username or password" 
+      };
     } catch (error) {
       console.error("Login error:", error);
       return { 
@@ -253,7 +177,5 @@ export const useSecureAdminAuth = () => {
     secureLogin,
     handleLogout,
     createAdmin,
-    isAccountLocked: isAccountLocked(),
-    clearLoginAttempts
   };
 };
