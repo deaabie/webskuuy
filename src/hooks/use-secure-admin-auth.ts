@@ -137,6 +137,7 @@ export const useSecureAdminAuth = () => {
       }
 
       // Get admin user from database
+      console.log("Attempting login for username:", username.trim());
       const { data, error } = await supabase
         .from('admin_users')
         .select('*')
@@ -148,11 +149,24 @@ export const useSecureAdminAuth = () => {
         throw error;
       }
       
+      console.log("User data retrieved:", data ? "User found" : "No user found");
+      
       // Verify credentials
-      if (data && await verifyPassword(password.trim(), data.password)) {
-        handleLoginSuccess(username);
-        return { success: true };
-      } else {
+      if (data) {
+        console.log("Verifying password...");
+        const passwordMatch = await verifyPassword(password.trim(), data.password);
+        console.log("Password verification result:", passwordMatch);
+        
+        if (passwordMatch) {
+          console.log("Login successful");
+          handleLoginSuccess(username);
+          return { success: true };
+        }
+      }
+      
+      // Login failed
+      console.log("Login failed - invalid credentials");
+      {
         // Update failed login attempts
         const attempts = getLoginAttempts();
         const newAttempts = {
