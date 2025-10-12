@@ -1,13 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Shield } from "lucide-react";
+import { Loader2, Shield, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { useSecureAdminAuth } from "@/hooks/use-secure-admin-auth";
+import { createAdminUser } from "@/utils/createAdmin";
 
 interface SecureAdminLoginProps {
   onLoginSuccess: () => void;
@@ -17,8 +17,36 @@ const SecureAdminLogin = ({ onLoginSuccess }: SecureAdminLoginProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const { toast } = useToast();
   const { secureLogin } = useSecureAdminAuth();
+
+  const handleCreateAdmin = async () => {
+    setCreateLoading(true);
+    try {
+      const result = await createAdminUser('admin', 'Depok789@@@!');
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Admin user created successfully. You can now login.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create admin user",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setCreateLoading(false);
+    }
+  };
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -110,7 +138,7 @@ const SecureAdminLogin = ({ onLoginSuccess }: SecureAdminLoginProps) => {
           <Button 
             className="w-full" 
             onClick={handleLogin}
-            disabled={loginLoading}
+            disabled={loginLoading || createLoading}
           >
             {loginLoading ? (
               <>
@@ -119,6 +147,24 @@ const SecureAdminLogin = ({ onLoginSuccess }: SecureAdminLoginProps) => {
               </>
             ) : (
               "Login"
+            )}
+          </Button>
+          <Button 
+            variant="outline"
+            className="w-full" 
+            onClick={handleCreateAdmin}
+            disabled={loginLoading || createLoading}
+          >
+            {createLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create Admin (admin/Depok789@@@!)
+              </>
             )}
           </Button>
         </CardFooter>
