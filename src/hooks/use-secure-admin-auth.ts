@@ -69,12 +69,16 @@ export const useSecureAdminAuth = () => {
   // Secure login function
   const secureLogin = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      console.log("Login attempt for username:", username);
+      
       // Input validation
       if (!username?.trim() || !password?.trim()) {
+        console.log("Validation failed: empty credentials");
         return { success: false, error: "Please enter both username and password" };
       }
 
       if (username.length > 50 || password.length > 100) {
+        console.log("Validation failed: credentials too long");
         return { success: false, error: "Invalid credentials" };
       }
 
@@ -85,6 +89,8 @@ export const useSecureAdminAuth = () => {
         .eq('username', username.trim())
         .maybeSingle();
       
+      console.log("Database query result:", { found: !!data, error: error?.message });
+      
       if (error) {
         console.error("Database error during login:", error);
         throw error;
@@ -92,12 +98,18 @@ export const useSecureAdminAuth = () => {
       
       // Verify credentials
       if (data) {
+        console.log("User found, verifying password...");
+        console.log("Password hash from DB:", data.password.substring(0, 20));
+        
         const passwordMatch = await verifyPassword(password.trim(), data.password);
+        console.log("Password match result:", passwordMatch);
         
         if (passwordMatch) {
           handleLoginSuccess(username);
           return { success: true };
         }
+      } else {
+        console.log("No user found with username:", username);
       }
       
       return { 
