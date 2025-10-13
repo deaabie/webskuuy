@@ -11,6 +11,7 @@ export const useAdminAuth = () => {
     const isAdmin = localStorage.getItem("admin-authenticated") === "true";
     setIsAuthenticated(isAdmin);
     setIsLoading(false);
+    return isAdmin;
   };
 
   const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -71,5 +72,6 @@ export const useAdminAuth = () => {
     login,
     handleLoginSuccess,
     handleLogout,
+    checkAdminAuth,
   };
 };

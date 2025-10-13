@@ -5,7 +5,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import { useAdminAuth } from "@/hooks/use-admin-auth";
 
 const Admin = () => {
-  const { isLoading, isAuthenticated, handleLogout } = useAdminAuth();
+  const { isLoading, isAuthenticated, handleLogout, checkAdminAuth } = useAdminAuth();
   
   if (isLoading) {
     return (
@@ -16,7 +16,7 @@ const Admin = () => {
   }
   
   if (!isAuthenticated) {
-    return <AdminLogin onLoginSuccess={() => {}} />;
+    return <AdminLogin onLoginSuccess={checkAdminAuth} />;
   }
   
   return (

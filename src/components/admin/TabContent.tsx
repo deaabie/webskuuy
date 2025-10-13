@@ -130,6 +130,9 @@ const TabContent = () => {
   
   // Delete project using React Query
   const handleDeleteProject = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
     deleteProject(id);
   };
 
