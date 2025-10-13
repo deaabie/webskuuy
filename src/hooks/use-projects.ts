@@ -83,6 +83,7 @@ export function useUpdateProject() {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["projects", updatedProject.id] });
       queryClient.invalidateQueries({ queryKey: ["projects", "slug", updatedProject.slug] });
+      queryClient.refetchQueries({ queryKey: ["projects"] });
       toast.success("Project updated successfully");
     },
     onError: (error) => {
@@ -99,8 +100,9 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (id: string) => deleteProject(id),
     onSuccess: () => {
-      // Invalidate projects cache to trigger refetch
+      // Invalidate and refetch all project-related queries
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.refetchQueries({ queryKey: ["projects"] });
       toast.success("Project deleted successfully");
     },
     onError: (error) => {
