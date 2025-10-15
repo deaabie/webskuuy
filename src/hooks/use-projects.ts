@@ -61,8 +61,8 @@ export function useCreateProject() {
       return createProject(newProject);
     },
     onSuccess: () => {
-      // Invalidate projects cache to trigger refetch
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      // Remove ALL project queries from cache to force fresh data
+      queryClient.removeQueries({ queryKey: ["projects"] });
       toast.success("Project created successfully");
     },
     onError: (error) => {
@@ -78,12 +78,9 @@ export function useUpdateProject() {
   
   return useMutation({
     mutationFn: (project: Project) => updateProject(project),
-    onSuccess: (updatedProject) => {
-      // Update projects cache
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["projects", updatedProject.id] });
-      queryClient.invalidateQueries({ queryKey: ["projects", "slug", updatedProject.slug] });
-      queryClient.refetchQueries({ queryKey: ["projects"] });
+    onSuccess: () => {
+      // Remove ALL project queries from cache to force fresh data
+      queryClient.removeQueries({ queryKey: ["projects"] });
       toast.success("Project updated successfully");
     },
     onError: (error) => {
@@ -100,9 +97,8 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (id: string) => deleteProject(id),
     onSuccess: () => {
-      // Invalidate and refetch all project-related queries
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.refetchQueries({ queryKey: ["projects"] });
+      // Remove ALL project queries from cache to force fresh data
+      queryClient.removeQueries({ queryKey: ["projects"] });
       toast.success("Project deleted successfully");
     },
     onError: (error) => {
