@@ -99,6 +99,7 @@ const TabContent = () => {
           status: "upcoming",
           installation_guide: ""
         });
+        setActiveTab("projects");
       }
     });
   };
@@ -124,6 +125,7 @@ const TabContent = () => {
       onSuccess: () => {
         setIsEditing(false);
         setSelectedProject(null);
+        setActiveTab("projects");
       }
     });
   };
@@ -133,7 +135,11 @@ const TabContent = () => {
     if (!confirm("Are you sure you want to delete this project?")) {
       return;
     }
-    deleteProject(id);
+    deleteProject(id, {
+      onSuccess: () => {
+        setActiveTab("projects");
+      }
+    });
   };
 
   return (
